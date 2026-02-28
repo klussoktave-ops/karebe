@@ -23,6 +23,7 @@
 
     <section class="controls">
       <select id="branchSelect"></select>
+      <select id="customerProfileSelect"></select>
       <select id="categoryFilter"></select>
       <input id="maxPrice" type="number" min="0" placeholder="Max price (KES)" value="100000" />
       <select id="popularFilter">
@@ -35,6 +36,8 @@
       </select>
     </section>
     <p id="shiftContact" class="small"></p>
+    <p id="activeTill" class="small"></p>
+    <p id="customerMeta" class="small"></p>
 
     <section class="card promo">
       <div class="promo-grid">
@@ -71,6 +74,25 @@
           <button id="cartClear" class="secondary">Clear Cart</button>
         </div>
       </div>
+    </section>
+
+    <section class="card">
+      <div class="card-body">
+        <h2 class="section-title" style="margin-top:0;">Order Card (Selected Cart Items)</h2>
+        <div id="orderCardItems" class="grid"></div>
+        <div class="row" style="margin-top:10px;">
+          <strong>Total</strong>
+          <strong id="orderCardTotal">KES 0</strong>
+        </div>
+        <div class="actions" style="margin-top:10px;">
+          <button id="orderCardCheckout">Checkout With M-Pesa Daraja (Mock)</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Customer Orders</h2>
+      <div id="selectableOrders" class="grid"></div>
     </section>
 
     <p class="footer-note">Ordering opens your phone dialer instantly. Confirm details during call. For very low bandwidth, images lazy-load automatically.</p>

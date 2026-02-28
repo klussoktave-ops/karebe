@@ -5,7 +5,11 @@
 - Product filtering by category, max price, popular, and new arrival.
 - Product cards show image, price, volume, description, availability state.
 - One-tap order actions: phone call (`tel:`), SMS prefill, WhatsApp prefill.
+- Customer profiles with seeded cart/order history and active profile selection.
+- Order card flow: selectable cart items accumulate into checkout card.
+- Daraja payment infrastructure seeded (tills + checkout metadata, mock STK flow).
 - Admin secure login gate (session-based in-browser auth for MVP).
+- Super-admin(owner) + branch admin model with branch shift routing.
 - Admin can add product (name, image URL, category, volume, price, stock, flags).
 - Admin can delete products.
 - Admin can toggle stock availability quickly.
@@ -27,11 +31,10 @@
 - Strong auth hardening (JWT, refresh tokens, password hashing, MFA).
 - Role-based access control on server side.
 - Real image upload pipeline (currently URL input only).
-- Multi-item cart/order composition in customer UI.
-- Automatic order creation directly from customer action (currently admin logs after call).
+- Proper live Daraja integration with secure credentials and callback verification (currently mock flow).
 - Advanced analytics (time series charts, cohort views, CSV export).
 - Admin filters for logs by date/rider/product/revenue ranges.
-- Payment integrations (M-Pesa, card gateways).
+- Production payment integrations hardening (webhooks, retries, reconciliation).
 - Age verification / 18+ compliance workflow.
 - Push notifications and automated SMS notifications.
 - Multi-branch support and branch-level stock routing.
@@ -41,8 +44,8 @@
 
 ## Notes
 - This MVP is intentionally dependency-free and runs as static files for fast local validation.
-- Super-admin(owner) credentials: `owner / owner1234`.
-- Branch admin credentials: `karebe / karebe1234`, `karuraadmin / karura1234`.
+- Super-admin(owner) credentials: `karebe-owner / karebeowner1234`.
+- Branch admin credentials: `karebe / karebe1234`, `dante / dante1234`.
 - Seed rider credentials:
   - `+254711000111 / 1111`
   - `+254722000222 / 2222`

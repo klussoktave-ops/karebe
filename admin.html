@@ -28,8 +28,8 @@
           <input id="adminPass" placeholder="Password" type="password" required />
           <button type="submit">Login</button>
         </form>
-        <p class="small">Super-admin(owner): owner / owner1234</p>
-        <p class="small">Branch admin example: karebe / karebe1234</p>
+        <p class="small">Super-admin(owner): karebe-owner / karebeowner1234</p>
+        <p class="small">Branch admins: karebe / karebe1234 and dante / dante1234</p>
       </div>
     </section>
 
@@ -72,6 +72,31 @@
         <button type="submit">Add Taxonomy Value</button>
       </form>
       <div id="taxonomyList" class="controls"></div>
+
+      <section class="super-only">
+        <h2 class="section-title">Till Infrastructure (Daraja)</h2>
+        <form id="tillForm" class="controls">
+          <select id="tillBranch"></select>
+          <input id="tillNumber" placeholder="Till Number" required />
+          <input id="tillShortCode" placeholder="Business ShortCode" required />
+          <input id="tillAccountRef" placeholder="Account Reference" required />
+          <button type="submit">Save Till</button>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Branch</th><th>Till</th><th>ShortCode</th><th>Reference</th><th>Status</th></tr></thead>
+            <tbody id="tillsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <h2 class="section-title">Customer Profiles</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Phone</th><th>Branch</th><th>Cart Items</th><th>Orders</th></tr></thead>
+          <tbody id="customerProfilesBody"></tbody>
+        </table>
+      </div>
 
       <div class="grid kpis">
         <article class="kpi"><h3>Today Revenue</h3><p id="kpiToday">-</p></article>

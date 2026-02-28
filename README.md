@@ -1,12 +1,12 @@
 # Karebe Wines & Spirits MVP
 
-Static frontend with Vercel serverless API endpoints for admin login + seed data.
+Static frontend with Vercel serverless API endpoints for admin login, seeded tills, and Daraja mock payment flow.
 
 ## Admin Credentials
 
-- Super-admin (owner): `owner / owner1234`
+- Super-admin (owner): `karebe-owner / karebeowner1234`
 - Branch admin (Wangige): `karebe / karebe1234`
-- Branch admin (Karura): `karuraadmin / karura1234`
+- Branch admin (Karura): `dante / dante1234`
 
 ## Local Run
 
@@ -32,3 +32,5 @@ The frontend pages (`index.html`, `admin.html`, `rider.html`) and backend endpoi
 
 - `POST /api/admin/login`
 - `GET /api/seed`
+- `POST /api/payments/daraja/stkpush`
+- `POST /api/payments/daraja/callback`

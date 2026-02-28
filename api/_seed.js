@@ -11,9 +11,9 @@
   users: [
     {
       id: "u_owner",
-      name: "Karebe Owner",
-      username: "owner",
-      password: "owner1234",
+      name: "Karebe",
+      username: "karebe-owner",
+      password: "karebeowner1234",
       role: "super-admin",
       phone: "+254700123456",
       branchId: null,
@@ -21,7 +21,7 @@
     },
     {
       id: "u_wangige_admin",
-      name: "Wangige Manager",
+      name: "Karebe",
       username: "karebe",
       password: "karebe1234",
       role: "admin",
@@ -31,9 +31,9 @@
     },
     {
       id: "u_karura_admin",
-      name: "Karura Manager",
-      username: "karuraadmin",
-      password: "karura1234",
+      name: "Dante",
+      username: "dante",
+      password: "dante1234",
       role: "admin",
       phone: "+254702222222",
       branchId: "b_karura",
@@ -62,8 +62,40 @@
     categories: ["Wine", "Whiskey", "Vodka", "Gin", "Champagne", "Local Spirits", "Keg"],
     paymentStatuses: ["PENDING", "PAID"],
     deliveryStatuses: ["ASSIGNED", "PICKED_UP", "ON_THE_WAY", "DELIVERED"],
-    orderSources: ["CALL", "SMS", "WHATSAPP"]
+    orderSources: ["CALL", "SMS", "WHATSAPP"],
+    paymentMethods: ["MPESA_DARAJA", "CASH", "CARD"]
   },
+  paymentInfrastructure: {
+    provider: "safaricom-daraja",
+    environment: "sandbox",
+    stkPushPath: "/api/payments/daraja/stkpush",
+    callbackPath: "/api/payments/daraja/callback",
+    credentials: {
+      consumerKeyEnv: "DARAJA_CONSUMER_KEY",
+      consumerSecretEnv: "DARAJA_CONSUMER_SECRET",
+      passKeyEnv: "DARAJA_PASSKEY"
+    }
+  },
+  tills: [
+    {
+      id: "till_wangige",
+      branchId: "b_wangige",
+      type: "BUY_GOODS",
+      tillNumber: "5132456",
+      businessShortCode: "174379",
+      accountReference: "KAREBE-WANGIGE",
+      active: true
+    },
+    {
+      id: "till_karura",
+      branchId: "b_karura",
+      type: "BUY_GOODS",
+      tillNumber: "5132457",
+      businessShortCode: "174379",
+      accountReference: "KAREBE-KARURA",
+      active: true
+    }
+  ],
   categories: ["Wine", "Whiskey", "Vodka", "Gin", "Champagne", "Local Spirits", "Keg"],
   products: [
     {
@@ -130,7 +162,85 @@
       active: true
     }
   ],
-  orders: [],
+  customerProfiles: [
+    {
+      id: "cst_001",
+      fullName: "Amina Njeri",
+      phone: "+254712111222",
+      email: "amina@example.com",
+      defaultBranchId: "b_wangige",
+      cart: [
+        {
+          id: "c_seed_1",
+          productId: "p4",
+          variantId: "v5",
+          productName: "Keg Beer",
+          volume: "Per Glass",
+          qty: 3,
+          unitPrice: 80,
+          lineTotal: 240,
+          branchId: "b_wangige",
+          selectedForOrderCard: true
+        },
+        {
+          id: "c_seed_2",
+          productId: "p3",
+          variantId: "v4",
+          productName: "Smirnoff Red",
+          volume: "750ml",
+          qty: 1,
+          unitPrice: 1800,
+          lineTotal: 1800,
+          branchId: "b_wangige",
+          selectedForOrderCard: true
+        }
+      ],
+      orderIds: ["o_seed_001"]
+    }
+  ],
+  activeCustomerProfileId: "cst_001",
+  orders: [
+    {
+      id: "o_seed_001",
+      customerProfileId: "cst_001",
+      customerPhone: "+254712111222",
+      source: "WHATSAPP",
+      paymentStatus: "PENDING",
+      paymentMethod: "MPESA_DARAJA",
+      paymentRequest: {
+        merchantRequestId: "seed-merchant-001",
+        checkoutRequestId: "seed-checkout-001",
+        tillId: "till_wangige",
+        mpesaNumber: "+254712111222",
+        status: "PENDING"
+      },
+      status: "CONFIRMED",
+      total: 2040,
+      createdAt: "2026-02-28T09:00:00.000Z",
+      createdBy: "karebe",
+      branchId: "b_wangige",
+      items: [
+        {
+          productId: "p4",
+          productName: "Keg Beer",
+          variantId: "v5",
+          volume: "Per Glass",
+          qty: 3,
+          unitPrice: 80,
+          lineTotal: 240
+        },
+        {
+          productId: "p3",
+          productName: "Smirnoff Red",
+          variantId: "v4",
+          volume: "750ml",
+          qty: 1,
+          unitPrice: 1800,
+          lineTotal: 1800
+        }
+      ]
+    }
+  ],
   deliveries: [],
   cart: []
 };

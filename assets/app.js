@@ -39,7 +39,8 @@
       taxonomies: {
         categories: ["Wine", "Whiskey", "Vodka", "Gin", "Champagne", "Local Spirits", "Keg"],
         paymentStatuses: ["PENDING", "PAID"],
-        deliveryStatuses: ["ASSIGNED", "PICKED_UP", "ON_THE_WAY", "DELIVERED"]
+        deliveryStatuses: ["ASSIGNED", "PICKED_UP", "ON_THE_WAY", "DELIVERED"],
+        paymentMethods: ["MPESA_DARAJA", "CASH", "CARD"]
       }
     };
   }
@@ -67,6 +68,31 @@
     next.orders = Array.isArray(next.orders) ? next.orders : [];
     next.deliveries = Array.isArray(next.deliveries) ? next.deliveries : [];
     next.cart = Array.isArray(next.cart) ? next.cart : [];
+    next.tills = Array.isArray(next.tills) ? next.tills : clone(seed.tills || []);
+    next.paymentInfrastructure =
+      next.paymentInfrastructure && typeof next.paymentInfrastructure === "object"
+        ? next.paymentInfrastructure
+        : clone(seed.paymentInfrastructure || {});
+    next.customerProfiles = Array.isArray(next.customerProfiles) ? next.customerProfiles : clone(seed.customerProfiles || []);
+    next.customerProfiles.forEach((cp) => {
+      cp.cart = Array.isArray(cp.cart) ? cp.cart : [];
+      cp.orderIds = Array.isArray(cp.orderIds) ? cp.orderIds : [];
+    });
+    if (!next.customerProfiles.length) {
+      next.customerProfiles.push({
+        id: "cst_default",
+        fullName: "Walk-in Customer",
+        phone: "+254700000000",
+        email: "",
+        defaultBranchId: next.branches[0] ? next.branches[0].id : null,
+        cart: clone(next.cart),
+        orderIds: []
+      });
+    }
+    next.activeCustomerProfileId =
+      next.activeCustomerProfileId && next.customerProfiles.find((cp) => cp.id === next.activeCustomerProfileId)
+        ? next.activeCustomerProfileId
+        : next.customerProfiles[0].id;
     return next;
   }
 
@@ -137,6 +163,30 @@
     };
   }
 
+  function getActiveCustomerProfile(state) {
+    return state.customerProfiles.find((cp) => cp.id === state.activeCustomerProfileId) || state.customerProfiles[0];
+  }
+
+  function getTillForBranch(state, branchId) {
+    return (state.tills || []).find((t) => t.branchId === branchId && t.active) || null;
+  }
+
+  function createMockDarajaRequest(state, customerProfile, till, amount) {
+    return {
+      provider: "safaricom-daraja",
+      merchantRequestId: `mreq_${Math.random().toString(36).slice(2, 10)}`,
+      checkoutRequestId: `creq_${Math.random().toString(36).slice(2, 10)}`,
+      tillId: till ? till.id : null,
+      tillNumber: till ? till.tillNumber : null,
+      businessShortCode: till ? till.businessShortCode : null,
+      accountReference: till ? till.accountReference : "KAREBE",
+      amount,
+      msisdn: customerProfile.phone,
+      status: "PENDING",
+      createdAt: nowISO()
+    };
+  }
+
   async function backendAdminLogin(username, password) {
     try {
       const res = await fetch("/api/admin/login", {
@@ -159,6 +209,7 @@
     const newSel = document.getElementById("newFilter");
     const maxPrice = document.getElementById("maxPrice");
     const branchSel = document.getElementById("branchSelect");
+    const customerSel = document.getElementById("customerProfileSelect");
     const shiftContact = document.getElementById("shiftContact");
     const list = document.getElementById("products");
     const cartItems = document.getElementById("cartItems");
@@ -167,6 +218,12 @@
     const cartSms = document.getElementById("cartSms");
     const cartWa = document.getElementById("cartWhatsapp");
     const cartClear = document.getElementById("cartClear");
+    const orderCardItems = document.getElementById("orderCardItems");
+    const orderCardTotal = document.getElementById("orderCardTotal");
+    const orderCardCheckout = document.getElementById("orderCardCheckout");
+    const activeTill = document.getElementById("activeTill");
+    const customerMeta = document.getElementById("customerMeta");
+    const selectableOrders = document.getElementById("selectableOrders");
 
     const categories = state.taxonomies.categories || state.categories;
     categorySel.innerHTML = `<option value="">All Categories</option>${categories.map((c) => `<option value="${c}">${c}</option>`).join("")}`;
@@ -174,9 +231,19 @@
       branchSel.innerHTML = state.branches.map((b) => `<option value="${b.id}">${b.location || b.name}</option>`).join("");
       branchSel.value = selectedBranchId(state);
     }
+    if (customerSel) {
+      customerSel.innerHTML = state.customerProfiles
+        .map((cp) => `<option value="${cp.id}">${cp.fullName} (${cp.phone})</option>`)
+        .join("");
+      customerSel.value = state.activeCustomerProfileId;
+    }
 
     function currentBranchId() {
       return (branchSel && branchSel.value) || selectedBranchId(loadState());
+    }
+
+    function currentProfile(stateRef) {
+      return getActiveCustomerProfile(stateRef || loadState());
     }
 
     function qtyFor(productId, variantId) {
@@ -184,18 +251,98 @@
       return Math.max(1, Number(el ? el.value : 1) || 1);
     }
 
+    function syncLegacyCart(fresh, profile) {
+      fresh.cart = profile.cart.slice();
+    }
+
+    function selectedOrderCardItems(profile, branchId) {
+      return profile.cart.filter((i) => i.branchId === branchId && i.selectedForOrderCard);
+    }
+
     function renderCart() {
       if (!cartItems || !cartTotal) return;
       const fresh = loadState();
       const branchId = currentBranchId();
-      const items = fresh.cart.filter((i) => i.branchId === branchId);
+      const profile = currentProfile(fresh);
+      const items = profile.cart.filter((i) => i.branchId === branchId);
       const total = items.reduce((s, i) => s + i.lineTotal, 0);
       const contact = getShiftContact(fresh, branchId);
+      const till = getTillForBranch(fresh, branchId);
       cartItems.innerHTML = items.length
-        ? items.map((i) => `<div class="cart-row"><span>${i.productName} (${i.volume}) x${i.qty}</span><span>${fmtKES(i.lineTotal)}</span><button class="secondary" data-act="remove" data-id="${i.id}">Remove</button></div>`).join("")
+        ? items
+            .map(
+              (i) =>
+                `<div class="cart-row"><label><input type="checkbox" data-act="toggle-order-card" data-id="${i.id}" ${
+                  i.selectedForOrderCard ? "checked" : ""
+                } /> ${i.productName} (${i.volume}) x${i.qty}</label><span>${fmtKES(i.lineTotal)}</span><button class="secondary" data-act="remove" data-id="${i.id}">Remove</button></div>`
+            )
+            .join("")
         : `<p class="small">Your cart is empty for this branch.</p>`;
       cartTotal.textContent = fmtKES(total);
       if (shiftContact) shiftContact.textContent = `On shift: ${contact.label} - ${contact.phone}`;
+      if (activeTill) {
+        activeTill.textContent = till
+          ? `Till: ${till.tillNumber} (${till.accountReference})`
+          : "No active till configured for this branch.";
+      }
+      if (customerMeta) {
+        customerMeta.textContent = `${profile.fullName} | ${profile.phone} | ${
+          profile.email || "no email"
+        }`;
+      }
+
+      const orderCard = selectedOrderCardItems(profile, branchId);
+      const orderCardTotalValue = orderCard.reduce((s, i) => s + i.lineTotal, 0);
+      if (orderCardItems) {
+        orderCardItems.innerHTML = orderCard.length
+          ? orderCard
+              .map((i) => `<div class="row"><span>${i.productName} (${i.volume}) x${i.qty}</span><span>${fmtKES(i.lineTotal)}</span></div>`)
+              .join("")
+          : `<p class="small">Select cart rows to build the order card.</p>`;
+      }
+      if (orderCardTotal) orderCardTotal.textContent = fmtKES(orderCardTotalValue);
+      if (orderCardCheckout) {
+        orderCardCheckout.onclick = () => {
+          if (!orderCard.length) return alert("Select cart items for the order card first.");
+          const s = loadState();
+          const p = currentProfile(s);
+          const tillRef = getTillForBranch(s, branchId);
+          const totalAmount = orderCard.reduce((sum, i) => sum + i.lineTotal, 0);
+          const request = createMockDarajaRequest(s, p, tillRef, totalAmount);
+          const order = {
+            id: uid("o"),
+            customerProfileId: p.id,
+            customerPhone: p.phone,
+            source: "WHATSAPP",
+            paymentStatus: "PENDING",
+            paymentMethod: "MPESA_DARAJA",
+            paymentRequest: request,
+            status: "CONFIRMED",
+            total: totalAmount,
+            createdAt: nowISO(),
+            createdBy: "customer",
+            branchId,
+            items: orderCard.map((i) => ({
+              productId: i.productId,
+              productName: i.productName,
+              variantId: i.variantId,
+              volume: i.volume,
+              qty: i.qty,
+              unitPrice: i.unitPrice,
+              lineTotal: i.lineTotal
+            }))
+          };
+          s.orders.push(order);
+          p.orderIds.push(order.id);
+          p.cart = p.cart.filter((i) => !i.selectedForOrderCard);
+          syncLegacyCart(s, p);
+          saveState(s);
+          alert(`Daraja STK push mocked. Checkout Request ID: ${request.checkoutRequestId}`);
+          renderCart();
+          renderSelectableOrders();
+        };
+      }
+
       if (cartCall) cartCall.onclick = () => { window.location.href = `tel:${contact.phone}`; };
       if (cartSms) cartSms.onclick = () => {
         if (!items.length) return alert("Add items to cart first.");
@@ -207,10 +354,49 @@
       };
       if (cartClear) cartClear.onclick = () => {
         const s = loadState();
-        s.cart = s.cart.filter((i) => i.branchId !== branchId);
+        const p = currentProfile(s);
+        p.cart = p.cart.filter((i) => i.branchId !== branchId);
+        syncLegacyCart(s, p);
         saveState(s);
         renderCart();
       };
+    }
+
+    function renderSelectableOrders() {
+      if (!selectableOrders) return;
+      const fresh = loadState();
+      const profile = currentProfile(fresh);
+      const orders = fresh.orders.filter((o) => o.customerProfileId === profile.id);
+      selectableOrders.innerHTML = orders.length
+        ? orders
+            .map(
+              (o) =>
+                `<article class="card"><div class="card-body"><div class="row"><strong>${o.id}</strong><span class="badge">${o.paymentMethod || "N/A"}</span></div><p class="small">${dateOnly(
+                  o.createdAt
+                )} | ${o.paymentStatus} | ${fmtKES(o.total)}</p><p class="small">Items: ${o.items
+                  .map((it) => `${it.productName} x${it.qty}`)
+                  .join(", ")}</p></div></article>`
+            )
+            .join("")
+        : `<p class="small">No orders for this customer profile yet.</p>`;
+    }
+
+    function addItemToProfileCart(item) {
+      const fresh = loadState();
+      const profile = currentProfile(fresh);
+      const existing = profile.cart.find(
+        (i) => i.productId === item.productId && i.variantId === item.variantId && i.branchId === item.branchId
+      );
+      if (existing) {
+        existing.qty += item.qty;
+        existing.lineTotal = existing.qty * existing.unitPrice;
+        existing.selectedForOrderCard = true;
+      } else {
+        profile.cart.push({ ...item, selectedForOrderCard: true });
+      }
+      syncLegacyCart(fresh, profile);
+      saveState(fresh);
+      renderCart();
     }
 
     function card(product, variant, contact) {
@@ -265,25 +451,28 @@
       if (btn.dataset.act === "call") return (window.location.href = `tel:${contact.phone}`);
       if (btn.dataset.act === "sms") return (window.location.href = `sms:${contact.phone}?body=${encodeURIComponent(buildMessage(fresh, contact, [item]))}`);
       if (btn.dataset.act === "wa") return window.open(`https://wa.me/${contact.whatsappPhone}?text=${encodeURIComponent(buildMessage(fresh, contact, [item]))}`, "_blank", "noopener");
-      if (btn.dataset.act === "cart") {
-        const existing = fresh.cart.find((i) => i.productId === item.productId && i.variantId === item.variantId && i.branchId === item.branchId);
-        if (existing) {
-          existing.qty += item.qty;
-          existing.lineTotal = existing.qty * existing.unitPrice;
-        } else {
-          fresh.cart.push(item);
-        }
-        saveState(fresh);
-        renderCart();
-      }
+      if (btn.dataset.act === "cart") addItemToProfileCart(item);
     };
 
     if (cartItems) {
       cartItems.onclick = (e) => {
+        const toggle = e.target.closest("input[data-act='toggle-order-card']");
+        if (toggle) {
+          const s = loadState();
+          const p = currentProfile(s);
+          const cartItem = p.cart.find((i) => i.id === toggle.dataset.id);
+          if (cartItem) cartItem.selectedForOrderCard = Boolean(toggle.checked);
+          syncLegacyCart(s, p);
+          saveState(s);
+          renderCart();
+          return;
+        }
         const btn = e.target.closest("button[data-act='remove']");
         if (!btn) return;
         const s = loadState();
-        s.cart = s.cart.filter((i) => i.id !== btn.dataset.id);
+        const p = currentProfile(s);
+        p.cart = p.cart.filter((i) => i.id !== btn.dataset.id);
+        syncLegacyCart(s, p);
         saveState(s);
         renderCart();
       };
@@ -291,7 +480,17 @@
 
     [categorySel, popularSel, newSel, maxPrice].forEach((el) => el.addEventListener("change", draw));
     if (branchSel) branchSel.addEventListener("change", () => { localStorage.setItem(CUSTOMER_BRANCH_KEY, branchSel.value); draw(); });
+    if (customerSel) {
+      customerSel.addEventListener("change", () => {
+        const s = loadState();
+        s.activeCustomerProfileId = customerSel.value;
+        saveState(s);
+        draw();
+        renderSelectableOrders();
+      });
+    }
     draw();
+    renderSelectableOrders();
   }
 
   function getAllVariants(state) {
@@ -388,6 +587,66 @@
       state.riders
         .map((r) => `${r.name}: ${state.deliveries.filter((d) => d.riderId === r.id && d.status === "DELIVERED").length}`)
         .join(" | ") || "No rider data";
+
+    const customerProfilesBody = document.getElementById("customerProfilesBody");
+    if (customerProfilesBody) {
+      customerProfilesBody.innerHTML =
+        state.customerProfiles
+          .map((cp) => {
+            const branch = state.branches.find((b) => b.id === cp.defaultBranchId);
+            return `<tr><td>${cp.fullName}</td><td>${cp.phone}</td><td>${branch ? branch.location : "-"}</td><td>${cp.cart.length}</td><td>${cp.orderIds.length}</td></tr>`;
+          })
+          .join("") || `<tr><td colspan="5">No customer profiles.</td></tr>`;
+    }
+
+    const tillsTableBody = document.getElementById("tillsTableBody");
+    const tillBranch = document.getElementById("tillBranch");
+    if (tillBranch) {
+      tillBranch.innerHTML = state.branches
+        .map((b) => `<option value="${b.id}">${b.location || b.name}</option>`)
+        .join("");
+    }
+    if (tillsTableBody) {
+      tillsTableBody.innerHTML =
+        state.tills
+          .map((t) => {
+            const branch = state.branches.find((b) => b.id === t.branchId);
+            return `<tr><td>${branch ? branch.location : t.branchId}</td><td>${t.tillNumber}</td><td>${t.businessShortCode}</td><td>${t.accountReference}</td><td>${t.active ? "Active" : "Inactive"}</td></tr>`;
+          })
+          .join("") || `<tr><td colspan="5">No tills configured.</td></tr>`;
+    }
+    const tillForm = document.getElementById("tillForm");
+    if (tillForm) {
+      tillForm.onsubmit = (e) => {
+        e.preventDefault();
+        if (!isSuper) return alert("Only super-admin can manage tills.");
+        const fresh = loadState();
+        const branchId = document.getElementById("tillBranch").value;
+        const tillNumber = document.getElementById("tillNumber").value.trim();
+        const shortCode = document.getElementById("tillShortCode").value.trim();
+        const accountReference = document.getElementById("tillAccountRef").value.trim();
+        let till = fresh.tills.find((t) => t.branchId === branchId);
+        if (!till) {
+          till = {
+            id: uid("till"),
+            branchId,
+            type: "BUY_GOODS",
+            tillNumber,
+            businessShortCode: shortCode,
+            accountReference,
+            active: true
+          };
+          fresh.tills.push(till);
+        } else {
+          till.tillNumber = tillNumber;
+          till.businessShortCode = shortCode;
+          till.accountReference = accountReference;
+          till.active = true;
+        }
+        saveState(fresh);
+        location.reload();
+      };
+    }
 
     const categories = state.taxonomies.categories || state.categories;
     const categorySel = document.getElementById("productCategory");
