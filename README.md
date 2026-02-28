@@ -4,8 +4,9 @@ Static frontend with Vercel serverless API endpoints for admin login + seed data
 
 ## Admin Credentials
 
-- Username: `karebe`
-- Password: `karebe1234`
+- Super-admin (owner): `owner / owner1234`
+- Branch admin (Wangige): `karebe / karebe1234`
+- Branch admin (Karura): `karuraadmin / karura1234`
 
 ## Local Run
 
@@ -31,4 +32,3 @@ The frontend pages (`index.html`, `admin.html`, `rider.html`) and backend endpoi
 
 - `POST /api/admin/login`
 - `GET /api/seed`
-

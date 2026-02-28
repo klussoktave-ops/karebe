@@ -1,11 +1,22 @@
 const { seed } = require("./_seed");
 
 function withoutAdminPassword(state) {
+  const users = (state.users || []).map((u) => ({
+    id: u.id,
+    name: u.name,
+    username: u.username,
+    role: u.role,
+    phone: u.phone,
+    branchId: u.branchId || null,
+    active: Boolean(u.active)
+  }));
+
   return {
     ...state,
     admin: {
       username: state.admin.username
-    }
+    },
+    users
   };
 }
 

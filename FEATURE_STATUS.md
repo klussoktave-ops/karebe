@@ -41,7 +41,8 @@
 
 ## Notes
 - This MVP is intentionally dependency-free and runs as static files for fast local validation.
-- Default admin credentials: `karebe / karebe1234`.
+- Super-admin(owner) credentials: `owner / owner1234`.
+- Branch admin credentials: `karebe / karebe1234`, `karuraadmin / karura1234`.
 - Seed rider credentials:
   - `+254711000111 / 1111`
   - `+254722000222 / 2222`

@@ -231,6 +231,13 @@ th, td {
   font-size: 0.8rem;
 }
 
+.cart-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
 .promo {
   margin-bottom: 14px;
 }

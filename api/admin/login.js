@@ -7,16 +7,33 @@ module.exports = async function handler(req, res) {
   }
 
   const { username, password } = req.body || {};
-  const isValid = username === seed.admin.username && password === seed.admin.password;
+  const user = (seed.users || []).find(
+    (u) => u.username === username && u.password === password && u.active
+  );
+  const legacyValid = username === seed.admin.username && password === seed.admin.password;
 
-  if (!isValid) {
+  if (!user && !legacyValid) {
     return res.status(401).json({ ok: false, error: "Invalid credentials" });
   }
+
+  const loginUser =
+    user ||
+    {
+      id: "u_legacy_admin",
+      username: seed.admin.username,
+      name: "Legacy Admin",
+      role: "admin",
+      branchId: null
+    };
 
   return res.status(200).json({
     ok: true,
     admin: {
-      username: seed.admin.username
+      userId: loginUser.id,
+      username: loginUser.username,
+      name: loginUser.name,
+      role: loginUser.role,
+      branchId: loginUser.branchId || null
     }
   });
 };

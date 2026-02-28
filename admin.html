@@ -28,14 +28,50 @@
           <input id="adminPass" placeholder="Password" type="password" required />
           <button type="submit">Login</button>
         </form>
-        <p class="small">Default: karebe / karebe1234</p>
+        <p class="small">Super-admin(owner): owner / owner1234</p>
+        <p class="small">Branch admin example: karebe / karebe1234</p>
       </div>
     </section>
 
     <section id="adminApp" class="hidden">
       <div class="actions" style="margin-bottom:12px;">
+        <span id="adminIdentity" class="badge gold"></span>
         <button id="adminLogout" class="secondary">Logout</button>
       </div>
+
+      <h2 class="section-title">Branch Shift Routing</h2>
+      <form id="shiftForm" class="controls">
+        <select id="shiftBranch"></select>
+        <select id="shiftUser"></select>
+        <button type="submit">Update On-Shift Contact</button>
+      </form>
+      <p id="shiftCurrent" class="small"></p>
+
+      <section class="super-only">
+        <h2 class="section-title">Branch Managers (Super Admin)</h2>
+        <form id="managerForm" class="controls">
+          <input id="managerName" placeholder="Manager full name" required />
+          <input id="managerUsername" placeholder="Username" required />
+          <input id="managerPassword" type="password" placeholder="Password" required />
+          <input id="managerPhone" placeholder="Phone (+254...)" required />
+          <select id="managerBranch"></select>
+          <button type="submit">Add Branch Admin</button>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Branch</th></tr></thead>
+            <tbody id="managerTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <h2 class="section-title">Taxonomies</h2>
+      <form id="taxonomyForm" class="controls">
+        <select id="taxonomyGroup"></select>
+        <input id="taxonomyValue" placeholder="Add taxonomy value" required />
+        <button type="submit">Add Taxonomy Value</button>
+      </form>
+      <div id="taxonomyList" class="controls"></div>
 
       <div class="grid kpis">
         <article class="kpi"><h3>Today Revenue</h3><p id="kpiToday">-</p></article>

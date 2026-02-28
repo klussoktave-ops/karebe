@@ -8,6 +8,62 @@
     username: "karebe",
     password: "karebe1234"
   },
+  users: [
+    {
+      id: "u_owner",
+      name: "Karebe Owner",
+      username: "owner",
+      password: "owner1234",
+      role: "super-admin",
+      phone: "+254700123456",
+      branchId: null,
+      active: true
+    },
+    {
+      id: "u_wangige_admin",
+      name: "Wangige Manager",
+      username: "karebe",
+      password: "karebe1234",
+      role: "admin",
+      phone: "+254701111111",
+      branchId: "b_wangige",
+      active: true
+    },
+    {
+      id: "u_karura_admin",
+      name: "Karura Manager",
+      username: "karuraadmin",
+      password: "karura1234",
+      role: "admin",
+      phone: "+254702222222",
+      branchId: "b_karura",
+      active: true
+    }
+  ],
+  branches: [
+    {
+      id: "b_wangige",
+      name: "Wangige",
+      isMain: true,
+      location: "Wangige (Main Branch)",
+      phone: "+254701111111",
+      onShiftUserId: "u_wangige_admin"
+    },
+    {
+      id: "b_karura",
+      name: "Karura",
+      isMain: false,
+      location: "Karura",
+      phone: "+254702222222",
+      onShiftUserId: "u_karura_admin"
+    }
+  ],
+  taxonomies: {
+    categories: ["Wine", "Whiskey", "Vodka", "Gin", "Champagne", "Local Spirits", "Keg"],
+    paymentStatuses: ["PENDING", "PAID"],
+    deliveryStatuses: ["ASSIGNED", "PICKED_UP", "ON_THE_WAY", "DELIVERED"],
+    orderSources: ["CALL", "SMS", "WHATSAPP"]
+  },
   categories: [
     "Wine",
     "Whiskey",
@@ -85,5 +141,6 @@
     }
   ],
   orders: [],
-  deliveries: []
+  deliveries: [],
+  cart: []
 };
