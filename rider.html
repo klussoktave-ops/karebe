@@ -1,0 +1,56 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rider | Karebe</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="rider">
+  <main class="container">
+    <header class="header">
+      <div class="brand">
+        <h1>Rider Portal</h1>
+        <p>Manage assigned jobs with status timeline updates.</p>
+      </div>
+      <nav class="nav">
+        <a href="index.html">Catalog</a>
+        <a href="admin.html">Admin</a>
+        <a href="rider.html">Rider</a>
+      </nav>
+    </header>
+
+    <section id="riderLogin" class="card login-card hidden">
+      <div class="card-body">
+        <h2 class="section-title">Rider Login</h2>
+        <form id="riderLoginForm" class="grid">
+          <input id="riderPhoneLogin" placeholder="Phone (+254...)" required />
+          <input id="riderPinLogin" placeholder="PIN" required />
+          <button type="submit">Login</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="riderApp" class="hidden">
+      <div class="actions" style="margin-bottom:12px;">
+        <span class="badge gold" id="riderNameLabel"></span>
+        <button id="riderLogout" class="secondary">Logout</button>
+      </div>
+
+      <h2 class="section-title">Assigned Deliveries</h2>
+      <section id="assignedJobs" class="grid"></section>
+
+      <h2 class="section-title">Delivery History</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Delivery</th><th>Item</th><th>Status</th><th>Last Updated</th></tr></thead>
+          <tbody id="riderHistoryBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="data/seed.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

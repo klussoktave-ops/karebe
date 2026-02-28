@@ -1,0 +1,129 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin | Karebe</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="admin">
+  <main class="container">
+    <header class="header">
+      <div class="brand">
+        <h1>Admin Console</h1>
+        <p>Catalog, orders, deliveries, analytics.</p>
+      </div>
+      <nav class="nav">
+        <a href="index.html">Catalog</a>
+        <a href="admin.html">Admin</a>
+        <a href="rider.html">Rider</a>
+      </nav>
+    </header>
+
+    <section id="adminLogin" class="card login-card hidden">
+      <div class="card-body">
+        <h2 class="section-title">Secure Login</h2>
+        <form id="adminLoginForm" class="grid">
+          <input id="adminUser" placeholder="Username" required />
+          <input id="adminPass" placeholder="Password" type="password" required />
+          <button type="submit">Login</button>
+        </form>
+        <p class="small">Default: karebe / karebe1234</p>
+      </div>
+    </section>
+
+    <section id="adminApp" class="hidden">
+      <div class="actions" style="margin-bottom:12px;">
+        <button id="adminLogout" class="secondary">Logout</button>
+      </div>
+
+      <div class="grid kpis">
+        <article class="kpi"><h3>Today Revenue</h3><p id="kpiToday">-</p></article>
+        <article class="kpi"><h3>7-Day Revenue</h3><p id="kpiWeek">-</p></article>
+        <article class="kpi"><h3>30-Day Revenue</h3><p id="kpiMonth">-</p></article>
+        <article class="kpi"><h3>Active Deliveries</h3><p id="kpiActive">-</p></article>
+      </div>
+
+      <h2 class="section-title">Insights</h2>
+      <div class="grid">
+        <article class="card"><div class="card-body"><strong>Most Ordered Products</strong><p class="small" id="topProducts"></p></div></article>
+        <article class="card"><div class="card-body"><strong>Rider Performance (Delivered Count)</strong><p class="small" id="riderPerformance"></p></div></article>
+      </div>
+
+      <h2 class="section-title">Add Product</h2>
+      <form id="productForm" class="controls">
+        <input id="productName" placeholder="Product name" required />
+        <select id="productCategory"></select>
+        <input id="productVolume" placeholder="Volume (e.g. 750ml)" required />
+        <input id="productPrice" type="number" min="1" placeholder="Price KES" required />
+        <input id="productStock" type="number" min="0" placeholder="Stock qty" required />
+        <input id="productImage" placeholder="Image URL" />
+        <input id="productDesc" placeholder="Short description" required />
+        <label class="small"><input id="productPopular" type="checkbox" /> Popular</label>
+        <label class="small"><input id="productNew" type="checkbox" /> New Arrival</label>
+        <button type="submit">Save Product</button>
+      </form>
+
+      <h2 class="section-title">Product Catalog</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Category</th><th>Volume</th><th>Price</th><th>Stock</th><th>Stock Toggle</th><th>Delete</th></tr></thead>
+          <tbody id="productsTableBody"></tbody>
+        </table>
+      </div>
+
+      <h2 class="section-title">Rider Management</h2>
+      <form id="riderForm" class="controls">
+        <input id="riderName" placeholder="Rider full name" required />
+        <input id="riderPhone" placeholder="Phone (+254...)" required />
+        <input id="riderPin" placeholder="PIN" required />
+        <button type="submit">Add Rider</button>
+      </form>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Phone</th><th>Status</th></tr></thead>
+          <tbody id="ridersTableBody"></tbody>
+        </table>
+      </div>
+
+      <h2 class="section-title">Log Call Order</h2>
+      <form id="orderForm" class="controls">
+        <select id="orderVariant"></select>
+        <input id="orderQty" type="number" min="1" value="1" required />
+        <input id="orderCustomer" placeholder="Customer phone" required />
+        <select id="orderPayment">
+          <option value="PENDING">Payment Pending</option>
+          <option value="PAID">Paid</option>
+        </select>
+        <button type="submit">Create Order</button>
+      </form>
+
+      <h2 class="section-title">Assign Delivery</h2>
+      <form id="assignForm" class="controls">
+        <select id="assignOrder"></select>
+        <select id="assignRider"></select>
+        <button type="submit">Assign Rider</button>
+      </form>
+
+      <h2 class="section-title">Order Logs</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Order</th><th>Customer</th><th>Item</th><th>Total</th><th>Payment</th><th>Date</th></tr></thead>
+          <tbody id="ordersTableBody"></tbody>
+        </table>
+      </div>
+
+      <h2 class="section-title">Delivery Logs</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Delivery</th><th>Rider</th><th>Customer</th><th>Item</th><th>Status</th><th>Last Update</th></tr></thead>
+          <tbody id="deliveriesTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="data/seed.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
