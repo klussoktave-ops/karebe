@@ -114,6 +114,10 @@
 
   function saveState(state) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (window.supabaseClient) {
+      window.supabaseClient.from('app_state').upsert({ id: 'karebe_mvp_state', state })
+        .then(({ error }) => { if (error) console.error("Supabase sync error:", error); });
+    }
   }
 
   function getBranch(state, branchId) {
@@ -242,6 +246,83 @@
       return (branchSel && branchSel.value) || selectedBranchId(loadState());
     }
 
+    // Google Maps logic for catalog
+    window.initMap = () => {
+      const mapEl = document.getElementById("catalogMap");
+      if (!mapEl || !window.google) return;
+
+      const map = new google.maps.Map(mapEl, {
+        zoom: 11,
+        center: { lat: -1.286389, lng: 36.817223 }, // Default Nairobi
+        mapTypeId: "roadmap",
+        disableDefaultUI: true,
+        zoomControl: true
+      });
+      mapEl.style.display = "block";
+
+      const s = loadState();
+      const bounds = new google.maps.LatLngBounds();
+      s.branches.forEach(b => {
+        if (b.lat && b.lng) {
+          const pos = { lat: b.lat, lng: b.lng };
+          new google.maps.Marker({ position: pos, map, title: b.name || b.location, label: "B" });
+          bounds.extend(pos);
+        }
+      });
+      if (!bounds.isEmpty()) map.fitBounds(bounds);
+    };
+
+    const nearestBtn = document.getElementById("findNearestBranchBtn");
+    if (nearestBtn) {
+      nearestBtn.onclick = () => {
+        if (!navigator.geolocation) return alert("Geolocation is not supported by your browser.");
+        if (!window.google) return alert("Maps API not loaded yet.");
+
+        nearestBtn.textContent = "Locating...";
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const clientLoc = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+            const fresh = loadState();
+            let closestBranch = null;
+            let shortestDist = Infinity;
+
+            fresh.branches.forEach(b => {
+              if (b.lat && b.lng) {
+                const branchLoc = new google.maps.LatLng(b.lat, b.lng);
+                const dist = google.maps.geometry.spherical.computeDistanceBetween(clientLoc, branchLoc);
+                if (dist < shortestDist) {
+                  shortestDist = dist;
+                  closestBranch = b;
+                }
+              }
+            });
+
+            if (closestBranch) {
+              branchSel.value = closestBranch.id;
+              localStorage.setItem(CUSTOMER_BRANCH_KEY, closestBranch.id);
+              draw();
+              alert(`Nearest branch is ${closestBranch.location || closestBranch.name} (${(shortestDist / 1000).toFixed(1)} km away)`);
+            } else {
+              alert("No branches with exact locations set by admin yet.");
+            }
+            nearestBtn.textContent = "📍 Nearest";
+
+            // Save location to profile temporarily for order routing
+            const p = currentProfile(fresh);
+            p.lastLat = pos.coords.latitude;
+            p.lastLng = pos.coords.longitude;
+            saveState(fresh);
+          },
+          (err) => {
+            console.error(err);
+            alert("Could not get location. Please ensure location services are enabled.");
+            nearestBtn.textContent = "📍 Nearest";
+          },
+          { enableHighAccuracy: true }
+        );
+      };
+    }
+
     function currentProfile(stateRef) {
       return getActiveCustomerProfile(stateRef || loadState());
     }
@@ -270,13 +351,12 @@
       const till = getTillForBranch(fresh, branchId);
       cartItems.innerHTML = items.length
         ? items
-            .map(
-              (i) =>
-                `<div class="cart-row"><label><input type="checkbox" data-act="toggle-order-card" data-id="${i.id}" ${
-                  i.selectedForOrderCard ? "checked" : ""
-                } /> ${i.productName} (${i.volume}) x${i.qty}</label><span>${fmtKES(i.lineTotal)}</span><button class="secondary" data-act="remove" data-id="${i.id}">Remove</button></div>`
-            )
-            .join("")
+          .map(
+            (i) =>
+              `<div class="cart-row"><label><input type="checkbox" data-act="toggle-order-card" data-id="${i.id}" ${i.selectedForOrderCard ? "checked" : ""
+              } /> ${i.productName} (${i.volume}) x${i.qty}</label><span>${fmtKES(i.lineTotal)}</span><button class="secondary" data-act="remove" data-id="${i.id}">Remove</button></div>`
+          )
+          .join("")
         : `<p class="small">Your cart is empty for this branch.</p>`;
       cartTotal.textContent = fmtKES(total);
       if (shiftContact) shiftContact.textContent = `On shift: ${contact.label} - ${contact.phone}`;
@@ -286,9 +366,8 @@
           : "No active till configured for this branch.";
       }
       if (customerMeta) {
-        customerMeta.textContent = `${profile.fullName} | ${profile.phone} | ${
-          profile.email || "no email"
-        }`;
+        customerMeta.textContent = `${profile.fullName} | ${profile.phone} | ${profile.email || "no email"
+          }`;
       }
 
       const orderCard = selectedOrderCardItems(profile, branchId);
@@ -296,8 +375,8 @@
       if (orderCardItems) {
         orderCardItems.innerHTML = orderCard.length
           ? orderCard
-              .map((i) => `<div class="row"><span>${i.productName} (${i.volume}) x${i.qty}</span><span>${fmtKES(i.lineTotal)}</span></div>`)
-              .join("")
+            .map((i) => `<div class="row"><span>${i.productName} (${i.volume}) x${i.qty}</span><span>${fmtKES(i.lineTotal)}</span></div>`)
+            .join("")
           : `<p class="small">Select cart rows to build the order card.</p>`;
       }
       if (orderCardTotal) orderCardTotal.textContent = fmtKES(orderCardTotalValue);
@@ -322,6 +401,8 @@
             createdAt: nowISO(),
             createdBy: "customer",
             branchId,
+            customerLat: p.lastLat || null,
+            customerLng: p.lastLng || null,
             items: orderCard.map((i) => ({
               productId: i.productId,
               productName: i.productName,
@@ -369,15 +450,15 @@
       const orders = fresh.orders.filter((o) => o.customerProfileId === profile.id);
       selectableOrders.innerHTML = orders.length
         ? orders
-            .map(
-              (o) =>
-                `<article class="card"><div class="card-body"><div class="row"><strong>${o.id}</strong><span class="badge">${o.paymentMethod || "N/A"}</span></div><p class="small">${dateOnly(
-                  o.createdAt
-                )} | ${o.paymentStatus} | ${fmtKES(o.total)}</p><p class="small">Items: ${o.items
-                  .map((it) => `${it.productName} x${it.qty}`)
-                  .join(", ")}</p></div></article>`
-            )
-            .join("")
+          .map(
+            (o) =>
+              `<article class="card"><div class="card-body"><div class="row"><strong>${o.id}</strong><span class="badge">${o.paymentMethod || "N/A"}</span></div><p class="small">${dateOnly(
+                o.createdAt
+              )} | ${o.paymentStatus} | ${fmtKES(o.total)}</p><p class="small">Items: ${o.items
+                .map((it) => `${it.productName} x${it.qty}`)
+                .join(", ")}</p></div></article>`
+          )
+          .join("")
         : `<p class="small">No orders for this customer profile yet.</p>`;
     }
 
@@ -560,6 +641,47 @@
       location.reload();
     };
 
+    // Google Maps Admin Logic
+    window.initMap = () => {
+      const mapEl = document.getElementById("adminBranchMap");
+      if (!mapEl || !window.google) return;
+      const map = new google.maps.Map(mapEl, {
+        zoom: 12,
+        center: { lat: -1.286389, lng: 36.817223 },
+        mapTypeId: "roadmap"
+      });
+      let marker = null;
+      map.addListener("click", (e) => {
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+        document.getElementById("newBranchLat").value = lat;
+        document.getElementById("newBranchLng").value = lng;
+        if (!marker) marker = new google.maps.Marker({ map });
+        marker.setPosition(e.latLng);
+      });
+    };
+
+    const newBranchForm = document.getElementById("newBranchForm");
+    if (newBranchForm) {
+      newBranchForm.onsubmit = (e) => {
+        e.preventDefault();
+        if (!isSuper) return alert("Only super-admin can create branches.");
+        const fresh = loadState();
+        fresh.branches.push({
+          id: uid("b"),
+          name: document.getElementById("newBranchName").value.trim(),
+          isMain: false,
+          location: document.getElementById("newBranchName").value.trim(),
+          phone: document.getElementById("newBranchPhone").value.trim(),
+          lat: Number(document.getElementById("newBranchLat").value),
+          lng: Number(document.getElementById("newBranchLng").value),
+          onShiftUserId: null
+        });
+        saveState(fresh);
+        location.reload();
+      };
+    }
+
     const variants = getAllVariants(state);
     document.getElementById("kpiToday").textContent = fmtKES(
       state.orders.filter((o) => dateOnly(o.createdAt) === dateOnly(nowISO())).reduce((s, o) => s + o.total, 0)
@@ -672,15 +794,39 @@
       location.reload();
     };
 
-    document.getElementById("productForm").onsubmit = (e) => {
+    document.getElementById("productForm").onsubmit = async (e) => {
       e.preventDefault();
+      const btn = document.querySelector('#productForm button[type="submit"]');
+      const originalText = btn.textContent;
+
+      let imageUrl = "https://images.unsplash.com/photo-1516594798947-e65505dbb29d?auto=format&fit=crop&w=700&q=70";
+      const fileInput = document.getElementById("productImageFile");
+      if (fileInput && fileInput.files.length > 0 && window.supabaseClient) {
+        btn.textContent = "Uploading Image...";
+        btn.disabled = true;
+        const file = fileInput.files[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${uid('img')}.${fileExt}`;
+        const filePath = `products/${fileName}`;
+        const { error } = await window.supabaseClient.storage.from('product_images').upload(filePath, file);
+        if (!error) {
+          const { data } = window.supabaseClient.storage.from('product_images').getPublicUrl(filePath);
+          if (data && data.publicUrl) imageUrl = data.publicUrl;
+        } else {
+          console.error("Upload error:", error);
+          alert("Image upload failed, using default.");
+        }
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+
       const fresh = loadState();
       fresh.products.push({
         id: uid("p"),
         name: document.getElementById("productName").value.trim(),
         category: document.getElementById("productCategory").value,
         description: document.getElementById("productDesc").value.trim(),
-        image: document.getElementById("productImage").value.trim() || "https://images.unsplash.com/photo-1516594798947-e65505dbb29d?auto=format&fit=crop&w=700&q=70",
+        image: imageUrl,
         popular: document.getElementById("productPopular").checked,
         newArrival: document.getElementById("productNew").checked,
         variants: [{ id: uid("v"), volume: document.getElementById("productVolume").value.trim(), price: Number(document.getElementById("productPrice").value), stock: Number(document.getElementById("productStock").value) }]
@@ -868,6 +1014,39 @@
     }
     document.getElementById("riderNameLabel").textContent = rider.name;
 
+    // Google Maps logic for rider
+    window.initMap = () => {
+      const mapEl = document.getElementById("riderMap");
+      if (!mapEl || !window.google) return;
+      const map = new google.maps.Map(mapEl, {
+        zoom: 12,
+        center: { lat: -1.286389, lng: 36.817223 },
+        mapTypeId: "roadmap"
+      });
+      mapEl.style.display = "block";
+
+      const s = loadState();
+      const bounds = new google.maps.LatLngBounds();
+      const mine = s.deliveries.filter((d) => d.riderId === riderId && d.status !== "DELIVERED");
+      let hasPins = false;
+
+      mine.forEach(d => {
+        const order = s.orders.find((o) => o.id === d.orderId);
+        if (order && order.customerLat && order.customerLng) {
+          const pos = { lat: order.customerLat, lng: order.customerLng };
+          new google.maps.Marker({ position: pos, map, title: `Order ${order.id}`, label: "D" });
+          bounds.extend(pos);
+          hasPins = true;
+        }
+      });
+
+      if (hasPins && !bounds.isEmpty()) {
+        map.fitBounds(bounds);
+      } else {
+        mapEl.style.display = "none";
+      }
+    };
+
     const statuses = state.taxonomies.deliveryStatuses || ["ASSIGNED", "PICKED_UP", "ON_THE_WAY", "DELIVERED"];
     const nextStatus = (s) => {
       const idx = statuses.indexOf(s);
@@ -905,8 +1084,25 @@
       }).join("") || `<tr><td colspan="4">No history.</td></tr>`;
   }
 
-  const page = document.body.dataset.page;
-  if (page === "customer") renderCustomer();
-  if (page === "admin") renderAdmin();
-  if (page === "rider") renderRider();
+  async function initApp() {
+    if (window.supabaseClient) {
+      try {
+        const { data, error } = await window.supabaseClient.from('app_state').select('state').eq('id', 'karebe_mvp_state').single();
+        if (data && data.state) {
+          const seed = clone(window.KAREBE_SEED || {});
+          const merged = reconcile(data.state, seed);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        }
+      } catch (err) {
+        console.error("Supabase load error:", err);
+      }
+    }
+
+    const page = document.body.dataset.page;
+    if (page === "customer") renderCustomer();
+    if (page === "admin") renderAdmin();
+    if (page === "rider") renderRider();
+  }
+
+  initApp();
 })();

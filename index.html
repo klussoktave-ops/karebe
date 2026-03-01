@@ -1,5 +1,6 @@
 ﻿<!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,6 +8,7 @@
   <title>Karebe Wines & Spirits</title>
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
+
 <body data-page="customer">
   <main class="container">
     <header class="header">
@@ -21,8 +23,12 @@
       </nav>
     </header>
 
-    <section class="controls">
-      <select id="branchSelect"></select>
+    <section class="controls" style="align-items: center">
+      <div style="display:flex; gap:8px; width:100%; max-width:100%;">
+        <select id="branchSelect" style="flex:1"></select>
+        <button id="findNearestBranchBtn" title="Find nearest branch" style="padding: 0 12px; white-space:nowrap;">📍
+          Nearest</button>
+      </div>
       <select id="customerProfileSelect"></select>
       <select id="categoryFilter"></select>
       <input id="maxPrice" type="number" min="0" placeholder="Max price (KES)" value="100000" />
@@ -39,13 +45,14 @@
     <p id="activeTill" class="small"></p>
     <p id="customerMeta" class="small"></p>
 
+    <div id="catalogMap"
+      style="width: 100%; height: 200px; border-radius: 8px; margin-bottom: 24px; background: #eaeaea; display:none;">
+    </div>
+
     <section class="card promo">
       <div class="promo-grid">
-        <img
-          src="https://images.pexels.com/photos/1267696/pexels-photo-1267696.jpeg?auto=compress&cs=tinysrgb&w=900"
-          alt="Fresh keg service at Karebe"
-          loading="lazy"
-        />
+        <img src="https://images.pexels.com/photos/1267696/pexels-photo-1267696.jpeg?auto=compress&cs=tinysrgb&w=900"
+          alt="Fresh keg service at Karebe" loading="lazy" />
         <div class="promo-body">
           <span class="badge gold">Keg Corner</span>
           <h2>Keg is now available at KES 80</h2>
@@ -95,10 +102,17 @@
       <div id="selectableOrders" class="grid"></div>
     </section>
 
-    <p class="footer-note">Ordering opens your phone dialer instantly. Confirm details during call. For very low bandwidth, images lazy-load automatically.</p>
+    <p class="footer-note">Ordering opens your phone dialer instantly. Confirm details during call. For very low
+      bandwidth, images lazy-load automatically.</p>
   </main>
 
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places,geometry&callback=initMap"
+    async defer></script>
   <script src="data/seed.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase.js"></script>
   <script src="assets/app.js"></script>
 </body>
+
 </html>

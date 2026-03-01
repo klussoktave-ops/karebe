@@ -1,11 +1,13 @@
 ﻿<!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin | Karebe</title>
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
+
 <body data-page="admin">
   <main class="container">
     <header class="header">
@@ -44,147 +46,245 @@
         <select id="shiftBranch"></select>
         <select id="shiftUser"></select>
         <button type="submit">Update On-Shift Contact</button>
-      </form>
-      <p id="shiftCurrent" class="small"></p>
+        <p id="shiftCurrent" class="small"></p>
 
-      <section class="super-only">
-        <h2 class="section-title">Branch Managers (Super Admin)</h2>
-        <form id="managerForm" class="controls">
-          <input id="managerName" placeholder="Manager full name" required />
-          <input id="managerUsername" placeholder="Username" required />
-          <input id="managerPassword" type="password" placeholder="Password" required />
-          <input id="managerPhone" placeholder="Phone (+254...)" required />
-          <select id="managerBranch"></select>
-          <button type="submit">Add Branch Admin</button>
+        <section class="super-only">
+          <h2 class="section-title">Branch Map Management (Super Admin)</h2>
+          <p class="small" style="margin-bottom:8px;">Click on the map to drop a pin for a new branch, then save it.</p>
+          <div id="adminBranchMap"
+            style="width: 100%; height: 300px; border-radius: 8px; margin-bottom: 12px; background: #eaeaea;"></div>
+          <form id="newBranchForm" class="controls">
+            <input id="newBranchName" placeholder="Branch Name (e.g. Westlands)" required />
+            <input id="newBranchPhone" placeholder="Phone (+254...)" required />
+            <input id="newBranchLat" placeholder="Latitude" readonly required style="max-width:120px;" />
+            <input id="newBranchLng" placeholder="Longitude" readonly required style="max-width:120px;" />
+            <button type="submit">Create Branch</button>
+          </form>
+        </section>
+
+        <section class="super-only">
+          <h2 class="section-title">Branch Managers (Super Admin)</h2>
+          <form id="managerForm" class="controls">
+            <input id="managerName" placeholder="Manager full name" required />
+            <input id="managerUsername" placeholder="Username" required />
+            <input id="managerPassword" type="password" placeholder="Password" required />
+            <input id="managerPhone" placeholder="Phone (+254...)" required />
+            <select id="managerBranch"></select>
+            <button type="submit">Add Branch Admin</button>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Branch</th>
+                </tr>
+              </thead>
+              <tbody id="managerTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <h2 class="section-title">Taxonomies</h2>
+        <form id="taxonomyForm" class="controls">
+          <select id="taxonomyGroup"></select>
+          <input id="taxonomyValue" placeholder="Add taxonomy value" required />
+          <button type="submit">Add Taxonomy Value</button>
+        </form>
+        <div id="taxonomyList" class="controls"></div>
+
+        <section class="super-only">
+          <h2 class="section-title">Till Infrastructure (Daraja)</h2>
+          <form id="tillForm" class="controls">
+            <select id="tillBranch"></select>
+            <input id="tillNumber" placeholder="Till Number" required />
+            <input id="tillShortCode" placeholder="Business ShortCode" required />
+            <input id="tillAccountRef" placeholder="Account Reference" required />
+            <button type="submit">Save Till</button>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Branch</th>
+                  <th>Till</th>
+                  <th>ShortCode</th>
+                  <th>Reference</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tillsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <h2 class="section-title">Customer Profiles</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Branch</th>
+                <th>Cart Items</th>
+                <th>Orders</th>
+              </tr>
+            </thead>
+            <tbody id="customerProfilesBody"></tbody>
+          </table>
+        </div>
+
+        <div class="grid kpis">
+          <article class="kpi">
+            <h3>Today Revenue</h3>
+            <p id="kpiToday">-</p>
+          </article>
+          <article class="kpi">
+            <h3>7-Day Revenue</h3>
+            <p id="kpiWeek">-</p>
+          </article>
+          <article class="kpi">
+            <h3>30-Day Revenue</h3>
+            <p id="kpiMonth">-</p>
+          </article>
+          <article class="kpi">
+            <h3>Active Deliveries</h3>
+            <p id="kpiActive">-</p>
+          </article>
+        </div>
+
+        <h2 class="section-title">Insights</h2>
+        <div class="grid">
+          <article class="card">
+            <div class="card-body"><strong>Most Ordered Products</strong>
+              <p class="small" id="topProducts"></p>
+            </div>
+          </article>
+          <article class="card">
+            <div class="card-body"><strong>Rider Performance (Delivered Count)</strong>
+              <p class="small" id="riderPerformance"></p>
+            </div>
+          </article>
+        </div>
+
+        <h2 class="section-title">Add Product</h2>
+        <form id="productForm" class="controls">
+          <input id="productName" placeholder="Product name" required />
+          <select id="productCategory"></select>
+          <input id="productVolume" placeholder="Volume (e.g. 750ml)" required />
+          <input id="productPrice" type="number" min="1" placeholder="Price KES" required />
+          <input id="productStock" type="number" min="0" placeholder="Stock qty" required />
+          <label class="small" style="display:block;margin-top:4px;">Product Image <span
+              style="color:var(--text-light);">(leave empty for default)</span></label>
+          <input id="productImageFile" type="file" accept="image/*" />
+          <input id="productDesc" placeholder="Short description" required />
+          <label class="small"><input id="productPopular" type="checkbox" /> Popular</label>
+          <label class="small"><input id="productNew" type="checkbox" /> New Arrival</label>
+          <button type="submit">Save Product</button>
+        </form>
+
+        <h2 class="section-title">Product Catalog</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Volume</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Stock Toggle</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody"></tbody>
+          </table>
+        </div>
+
+        <h2 class="section-title">Rider Management</h2>
+        <form id="riderForm" class="controls">
+          <input id="riderName" placeholder="Rider full name" required />
+          <input id="riderPhone" placeholder="Phone (+254...)" required />
+          <input id="riderPin" placeholder="PIN" required />
+          <button type="submit">Add Rider</button>
         </form>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Branch</th></tr></thead>
-            <tbody id="managerTableBody"></tbody>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="ridersTableBody"></tbody>
           </table>
         </div>
-      </section>
 
-      <h2 class="section-title">Taxonomies</h2>
-      <form id="taxonomyForm" class="controls">
-        <select id="taxonomyGroup"></select>
-        <input id="taxonomyValue" placeholder="Add taxonomy value" required />
-        <button type="submit">Add Taxonomy Value</button>
-      </form>
-      <div id="taxonomyList" class="controls"></div>
-
-      <section class="super-only">
-        <h2 class="section-title">Till Infrastructure (Daraja)</h2>
-        <form id="tillForm" class="controls">
-          <select id="tillBranch"></select>
-          <input id="tillNumber" placeholder="Till Number" required />
-          <input id="tillShortCode" placeholder="Business ShortCode" required />
-          <input id="tillAccountRef" placeholder="Account Reference" required />
-          <button type="submit">Save Till</button>
+        <h2 class="section-title">Log Call Order</h2>
+        <form id="orderForm" class="controls">
+          <select id="orderVariant"></select>
+          <input id="orderQty" type="number" min="1" value="1" required />
+          <input id="orderCustomer" placeholder="Customer phone" required />
+          <select id="orderPayment">
+            <option value="PENDING">Payment Pending</option>
+            <option value="PAID">Paid</option>
+          </select>
+          <button type="submit">Create Order</button>
         </form>
+
+        <h2 class="section-title">Assign Delivery</h2>
+        <form id="assignForm" class="controls">
+          <select id="assignOrder"></select>
+          <select id="assignRider"></select>
+          <button type="submit">Assign Rider</button>
+        </form>
+
+        <h2 class="section-title">Order Logs</h2>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Branch</th><th>Till</th><th>ShortCode</th><th>Reference</th><th>Status</th></tr></thead>
-            <tbody id="tillsTableBody"></tbody>
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Customer</th>
+                <th>Item</th>
+                <th>Total</th>
+                <th>Payment</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody"></tbody>
           </table>
         </div>
-      </section>
 
-      <h2 class="section-title">Customer Profiles</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Name</th><th>Phone</th><th>Branch</th><th>Cart Items</th><th>Orders</th></tr></thead>
-          <tbody id="customerProfilesBody"></tbody>
-        </table>
-      </div>
-
-      <div class="grid kpis">
-        <article class="kpi"><h3>Today Revenue</h3><p id="kpiToday">-</p></article>
-        <article class="kpi"><h3>7-Day Revenue</h3><p id="kpiWeek">-</p></article>
-        <article class="kpi"><h3>30-Day Revenue</h3><p id="kpiMonth">-</p></article>
-        <article class="kpi"><h3>Active Deliveries</h3><p id="kpiActive">-</p></article>
-      </div>
-
-      <h2 class="section-title">Insights</h2>
-      <div class="grid">
-        <article class="card"><div class="card-body"><strong>Most Ordered Products</strong><p class="small" id="topProducts"></p></div></article>
-        <article class="card"><div class="card-body"><strong>Rider Performance (Delivered Count)</strong><p class="small" id="riderPerformance"></p></div></article>
-      </div>
-
-      <h2 class="section-title">Add Product</h2>
-      <form id="productForm" class="controls">
-        <input id="productName" placeholder="Product name" required />
-        <select id="productCategory"></select>
-        <input id="productVolume" placeholder="Volume (e.g. 750ml)" required />
-        <input id="productPrice" type="number" min="1" placeholder="Price KES" required />
-        <input id="productStock" type="number" min="0" placeholder="Stock qty" required />
-        <input id="productImage" placeholder="Image URL" />
-        <input id="productDesc" placeholder="Short description" required />
-        <label class="small"><input id="productPopular" type="checkbox" /> Popular</label>
-        <label class="small"><input id="productNew" type="checkbox" /> New Arrival</label>
-        <button type="submit">Save Product</button>
-      </form>
-
-      <h2 class="section-title">Product Catalog</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Name</th><th>Category</th><th>Volume</th><th>Price</th><th>Stock</th><th>Stock Toggle</th><th>Delete</th></tr></thead>
-          <tbody id="productsTableBody"></tbody>
-        </table>
-      </div>
-
-      <h2 class="section-title">Rider Management</h2>
-      <form id="riderForm" class="controls">
-        <input id="riderName" placeholder="Rider full name" required />
-        <input id="riderPhone" placeholder="Phone (+254...)" required />
-        <input id="riderPin" placeholder="PIN" required />
-        <button type="submit">Add Rider</button>
-      </form>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Name</th><th>Phone</th><th>Status</th></tr></thead>
-          <tbody id="ridersTableBody"></tbody>
-        </table>
-      </div>
-
-      <h2 class="section-title">Log Call Order</h2>
-      <form id="orderForm" class="controls">
-        <select id="orderVariant"></select>
-        <input id="orderQty" type="number" min="1" value="1" required />
-        <input id="orderCustomer" placeholder="Customer phone" required />
-        <select id="orderPayment">
-          <option value="PENDING">Payment Pending</option>
-          <option value="PAID">Paid</option>
-        </select>
-        <button type="submit">Create Order</button>
-      </form>
-
-      <h2 class="section-title">Assign Delivery</h2>
-      <form id="assignForm" class="controls">
-        <select id="assignOrder"></select>
-        <select id="assignRider"></select>
-        <button type="submit">Assign Rider</button>
-      </form>
-
-      <h2 class="section-title">Order Logs</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Order</th><th>Customer</th><th>Item</th><th>Total</th><th>Payment</th><th>Date</th></tr></thead>
-          <tbody id="ordersTableBody"></tbody>
-        </table>
-      </div>
-
-      <h2 class="section-title">Delivery Logs</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Delivery</th><th>Rider</th><th>Customer</th><th>Item</th><th>Status</th><th>Last Update</th></tr></thead>
-          <tbody id="deliveriesTableBody"></tbody>
-        </table>
-      </div>
+        <h2 class="section-title">Delivery Logs</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Delivery</th>
+                <th>Rider</th>
+                <th>Customer</th>
+                <th>Item</th>
+                <th>Status</th>
+                <th>Last Update</th>
+              </tr>
+            </thead>
+            <tbody id="deliveriesTableBody"></tbody>
+          </table>
+        </div>
     </section>
   </main>
 
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places,geometry&callback=initMap"
+    async defer></script>
   <script src="data/seed.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase.js"></script>
   <script src="assets/app.js"></script>
 </body>
+
 </html>

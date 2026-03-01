@@ -1,11 +1,13 @@
 ﻿<!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rider | Karebe</title>
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
+
 <body data-page="rider">
   <main class="container">
     <header class="header">
@@ -38,19 +40,35 @@
       </div>
 
       <h2 class="section-title">Assigned Deliveries</h2>
+      <div id="riderMap"
+        style="width: 100%; height: 300px; border-radius: 8px; margin-bottom: 24px; background: #eaeaea; display:none;">
+      </div>
       <section id="assignedJobs" class="grid"></section>
 
       <h2 class="section-title">Delivery History</h2>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Delivery</th><th>Item</th><th>Status</th><th>Last Updated</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Delivery</th>
+              <th>Item</th>
+              <th>Status</th>
+              <th>Last Updated</th>
+            </tr>
+          </thead>
           <tbody id="riderHistoryBody"></tbody>
         </table>
       </div>
     </section>
   </main>
 
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places,geometry&callback=initMap"
+    async defer></script>
   <script src="data/seed.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase.js"></script>
   <script src="assets/app.js"></script>
 </body>
+
 </html>
