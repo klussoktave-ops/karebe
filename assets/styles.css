@@ -320,6 +320,35 @@ body[data-page="admin"] .kpi {
   white-space: nowrap;
 }
 
+.admin-sync-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #d9c7b4;
+  background: #fff7ef;
+  font-weight: 600;
+}
+
+.admin-sync-status.ok {
+  color: #2f7e52;
+  border-color: #beddc8;
+  background: #ecfaf2;
+}
+
+.admin-sync-status.warn {
+  color: #8a601b;
+  border-color: #e9d7ac;
+  background: #fff8e8;
+}
+
+.admin-sync-status.danger {
+  color: #9f2d2d;
+  border-color: #efc1c1;
+  background: #fff1f1;
+}
+
 .admin-map {
   width: 100%;
   height: 300px;

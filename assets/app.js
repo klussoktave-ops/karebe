@@ -105,11 +105,42 @@
     return merged;
   }
 
-  function saveState(state) {
+  function logClient(level, scope, message, payload) {
+    const tag = `[KAREBE:${scope}] ${message}`;
+    if (payload !== undefined) {
+      (console[level] || console.log)(tag, payload);
+    } else {
+      (console[level] || console.log)(tag);
+    }
+  }
+
+  function adminSyncLabel(type, message) {
+    const el = document.getElementById("adminSyncStatus");
+    if (!el) return;
+    el.textContent = message;
+    el.classList.remove("ok", "warn", "danger");
+    if (type) el.classList.add(type);
+  }
+
+  async function saveState(state, source) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    if (window.supabaseClient) {
-      window.supabaseClient.from('app_state').upsert({ id: 'karebe_mvp_state', state })
-        .then(({ error }) => { if (error) console.error("Supabase sync error:", error); });
+    const ctx = source || "state_update";
+    if (!window.supabaseClient) {
+      logClient("warn", "SYNC", "Supabase client unavailable, persisted locally only.", { source: ctx });
+      return { ok: false, localOnly: true, error: new Error("Supabase client unavailable") };
+    }
+    logClient("info", "SYNC", "Push started.", { source: ctx });
+    try {
+      const { error } = await window.supabaseClient.from("app_state").upsert({ id: "karebe_mvp_state", state });
+      if (error) {
+        logClient("error", "SYNC", "Push failed.", { source: ctx, error });
+        return { ok: false, localOnly: false, error };
+      }
+      logClient("info", "SYNC", "Push success.", { source: ctx });
+      return { ok: true, localOnly: false, error: null };
+    } catch (error) {
+      logClient("error", "SYNC", "Push failed (exception).", { source: ctx, error });
+      return { ok: false, localOnly: false, error };
     }
   }
 
@@ -625,6 +656,7 @@
     loginWrap.classList.add("hidden");
     appWrap.classList.remove("hidden");
     const isSuper = session.role === "super-admin";
+    adminSyncLabel("ok", "Sync ready");
     const identity = document.getElementById("adminIdentity");
     if (identity) identity.textContent = `${session.name || session.username} (${session.role})`;
     document.querySelectorAll(".super-only").forEach((el) => el.classList.toggle("hidden", !isSuper));
@@ -633,6 +665,26 @@
       sessionStorage.removeItem(ADMIN_SESSION_KEY);
       location.reload();
     };
+
+    async function persistAdminState(fresh, actionName, options) {
+      const opts = options || {};
+      const reload = opts.reload !== false;
+      const onSuccess = typeof opts.onSuccess === "function" ? opts.onSuccess : null;
+      adminSyncLabel("warn", `Syncing ${actionName}...`);
+      const result = await saveState(fresh, `admin:${actionName}`);
+      if (!result.ok) {
+        const reason = result.error && result.error.message ? result.error.message : "Unknown sync failure";
+        adminSyncLabel("danger", `Sync failed: ${actionName}`);
+        alert(`Saved locally, but Supabase sync failed for "${actionName}". Check console logs.`);
+        logClient("error", "ADMIN", `Action failed remote sync: ${actionName}`, { reason });
+        return false;
+      }
+      adminSyncLabel("ok", `Synced: ${actionName}`);
+      logClient("info", "ADMIN", `Action synced: ${actionName}`);
+      if (onSuccess) onSuccess();
+      if (reload) location.reload();
+      return true;
+    }
 
     // Google Maps Admin Logic
     window.initMap = () => {
@@ -656,7 +708,7 @@
 
     const newBranchForm = document.getElementById("newBranchForm");
     if (newBranchForm) {
-      newBranchForm.onsubmit = (e) => {
+      newBranchForm.onsubmit = async (e) => {
         e.preventDefault();
         if (!isSuper) return alert("Only super-admin can create branches.");
         const fresh = loadState();
@@ -670,8 +722,7 @@
           lng: Number(document.getElementById("newBranchLng").value),
           onShiftUserId: null
         });
-        saveState(fresh);
-        location.reload();
+        await persistAdminState(fresh, "create_branch");
       };
     }
 
@@ -732,7 +783,7 @@
     }
     const tillForm = document.getElementById("tillForm");
     if (tillForm) {
-      tillForm.onsubmit = (e) => {
+      tillForm.onsubmit = async (e) => {
         e.preventDefault();
         if (!isSuper) return alert("Only super-admin can manage tills.");
         const fresh = loadState();
@@ -758,8 +809,7 @@
           till.accountReference = accountReference;
           till.active = true;
         }
-        saveState(fresh);
-        location.reload();
+        await persistAdminState(fresh, "save_till");
       };
     }
 
@@ -777,16 +827,23 @@
         })
         .join("") || `<tr><td colspan="7">No products.</td></tr>`;
 
-    document.getElementById("productsTableBody").onclick = (e) => {
+    document.getElementById("productsTableBody").onclick = async (e) => {
       const btn = e.target.closest("button");
       if (!btn) return;
       const fresh = loadState();
       const p = fresh.products.find((x) => x.id === btn.dataset.id);
       if (!p) return;
-      if (btn.dataset.act === "stock") p.variants.forEach((v) => (v.stock = v.stock > 0 ? 0 : 10));
-      if (btn.dataset.act === "del") fresh.products = fresh.products.filter((x) => x.id !== btn.dataset.id);
-      saveState(fresh);
-      location.reload();
+      let actionName = "";
+      if (btn.dataset.act === "stock") {
+        p.variants.forEach((v) => (v.stock = v.stock > 0 ? 0 : 10));
+        actionName = "toggle_product_stock";
+      }
+      if (btn.dataset.act === "del") {
+        fresh.products = fresh.products.filter((x) => x.id !== btn.dataset.id);
+        actionName = "delete_product";
+      }
+      if (!actionName) return;
+      await persistAdminState(fresh, actionName);
     };
 
     document.getElementById("productForm").onsubmit = async (e) => {
@@ -830,25 +887,23 @@
       if (newCategory && !fresh.categories.includes(newCategory)) {
         fresh.categories.push(newCategory);
       }
-      saveState(fresh);
-      location.reload();
+      await persistAdminState(fresh, "create_product");
     };
 
     document.getElementById("ridersTableBody").innerHTML =
       state.riders.map((r) => `<tr><td>${r.name}</td><td>${r.phone}</td><td>${r.active ? "Active" : "Inactive"}</td></tr>`).join("") || `<tr><td colspan="3">No riders.</td></tr>`;
-    document.getElementById("riderForm").onsubmit = (e) => {
+    document.getElementById("riderForm").onsubmit = async (e) => {
       e.preventDefault();
       const fresh = loadState();
       fresh.riders.push({ id: uid("r"), name: document.getElementById("riderName").value.trim(), phone: document.getElementById("riderPhone").value.trim(), pin: document.getElementById("riderPin").value.trim(), active: true });
-      saveState(fresh);
-      location.reload();
+      await persistAdminState(fresh, "create_rider");
     };
 
     const orderVariant = document.getElementById("orderVariant");
     orderVariant.innerHTML = variants.map((row) => `<option value="${row.product.id}|${row.variant.id}">${row.product.name} - ${row.variant.volume} (${fmtKES(row.variant.price)})</option>`).join("");
     const paymentSel = document.getElementById("orderPayment");
     paymentSel.innerHTML = PAYMENT_STATUSES.map((p) => `<option value="${p}">${p.replaceAll("_", " ")}</option>`).join("");
-    document.getElementById("orderForm").onsubmit = (e) => {
+    document.getElementById("orderForm").onsubmit = async (e) => {
       e.preventDefault();
       const fresh = loadState();
       const [pId, vId] = orderVariant.value.split("|");
@@ -862,14 +917,13 @@
       const total = qty * variant.price;
       variant.stock -= qty;
       fresh.orders.push({ id: uid("o"), customerPhone, source: "CALL", paymentStatus, status: "CONFIRMED", total, createdAt: nowISO(), createdBy: session.username, branchId: session.branchId, items: [{ productId: prod.id, productName: prod.name, variantId: variant.id, volume: variant.volume, qty, unitPrice: variant.price, lineTotal: total }] });
-      saveState(fresh);
-      location.reload();
+      await persistAdminState(fresh, "create_call_order");
     };
 
     document.getElementById("assignRider").innerHTML = state.riders.map((r) => `<option value="${r.id}">${r.name}</option>`).join("");
     const assigned = new Set(state.deliveries.map((d) => d.orderId));
     document.getElementById("assignOrder").innerHTML = state.orders.filter((o) => !assigned.has(o.id)).map((o) => `<option value="${o.id}">${o.id} - ${fmtKES(o.total)} - ${o.customerPhone}</option>`).join("");
-    document.getElementById("assignForm").onsubmit = (e) => {
+    document.getElementById("assignForm").onsubmit = async (e) => {
       e.preventDefault();
       const orderId = document.getElementById("assignOrder").value;
       const riderId = document.getElementById("assignRider").value;
@@ -877,8 +931,7 @@
       const fresh = loadState();
       const start = DELIVERY_STATUSES[0];
       fresh.deliveries.push({ id: uid("d"), orderId, riderId, status: start, timeline: [{ status: start, at: nowISO() }] });
-      saveState(fresh);
-      location.reload();
+      await persistAdminState(fresh, "assign_delivery");
     };
 
     document.getElementById("ordersTableBody").innerHTML =
@@ -909,7 +962,7 @@
       };
       shiftBranch.onchange = drawShiftUsers;
       drawShiftUsers();
-      document.getElementById("shiftForm").onsubmit = (e) => {
+      document.getElementById("shiftForm").onsubmit = async (e) => {
         e.preventDefault();
         const fresh = loadState();
         const branch = fresh.branches.find((b) => b.id === shiftBranch.value);
@@ -917,9 +970,13 @@
         branch.onShiftUserId = shiftUser.value;
         const user = fresh.users.find((u) => u.id === shiftUser.value);
         if (user && user.phone) branch.phone = user.phone;
-        saveState(fresh);
-        drawShiftUsers();
-        alert("Shift updated.");
+        await persistAdminState(fresh, "update_shift_contact", {
+          reload: false,
+          onSuccess: () => {
+            drawShiftUsers();
+            alert("Shift updated.");
+          }
+        });
       };
     }
 
@@ -936,16 +993,20 @@
         }).join("");
       };
       drawManagers();
-      managerForm.onsubmit = (e) => {
+      managerForm.onsubmit = async (e) => {
         e.preventDefault();
         if (!isSuper) return alert("Only super-admin can add managers.");
         const fresh = loadState();
         const username = document.getElementById("managerUsername").value.trim();
         if (fresh.users.find((u) => u.username === username)) return alert("Username exists.");
         fresh.users.push({ id: uid("u"), name: document.getElementById("managerName").value.trim(), username, password: document.getElementById("managerPassword").value.trim(), role: "admin", phone: document.getElementById("managerPhone").value.trim(), branchId: managerBranch.value, active: true });
-        saveState(fresh);
-        managerForm.reset();
-        drawManagers();
+        await persistAdminState(fresh, "create_branch_admin", {
+          reload: false,
+          onSuccess: () => {
+            managerForm.reset();
+            drawManagers();
+          }
+        });
       };
     }
   }
@@ -1059,15 +1120,24 @@
   async function initApp() {
     if (window.supabaseClient) {
       try {
+        logClient("info", "INIT", "Loading remote state from Supabase...");
         const { data, error } = await window.supabaseClient.from('app_state').select('state').eq('id', 'karebe_mvp_state').single();
+        if (error) {
+          logClient("warn", "INIT", "Remote state load returned error; using local/seed fallback.", error);
+        }
         if (data && data.state) {
           const seed = clone(window.KAREBE_SEED || {});
           const merged = reconcile(data.state, seed);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+          logClient("info", "INIT", "Remote state loaded and reconciled.");
+        } else {
+          logClient("info", "INIT", "No remote state found; using local/seed state.");
         }
       } catch (err) {
-        console.error("Supabase load error:", err);
+        logClient("error", "INIT", "Remote state load failed; using local/seed fallback.", err);
       }
+    } else {
+      logClient("warn", "INIT", "Supabase client not available; running local-only.");
     }
 
     const page = document.body.dataset.page;
