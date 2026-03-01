@@ -1,0 +1,8 @@
+{
+  "name": "karebe",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test tests/integration/frontend-supabase-sync.test.cjs"
+  }
+}

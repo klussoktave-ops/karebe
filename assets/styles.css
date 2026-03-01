@@ -367,6 +367,35 @@ body[data-page="admin"] .kpi {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
+.admin-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.admin-tab {
+  border: 1px solid #d7c5b4;
+  background: #fff;
+  color: #6f5643;
+  border-radius: 999px;
+  padding: 9px 12px;
+  font-weight: 700;
+}
+
+.admin-tab.active {
+  background: linear-gradient(140deg, #e59462, #d8754f);
+  color: #fff;
+  border-color: transparent;
+}
+
+.admin-tab-panel {
+  display: none;
+}
+
+.admin-tab-panel.active {
+  display: block;
+}
+
 body[data-page="admin"] .section-title {
   margin-top: 0;
   color: #b86f3f;
@@ -412,6 +441,9 @@ body[data-page="admin"] td {
   }
   .admin-panel .card-body {
     padding: 12px;
+  }
+  .admin-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .admin-map {
     height: 220px;

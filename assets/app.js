@@ -122,6 +122,43 @@
     if (type) el.classList.add(type);
   }
 
+  function setupAdminTabs(isSuper) {
+    const tabsWrap = document.getElementById("adminTabs");
+    if (!tabsWrap) return;
+    const tabs = Array.from(tabsWrap.querySelectorAll(".admin-tab"));
+    const panels = Array.from(document.querySelectorAll(".admin-tab-panel"));
+    const storageKey = "karebe_admin_tab";
+
+    const visibleTabs = tabs.filter((tab) => {
+      if (tab.dataset.tab !== "system") return true;
+      return isSuper;
+    });
+    tabs.forEach((tab) => {
+      tab.classList.toggle("hidden", !visibleTabs.includes(tab));
+    });
+
+    const hasPanelForTab = (tabName) =>
+      panels.some((panel) => panel.dataset.panel === tabName && !(panel.classList.contains("super-only") && !isSuper));
+
+    const applyTab = (tabName) => {
+      const target = hasPanelForTab(tabName) ? tabName : visibleTabs[0] ? visibleTabs[0].dataset.tab : "operations";
+      tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === target));
+      panels.forEach((panel) => {
+        const match = panel.dataset.panel === target;
+        panel.classList.toggle("active", match);
+      });
+      sessionStorage.setItem(storageKey, target);
+      logClient("info", "ADMIN", "Switched dashboard tab.", { tab: target });
+    };
+
+    visibleTabs.forEach((tab) => {
+      tab.onclick = () => applyTab(tab.dataset.tab);
+    });
+
+    const initial = sessionStorage.getItem(storageKey) || "operations";
+    applyTab(initial);
+  }
+
   async function saveState(state, source) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     const ctx = source || "state_update";
@@ -657,6 +694,7 @@
     appWrap.classList.remove("hidden");
     const isSuper = session.role === "super-admin";
     adminSyncLabel("ok", "Sync ready");
+    setupAdminTabs(isSuper);
     const identity = document.getElementById("adminIdentity");
     if (identity) identity.textContent = `${session.name || session.username} (${session.role})`;
     document.querySelectorAll(".super-only").forEach((el) => el.classList.toggle("hidden", !isSuper));
@@ -1144,6 +1182,15 @@
     if (page === "customer") renderCustomer();
     if (page === "admin") renderAdmin();
     if (page === "rider") renderRider();
+  }
+
+  if (window.__KAREBE_ENABLE_TEST_API__) {
+    window.__KAREBE_TEST_API = {
+      reconcile,
+      loadState,
+      saveState,
+      initApp
+    };
   }
 
   initApp();

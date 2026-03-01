@@ -48,6 +48,18 @@
 
       <section class="card admin-panel">
         <div class="card-body">
+          <nav class="admin-tabs" id="adminTabs">
+            <button type="button" class="admin-tab active" data-tab="operations">Operations</button>
+            <button type="button" class="admin-tab" data-tab="catalog">Catalog</button>
+            <button type="button" class="admin-tab" data-tab="delivery">Delivery</button>
+            <button type="button" class="admin-tab" data-tab="insights">Insights</button>
+            <button type="button" class="admin-tab" data-tab="system">System</button>
+          </nav>
+        </div>
+      </section>
+
+      <section class="card admin-panel admin-tab-panel" data-panel="operations">
+        <div class="card-body">
           <h2 class="section-title">Branch Shift Routing</h2>
           <form id="shiftForm" class="controls">
             <select id="shiftBranch"></select>
@@ -58,7 +70,7 @@
         </div>
       </section>
 
-      <section class="card admin-panel super-only">
+      <section class="card admin-panel admin-tab-panel super-only" data-panel="system">
         <div class="card-body">
           <h2 class="section-title">Branch Map Management (Super Admin)</h2>
           <p class="small admin-help">Click on the map to drop a pin for a new branch, then save it.</p>
@@ -73,7 +85,7 @@
         </div>
       </section>
 
-      <section class="card admin-panel super-only">
+      <section class="card admin-panel admin-tab-panel super-only" data-panel="system">
         <div class="card-body">
           <h2 class="section-title">Branch Managers (Super Admin)</h2>
           <form id="managerForm" class="controls">
@@ -100,7 +112,7 @@
         </div>
       </section>
 
-      <section class="card admin-panel super-only">
+      <section class="card admin-panel admin-tab-panel super-only" data-panel="system">
         <div class="card-body">
           <h2 class="section-title">Till Infrastructure (Daraja)</h2>
           <form id="tillForm" class="controls">
@@ -127,7 +139,7 @@
         </div>
       </section>
 
-      <section class="card admin-panel">
+      <section class="card admin-panel admin-tab-panel" data-panel="insights">
         <div class="card-body">
           <h2 class="section-title">Business Snapshot</h2>
           <div class="grid kpis">
@@ -161,7 +173,7 @@
         </div>
       </section>
 
-      <section class="card admin-panel">
+      <section class="card admin-panel admin-tab-panel" data-panel="catalog">
         <div class="card-body">
           <h2 class="section-title">Add Product</h2>
           <form id="productForm" class="controls">
@@ -181,7 +193,7 @@
         </div>
       </section>
 
-      <section class="card admin-panel">
+      <section class="card admin-panel admin-tab-panel" data-panel="catalog">
         <div class="card-body">
           <h2 class="section-title">Product Catalog</h2>
           <div class="table-wrap">
@@ -203,7 +215,7 @@
         </div>
       </section>
 
-      <section class="card admin-panel">
+      <section class="card admin-panel admin-tab-panel" data-panel="delivery">
         <div class="card-body">
           <h2 class="section-title">Rider Management</h2>
           <form id="riderForm" class="controls">
@@ -227,7 +239,7 @@
         </div>
       </section>
 
-      <section class="card admin-panel">
+      <section class="card admin-panel admin-tab-panel" data-panel="operations">
         <div class="card-body">
           <h2 class="section-title">Log Call Order</h2>
           <form id="orderForm" class="controls">
@@ -243,7 +255,7 @@
         </div>
       </section>
 
-      <section class="card admin-panel">
+      <section class="card admin-panel admin-tab-panel" data-panel="delivery">
         <div class="card-body">
           <h2 class="section-title">Assign Delivery</h2>
           <form id="assignForm" class="controls">
@@ -254,7 +266,7 @@
         </div>
       </section>
 
-      <section class="card admin-panel">
+      <section class="card admin-panel admin-tab-panel" data-panel="insights">
         <div class="card-body">
           <h2 class="section-title">Customer Profiles</h2>
           <div class="table-wrap">
@@ -274,7 +286,7 @@
         </div>
       </section>
 
-      <section class="card admin-panel">
+      <section class="card admin-panel admin-tab-panel" data-panel="insights">
         <div class="card-body">
           <h2 class="section-title">Order Logs</h2>
           <div class="table-wrap">
@@ -295,7 +307,7 @@
         </div>
       </section>
 
-      <section class="card admin-panel">
+      <section class="card admin-panel admin-tab-panel" data-panel="delivery">
         <div class="card-body">
           <h2 class="section-title">Delivery Logs</h2>
           <div class="table-wrap">
