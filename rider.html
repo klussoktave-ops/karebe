@@ -9,11 +9,11 @@
 </head>
 
 <body data-page="rider">
-  <main class="container">
+  <main class="container rider-shell">
     <header class="header">
       <div class="brand">
         <h1>Rider Portal</h1>
-        <p>Manage assigned jobs with status timeline updates.</p>
+        <p>Track assignments, update statuses, and complete deliveries with confidence.</p>
       </div>
       <nav class="nav">
         <a href="index.html">Catalog</a>
@@ -26,39 +26,74 @@
       <div class="card-body">
         <h2 class="section-title">Rider Login</h2>
         <form id="riderLoginForm" class="grid">
-          <input id="riderPhoneLogin" placeholder="Phone (+254...)" autocomplete="username" aria-label="Rider phone number" required />
-          <input id="riderPinLogin" placeholder="PIN" autocomplete="current-password" aria-label="Rider PIN" required />
+          <label class="small" for="riderPhoneLogin">Phone Number</label>
+          <input id="riderPhoneLogin" placeholder="Enter phone (+254...)" autocomplete="username" aria-label="Rider phone number" required />
+          <label class="small" for="riderPinLogin">PIN</label>
+          <input id="riderPinLogin" type="password" placeholder="Enter PIN" autocomplete="current-password" aria-label="Rider PIN" required />
+          <p class="small">Default rider test: +254711000111 / 1111</p>
           <button type="submit">Login</button>
         </form>
       </div>
     </section>
 
-    <section id="riderApp" class="hidden">
-      <div class="actions" style="margin-bottom:12px;">
-        <span class="badge gold" id="riderNameLabel"></span>
-        <button id="riderLogout" class="secondary">Logout</button>
-      </div>
+    <section id="riderApp" class="hidden rider-app-stack">
+      <section class="card rider-hero">
+        <div class="card-body rider-hero-body">
+          <div>
+            <h2 class="section-title rider-title">On Shift</h2>
+            <p class="small">Handle active jobs first to keep delivery times predictable.</p>
+          </div>
+          <div class="actions rider-hero-actions">
+            <span class="badge gold" id="riderNameLabel"></span>
+            <button id="riderLogout" class="secondary">Logout</button>
+          </div>
+        </div>
+      </section>
 
-      <h2 class="section-title">Assigned Deliveries</h2>
-      <div id="riderMap"
-        style="width: 100%; height: 300px; border-radius: 8px; margin-bottom: 24px; background: #eaeaea; display:none;">
-      </div>
-      <section id="assignedJobs" class="grid"></section>
+      <section class="grid rider-kpis">
+        <article class="kpi">
+          <h3>Active Jobs</h3>
+          <p id="riderActiveCount">0</p>
+        </article>
+        <article class="kpi">
+          <h3>Completed</h3>
+          <p id="riderCompletedCount">0</p>
+        </article>
+      </section>
 
-      <h2 class="section-title">Delivery History</h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Delivery</th>
-              <th>Items</th>
-              <th>Status</th>
-              <th>Last Updated</th>
-            </tr>
-          </thead>
-          <tbody id="riderHistoryBody"></tbody>
-        </table>
-      </div>
+      <section class="card rider-map-card">
+        <div class="card-body">
+          <h2 class="section-title rider-title">Live Delivery Map</h2>
+          <p class="small">Map shows active customer destinations when location is available.</p>
+          <div id="riderMap" class="rider-map"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-body">
+          <h2 class="section-title rider-title">Assigned Deliveries</h2>
+          <section id="assignedJobs" class="grid"></section>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-body">
+          <h2 class="section-title rider-title">Delivery History</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Delivery</th>
+                  <th>Items</th>
+                  <th>Status</th>
+                  <th>Last Updated</th>
+                </tr>
+              </thead>
+              <tbody id="riderHistoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </section>
   </main>
 

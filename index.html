@@ -10,11 +10,11 @@
 </head>
 
 <body data-page="customer">
-  <main class="container">
+  <main class="container customer-shell">
     <header class="header">
       <div class="brand">
         <h1>Karebe Wines & Spirits</h1>
-        <p>Premium delivery across Kenya. Mobile-first, fast checkout by call.</p>
+        <p>Warm, guided checkout for premium delivery across Kenya.</p>
       </div>
       <nav class="nav">
         <a href="index.html">Catalog</a>
@@ -23,81 +23,137 @@
       </nav>
     </header>
 
-    <section class="controls controls-priority">
-      <div class="split-row">
-        <select id="branchSelect" aria-label="Select branch"></select>
-        <button id="findNearestBranchBtn" class="fit-button" title="Find nearest branch">Nearest</button>
-      </div>
-      <select id="customerProfileSelect" aria-label="Select customer profile"></select>
+    <section class="customer-layout">
+      <section class="customer-content">
+        <section class="card customer-setup">
+          <div class="card-body">
+            <h2 class="section-title customer-title">Start Your Order</h2>
+            <div class="controls controls-priority customer-controls">
+              <div>
+                <label class="small" for="branchSelect">Delivery Branch</label>
+                <div class="split-row">
+                  <select id="branchSelect" aria-label="Select branch"></select>
+                  <button id="findNearestBranchBtn" class="fit-button" title="Find nearest branch">Nearest</button>
+                </div>
+                <p class="small">Pick a branch close to your location for faster delivery.</p>
+              </div>
+              <div>
+                <label class="small" for="customerProfileSelect">Customer Profile</label>
+                <select id="customerProfileSelect" aria-label="Select customer profile"></select>
+                <p class="small">Switch profile to manage separate carts and order history.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <details class="card filters-card">
+          <summary>Filter Catalog</summary>
+          <div class="controls filters-grid">
+            <div>
+              <label class="small" for="categoryFilter">Category</label>
+              <select id="categoryFilter" aria-label="Filter by category"></select>
+            </div>
+            <div>
+              <label class="small" for="maxPrice">Max Price (KES)</label>
+              <input id="maxPrice" type="number" min="0" value="100000" aria-label="Max price" />
+            </div>
+            <div>
+              <label class="small" for="popularFilter">Popular</label>
+              <select id="popularFilter" aria-label="Filter by popularity">
+                <option value="">Popular: Any</option>
+                <option value="yes">Popular Only</option>
+              </select>
+            </div>
+            <div>
+              <label class="small" for="newFilter">New Arrivals</label>
+              <select id="newFilter" aria-label="Filter by new arrivals">
+                <option value="">New: Any</option>
+                <option value="yes">New Arrivals</option>
+              </select>
+            </div>
+          </div>
+        </details>
+
+        <section class="card customer-context">
+          <div class="card-body">
+            <div class="context-grid">
+              <p id="shiftContact" class="small"></p>
+              <p id="activeTill" class="small"></p>
+              <p id="customerMeta" class="small"></p>
+            </div>
+            <div id="catalogMap" class="customer-map"></div>
+          </div>
+        </section>
+
+        <section class="card promo">
+          <div class="promo-grid">
+            <img src="https://images.pexels.com/photos/1267696/pexels-photo-1267696.jpeg?auto=compress&cs=tinysrgb&w=900"
+              alt="Fresh keg service at Karebe" loading="lazy" />
+            <div class="promo-body">
+              <span class="badge gold">Keg Corner</span>
+              <h2>Keg is now available at KES 80</h2>
+              <p class="small">Visit our bar for chilled keg pours, great vibes, and quick service every day.</p>
+              <p><strong>Branches:</strong> Karura and Wangige (Main Branch).</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card products-wrap">
+          <div class="card-body">
+            <div class="row">
+              <h2 class="section-title customer-title">Browse Products</h2>
+              <span class="small">Tap any item to add it to checkout.</span>
+            </div>
+            <section id="products" class="grid products-grid"></section>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-body">
+            <h2 class="section-title customer-title">Customer Orders</h2>
+            <div id="selectableOrders" class="grid"></div>
+          </div>
+        </section>
+      </section>
+
+      <aside class="customer-checkout">
+        <section class="card sticky-cart">
+          <div class="card-body">
+            <h2 class="section-title customer-title">Checkout</h2>
+            <p class="small">Choose a checkout method, then confirm with one primary action.</p>
+            <div id="cartItems" class="grid"></div>
+            <div class="row cart-total-row">
+              <strong>Total</strong>
+              <strong id="cartTotal">KES 0</strong>
+            </div>
+            <h3 class="section-title checkout-subtitle">Checkout Method</h3>
+            <div id="checkoutMethods" class="checkout-methods">
+              <button type="button" class="method-card is-active" data-method="MPESA_DARAJA">
+                <span class="method-icon">M</span>
+                <span>M-Pesa</span>
+              </button>
+              <button type="button" class="method-card" data-method="CALL">
+                <span class="method-icon">&#9742;</span>
+                <span>Call</span>
+              </button>
+              <button type="button" class="method-card" data-method="SMS">
+                <span class="method-icon">&#9993;</span>
+                <span>SMS</span>
+              </button>
+              <button type="button" class="method-card" data-method="WHATSAPP">
+                <span class="method-icon">WA</span>
+                <span>WhatsApp</span>
+              </button>
+            </div>
+            <button id="cartPrimaryAction">Checkout With M-Pesa (Mock)</button>
+            <p id="checkoutHint" class="small"></p>
+            <button id="cartClear" class="secondary">Clear Cart</button>
+          </div>
+        </section>
+      </aside>
     </section>
 
-    <details class="card filters-card">
-      <summary>Filter Catalog</summary>
-      <div class="controls filters-grid">
-        <select id="categoryFilter" aria-label="Filter by category"></select>
-        <input id="maxPrice" type="number" min="0" placeholder="Max price (KES)" value="100000" aria-label="Max price" />
-        <select id="popularFilter" aria-label="Filter by popularity">
-          <option value="">Popular: Any</option>
-          <option value="yes">Popular Only</option>
-        </select>
-        <select id="newFilter" aria-label="Filter by new arrivals">
-          <option value="">New: Any</option>
-          <option value="yes">New Arrivals</option>
-        </select>
-      </div>
-    </details>
-    <p id="shiftContact" class="small"></p>
-    <p id="activeTill" class="small"></p>
-    <p id="customerMeta" class="small"></p>
-
-    <div id="catalogMap"
-      style="width: 100%; height: 200px; border-radius: 8px; margin-bottom: 24px; background: #eaeaea; display:none;">
-    </div>
-
-    <section class="card promo">
-      <div class="promo-grid">
-        <img src="https://images.pexels.com/photos/1267696/pexels-photo-1267696.jpeg?auto=compress&cs=tinysrgb&w=900"
-          alt="Fresh keg service at Karebe" loading="lazy" />
-        <div class="promo-body">
-          <span class="badge gold">Keg Corner</span>
-          <h2>Keg is now available at KES 80</h2>
-          <p class="small">Visit our bar for chilled keg pours, great vibes, and quick service every day.</p>
-          <p><strong>Branches:</strong> Karura and Wangige (Main Branch).</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="products" class="grid products-grid"></section>
-
-    <section class="card">
-      <div class="card-body">
-        <h2 class="section-title" style="margin-top:0;">Your Cart</h2>
-        <div id="cartItems" class="grid"></div>
-        <div class="row" style="margin-top:10px;">
-          <strong>Total</strong>
-          <strong id="cartTotal">KES 0</strong>
-        </div>
-        <div class="actions" style="margin-top:10px;">
-          <button id="cartCheckout">Checkout With M-Pesa (Mock)</button>
-        </div>
-        <div class="actions" style="margin-top:10px;">
-          <button id="cartCall">Call</button>
-          <button id="cartSms" class="secondary">SMS Cart</button>
-          <button id="cartWhatsapp" class="secondary">WhatsApp Cart</button>
-        </div>
-        <div class="actions" style="margin-top:10px;">
-          <button id="cartClear" class="secondary">Clear Cart</button>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <h2 class="section-title">Customer Orders</h2>
-      <div id="selectableOrders" class="grid"></div>
-    </section>
-
-    <p class="footer-note">Ordering opens your phone dialer instantly. Confirm details during call. For very low
-      bandwidth, images lazy-load automatically.</p>
+    <p class="footer-note">Images lazy-load automatically for lower bandwidth and faster browsing.</p>
   </main>
 
   <script

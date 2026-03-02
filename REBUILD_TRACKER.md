@@ -31,7 +31,7 @@ Objective: Rebuild to a modern, warm, tactile, icon-driven multi-page SaaS UI.
 - [x] Define new warm design tokens (color, spacing, radii, shadows, motion).
 - [x] Replace flat visual style with layered cards/surfaces.
 - [x] Add icon-supported navigation and action patterns.
-- [-] Implement tactile interactions:
+- [x] Implement tactile interactions:
   - [x] Hover lift
   - [x] Press animation
   - [x] Focus glow (accessible)
@@ -40,23 +40,23 @@ Objective: Rebuild to a modern, warm, tactile, icon-driven multi-page SaaS UI.
 - [x] Move toast notifications to top-right and style consistently.
 
 ## Phase 3 - Customer Experience Rebuild
-- [ ] Restructure catalog page for calmer hierarchy.
-- [ ] Keep product cards focused on primary action: Add.
-- [ ] Keep communication methods only in checkout method selection.
-- [ ] Create tactile quantity selector behavior.
-- [ ] Add sticky cart summary with clear iconography.
-- [ ] Build guided checkout method cards.
-- [ ] Improve customer empty states with clear CTA text.
+- [x] Restructure catalog page for calmer hierarchy.
+- [x] Keep product cards focused on primary action: Add.
+- [x] Keep communication methods only in checkout method selection.
+- [x] Create tactile quantity selector behavior.
+- [x] Add sticky cart summary with clear iconography.
+- [x] Build guided checkout method cards.
+- [x] Improve customer empty states with clear CTA text.
 
 ## Phase 4 - Admin Experience Rebuild
 - [-] Dashboard page:
   - [x] KPI cards, warm visual hierarchy, quick actions.
-- [-] Catalog page:
-  - [ ] Searchable table with icons.
+- [x] Catalog page:
+  - [x] Searchable table with icons.
   - [x] Clickable product rows.
-- [-] Add Product page:
+- [x] Add Product page:
   - [x] Sectioned form groups.
-  - [-] Labels + microcopy + friendly validation states.
+  - [x] Labels + microcopy + friendly validation states.
 - [-] Orders page:
   - [x] Status badges in warm tones.
   - [x] Expandable/clickable row details.
@@ -67,16 +67,16 @@ Objective: Rebuild to a modern, warm, tactile, icon-driven multi-page SaaS UI.
   - [x] Shift, branches, managers, tills in clear card groups.
 
 ## Phase 5 - Rider Experience Rebuild
-- [ ] Upgrade rider page visual language to match SaaS theme.
-- [ ] Improve assigned job cards and status update affordance.
-- [ ] Improve delivery history readability and empty states.
+- [x] Upgrade rider page visual language to match SaaS theme.
+- [x] Improve assigned job cards and status update affordance.
+- [x] Improve delivery history readability and empty states.
 
 ## Phase 6 - Accessibility and Interaction Quality
-- [ ] Ensure all form fields use labels (not placeholder-only).
-- [ ] Ensure keyboard-visible focus states across controls.
-- [ ] Ensure color contrast for text/badges/actions.
-- [ ] Ensure interaction feedback is inline/toast (no blocking popups).
-- [ ] Ensure no reload-based UX interruptions.
+- [x] Ensure all form fields use labels (not placeholder-only).
+- [x] Ensure keyboard-visible focus states across controls.
+- [-] Ensure color contrast for text/badges/actions.
+- [x] Ensure interaction feedback is inline/toast (no blocking popups).
+- [x] Ensure no reload-based UX interruptions.
 
 ## Phase 7 - Verification and Handover
 - [x] Run `node --check assets/app.js`.
@@ -145,13 +145,56 @@ Objective: Rebuild to a modern, warm, tactile, icon-driven multi-page SaaS UI.
 - [x] Validation pass after icon + form-label updates:
   - `node --check assets/app.js`
   - `npm test` (100/100 passing)
+- [x] Rebuilt customer page structure in `index.html`:
+  - Added 2-column layout with sticky checkout rail.
+  - Added guided checkout method cards (M-Pesa, Call, SMS, WhatsApp).
+  - Removed fragmented cart action buttons in favor of one primary action.
+  - Added clearer form labels, context cards, and calmer content rhythm.
+- [x] Updated customer behavior logic in `assets/app.js`:
+  - Added `CUSTOMER_CHECKOUT_METHOD_KEY` state handling.
+  - Added method-card selection with one primary checkout CTA.
+  - Kept branch contact channels available only through checkout method selection.
+- [x] Rebuilt rider page structure in `rider.html`:
+  - Added rider hero, KPI cards, map card, and grouped workflow sections.
+  - Added labeled login inputs and default rider test hint.
+- [x] Updated rider interactions in `assets/app.js`:
+  - Added active/completed counters.
+  - Improved assigned job card affordance and status action clarity.
+- [x] Added warm customer/rider visual system styles in `assets/styles.css`:
+  - Warm page tokens, sticky checkout, method card states, product quantity affordance.
+  - Rider workflow styling, responsive behavior, and tactile interactions.
+- [x] Validation pass after customer+rider rebuild:
+  - `node --check assets/app.js`
+  - `npm test` (100/100 passing)
+- [x] Completed admin form labeling/microcopy pass:
+  - `admin-delivery.html` (rider + assignment form labels and helper text)
+  - `admin-system.html` (shift, branch, manager, till form labels and helper text)
+  - `admin-catalog.html` (search label and helper text)
+  - `rider.html` (PIN field typed as password)
+- [x] Validation pass after form/accessibility updates:
+  - `node --check assets/app.js`
+  - `npm test` (100/100 passing)
+- [x] Completed admin catalog iconized table rows:
+  - Added icon column in `admin-catalog.html`.
+  - Added category-based icon rendering in `assets/app.js`.
+  - Added icon chip styling in `assets/styles.css`.
+- [x] Validation pass after catalog icon updates:
+  - `node --check assets/app.js`
+  - `npm test` (100/100 passing)
+- [x] Completed Add Product inline validation improvements:
+  - Added field-level invalid styling (`.field-invalid`) in `assets/styles.css`.
+  - Added inline validation checks and focused feedback in `assets/app.js` (`productForm`).
+  - Preserved upload flow and sync behavior after validation pass.
+- [x] Validation pass after Add Product validation updates:
+  - `node --check assets/app.js`
+  - `npm test` (100/100 passing)
 
 ## Resume Notes
-- Current phase: **Phase 2 + Phase 4 (in progress)**.
+- Current phase: **Phase 6 + Phase 7 (in progress)**.
 - Next concrete action:
-  1. Upgrade Add Product and Delivery forms with clearer persistent labels + microcopy on all fields (remove any placeholder-only fields).
-  2. Rebuild customer page visual structure (sticky cart, calmer hierarchy, checkout method cards only).
-  3. Rebuild rider page visuals to match warm SaaS system and improve status-action affordance.
+  1. Run manual end-to-end UX pass for customer/admin/rider flows and log any interaction regressions.
+  2. Tweak any low-contrast spots discovered during manual QA.
+  3. Produce final before-vs-after summary and close Phase 7 handover checklist.
 
 ## Files Planned for Major Changes
 - `assets/styles.css`

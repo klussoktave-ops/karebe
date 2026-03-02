@@ -3,6 +3,7 @@
   const ADMIN_SESSION_KEY = "karebe_admin_session";
   const ADMIN_CATALOG_SELECTION_KEY = "karebe_admin_catalog_selection";
   const ADMIN_ORDER_EXPANDED_KEY = "karebe_admin_expanded_order";
+  const CUSTOMER_CHECKOUT_METHOD_KEY = "karebe_customer_checkout_method";
   const RIDER_SESSION_KEY = "karebe_rider_id";
   const CUSTOMER_BRANCH_KEY = "karebe_customer_branch";
   const PAYMENT_STATUSES = ["PENDING", "PAID"];
@@ -278,14 +279,33 @@
     const list = document.getElementById("products");
     const cartItems = document.getElementById("cartItems");
     const cartTotal = document.getElementById("cartTotal");
-    const cartCheckout = document.getElementById("cartCheckout");
-    const cartCall = document.getElementById("cartCall");
-    const cartSms = document.getElementById("cartSms");
-    const cartWa = document.getElementById("cartWhatsapp");
+    const cartPrimaryAction = document.getElementById("cartPrimaryAction") || document.getElementById("cartCheckout");
+    const checkoutMethods = document.getElementById("checkoutMethods");
+    const checkoutHint = document.getElementById("checkoutHint");
     const cartClear = document.getElementById("cartClear");
     const activeTill = document.getElementById("activeTill");
     const customerMeta = document.getElementById("customerMeta");
     const selectableOrders = document.getElementById("selectableOrders");
+    const checkoutMethodMeta = {
+      MPESA_DARAJA: {
+        cta: "Checkout With M-Pesa (Mock)",
+        hint: "Fastest route: create an order instantly and submit a mock M-Pesa payment request."
+      },
+      CALL: {
+        cta: "Call Front Desk",
+        hint: "Best for special requests. You can confirm details directly with the branch contact."
+      },
+      SMS: {
+        cta: "Send Order By SMS",
+        hint: "Send your full cart as an SMS if data connection is limited."
+      },
+      WHATSAPP: {
+        cta: "Send Order On WhatsApp",
+        hint: "Open WhatsApp with a prefilled cart message for quick confirmation."
+      }
+    };
+    let selectedCheckoutMethod = sessionStorage.getItem(CUSTOMER_CHECKOUT_METHOD_KEY) || "MPESA_DARAJA";
+    if (!checkoutMethodMeta[selectedCheckoutMethod]) selectedCheckoutMethod = "MPESA_DARAJA";
 
     const categories = state.categories || [];
     categorySel.innerHTML = `<option value="">All Categories</option>${categories.map((c) => `<option value="${c}">${c}</option>`).join("")}`;
@@ -402,6 +422,31 @@
       fresh.cart = profile.cart.slice();
     }
 
+    function syncCheckoutMethodUI(hasItems) {
+      if (checkoutMethods) {
+        checkoutMethods.querySelectorAll("[data-method]").forEach((btn) => {
+          const method = btn.dataset.method;
+          btn.classList.toggle("is-active", method === selectedCheckoutMethod);
+          btn.disabled = !hasItems;
+        });
+      }
+      if (cartPrimaryAction) {
+        const meta = checkoutMethodMeta[selectedCheckoutMethod] || checkoutMethodMeta.MPESA_DARAJA;
+        cartPrimaryAction.textContent = hasItems ? meta.cta : "Add Items To Checkout";
+        cartPrimaryAction.disabled = !hasItems;
+      }
+      if (checkoutHint) {
+        checkoutHint.textContent = (checkoutMethodMeta[selectedCheckoutMethod] || checkoutMethodMeta.MPESA_DARAJA).hint;
+      }
+    }
+
+    function setCheckoutMethod(method, hasItems) {
+      if (!checkoutMethodMeta[method]) return;
+      selectedCheckoutMethod = method;
+      sessionStorage.setItem(CUSTOMER_CHECKOUT_METHOD_KEY, selectedCheckoutMethod);
+      syncCheckoutMethodUI(hasItems);
+    }
+
     function renderCart() {
       if (!cartItems || !cartTotal) return;
       const fresh = loadState();
@@ -420,6 +465,7 @@
           .join("")
         : `<p class="small">Your cart is empty. Add an item from the catalog to start checkout.</p>`;
       cartTotal.textContent = fmtKES(total);
+      syncCheckoutMethodUI(items.length > 0);
       if (shiftContact) shiftContact.textContent = `On shift: ${contact.label} - ${contact.phone}`;
       if (activeTill) {
         activeTill.textContent = till
@@ -431,12 +477,25 @@
           }`;
       }
 
-      if (cartCheckout) {
-        cartCheckout.onclick = () => {
+      if (cartPrimaryAction) {
+        cartPrimaryAction.onclick = () => {
           if (!items.length) {
             notify("Add items to cart before checkout.", "warn");
             return;
           }
+          if (selectedCheckoutMethod === "CALL") {
+            window.location.href = `tel:${contact.phone}`;
+            return;
+          }
+          if (selectedCheckoutMethod === "SMS") {
+            window.location.href = `sms:${contact.phone}?body=${encodeURIComponent(buildMessage(fresh, contact, items))}`;
+            return;
+          }
+          if (selectedCheckoutMethod === "WHATSAPP") {
+            window.open(`https://wa.me/${contact.whatsappPhone}?text=${encodeURIComponent(buildMessage(fresh, contact, items))}`, "_blank", "noopener");
+            return;
+          }
+
           const s = loadState();
           const p = currentProfile(s);
           const tillRef = getTillForBranch(s, branchId);
@@ -495,30 +554,6 @@
           renderSelectableOrders();
         };
       }
-
-      if (cartCall) {
-        cartCall.onclick = () => {
-          if (!items.length) {
-            notify("Add items first so the admin call is contextual.", "warn");
-            return;
-          }
-          window.location.href = `tel:${contact.phone}`;
-        };
-      }
-      if (cartSms) cartSms.onclick = () => {
-        if (!items.length) {
-          notify("Add items to cart first.", "warn");
-          return;
-        }
-        window.location.href = `sms:${contact.phone}?body=${encodeURIComponent(buildMessage(fresh, contact, items))}`;
-      };
-      if (cartWa) cartWa.onclick = () => {
-        if (!items.length) {
-          notify("Add items to cart first.", "warn");
-          return;
-        }
-        window.open(`https://wa.me/${contact.whatsappPhone}?text=${encodeURIComponent(buildMessage(fresh, contact, items))}`, "_blank", "noopener");
-      };
       if (cartClear) cartClear.onclick = () => {
         if (!items.length) {
           notify("Cart is already empty for this branch.", "warn");
@@ -543,7 +578,7 @@
         ? orders
           .map(
             (o) =>
-              `<article class="card"><div class="card-body"><div class="row"><strong>${o.id}</strong><span class="badge">${o.paymentMethod || "N/A"}</span></div><p class="small">${dateOnly(
+              `<article class="card customer-order-card"><div class="card-body"><div class="row"><strong>${o.id}</strong><span class="badge ${o.paymentStatus === "PAID" ? "ok" : "warn"}">${o.paymentMethod || "N/A"}</span></div><p class="small">${dateOnly(
                 o.createdAt
               )} | ${o.paymentStatus} | ${fmtKES(o.total)}</p><p class="small">Items: ${o.items
                 .map((it) => `${it.productName} x${it.qty}`)
@@ -582,15 +617,15 @@
     function card(product, variant) {
       const inStock = variant.stock > 0;
       return `
-      <article class="card">
+      <article class="card product-card">
         <img src="${product.image}" alt="${product.name}" loading="lazy" />
         <div class="card-body">
           <div class="row"><strong>${product.name}</strong><span class="badge ${inStock ? "ok" : "danger"}">${inStock ? "In Stock" : "Out"}</span></div>
           <p class="small">${product.description}</p>
           <div class="row"><span class="badge">${product.category}</span><span class="badge gold">${variant.volume}</span></div>
-          <div class="row" style="margin-top:8px;"><strong>${fmtKES(variant.price)}</strong><input id="qty_${product.id}_${variant.id}" type="number" min="1" value="1" style="max-width:72px;" /></div>
-          <div class="actions" style="margin-top:8px;"><button data-act="cart" data-pid="${product.id}" data-vid="${variant.id}" ${!inStock ? "disabled" : ""}>Add To Cart</button></div>
-          <p class="small" style="margin-top:8px;">Need call or messaging? Add items first, then use cart actions.</p>
+          <div class="row qty-row"><strong>${fmtKES(variant.price)}</strong><div class="qty-wrap"><label class="small qty-label" for="qty_${product.id}_${variant.id}">Qty</label><input class="qty-input" id="qty_${product.id}_${variant.id}" type="number" min="1" value="1" /></div></div>
+          <div class="actions"><button data-act="cart" data-pid="${product.id}" data-vid="${variant.id}" ${!inStock ? "disabled" : ""}>Add To Cart</button></div>
+          <p class="small">Stock available: ${variant.stock} units.</p>
         </div>
       </article>`;
     }
@@ -627,6 +662,18 @@
       const item = makeItem(p, v, qty, branchId);
       if (btn.dataset.act === "cart") addItemToProfileCart(item);
     };
+
+    if (checkoutMethods) {
+      checkoutMethods.onclick = (e) => {
+        const button = e.target.closest("[data-method]");
+        if (!button) return;
+        const fresh = loadState();
+        const branchId = currentBranchId();
+        const profile = currentProfile(fresh);
+        const hasItems = profile.cart.some((i) => i.branchId === branchId);
+        setCheckoutMethod(button.dataset.method, hasItems);
+      };
+    }
 
     if (cartItems) {
       cartItems.onclick = (e) => {
@@ -927,6 +974,15 @@
         const fresh = loadState();
         const term = searchInput ? String(searchInput.value || "").trim().toLowerCase() : "";
         const selectedProductId = sessionStorage.getItem(ADMIN_CATALOG_SELECTION_KEY);
+        const categoryIcon = (category) => {
+          const value = String(category || "").toLowerCase();
+          if (value.includes("whiskey") || value.includes("bourbon")) return "WK";
+          if (value.includes("wine")) return "WN";
+          if (value.includes("vodka")) return "VD";
+          if (value.includes("gin")) return "GN";
+          if (value.includes("beer") || value.includes("lager")) return "BR";
+          return "SP";
+        };
         const rows = fresh.products
           .filter((p) => {
             if (!term) return true;
@@ -935,10 +991,10 @@
           .map((p) => {
             const v = p.variants && p.variants[0] ? p.variants[0] : { volume: "-", price: 0, stock: 0 };
             const rowClass = selectedProductId === p.id ? "catalog-row is-selected" : "catalog-row";
-            return `<tr class="${rowClass}" data-product-id="${p.id}"><td>${p.name}</td><td>${p.category || "-"}</td><td>${v.volume}</td><td>${fmtKES(v.price)}</td><td>${v.stock}</td><td><button data-act="stock" data-id="${p.id}" class="secondary">Toggle Stock</button></td><td><button data-act="del" data-id="${p.id}" class="secondary">Delete</button></td></tr>`;
+            return `<tr class="${rowClass}" data-product-id="${p.id}"><td><span class="catalog-icon">${categoryIcon(p.category)}</span></td><td>${p.name}</td><td>${p.category || "-"}</td><td>${v.volume}</td><td>${fmtKES(v.price)}</td><td>${v.stock}</td><td><button data-act="stock" data-id="${p.id}" class="secondary">Toggle Stock</button></td><td><button data-act="del" data-id="${p.id}" class="secondary">Delete</button></td></tr>`;
           })
           .join("");
-        productsTableBody.innerHTML = rows || `<tr><td colspan="7">No products found.</td></tr>`;
+        productsTableBody.innerHTML = rows || `<tr><td colspan="8">No products found.</td></tr>`;
         if (!selectedProductId) return;
         const selected = fresh.products.find((p) => p.id === selectedProductId);
         if (selected) {
@@ -991,8 +1047,42 @@
 
     const productForm = document.getElementById("productForm");
     if (productForm) {
+      const trackedFields = ["productName", "productCategory", "productVolume", "productPrice", "productStock", "productDesc"];
+      trackedFields.forEach((fieldId) => {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        field.addEventListener("input", () => field.classList.remove("field-invalid"));
+      });
+
+      const markFieldInvalid = (fieldId, message) => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          field.classList.add("field-invalid");
+          field.focus();
+        }
+        if (message) notify(message, "warn");
+      };
+
       productForm.onsubmit = async (e) => {
         e.preventDefault();
+        const nameValue = document.getElementById("productName").value.trim();
+        const categoryValue = document.getElementById("productCategory").value.trim();
+        const volumeValue = document.getElementById("productVolume").value.trim();
+        const priceValue = Number(document.getElementById("productPrice").value);
+        const stockValue = Number(document.getElementById("productStock").value);
+        const descriptionValue = document.getElementById("productDesc").value.trim();
+
+        if (!nameValue) return markFieldInvalid("productName", "Enter a product name.");
+        if (!categoryValue) return markFieldInvalid("productCategory", "Enter a product category.");
+        if (!volumeValue) return markFieldInvalid("productVolume", "Enter a product volume.");
+        if (!Number.isFinite(priceValue) || priceValue <= 0) {
+          return markFieldInvalid("productPrice", "Price must be greater than zero.");
+        }
+        if (!Number.isFinite(stockValue) || stockValue < 0) {
+          return markFieldInvalid("productStock", "Stock cannot be negative.");
+        }
+        if (!descriptionValue) return markFieldInvalid("productDesc", "Enter a short product description.");
+
         const btn = productForm.querySelector('button[type="submit"]');
         const originalText = btn ? btn.textContent : "Save Product";
 
@@ -1020,15 +1110,15 @@
         const fresh = loadState();
         fresh.products.push({
           id: uid("p"),
-          name: document.getElementById("productName").value.trim(),
-          category: document.getElementById("productCategory").value.trim(),
-          description: document.getElementById("productDesc").value.trim(),
+          name: nameValue,
+          category: categoryValue,
+          description: descriptionValue,
           image: imageUrl,
           popular: document.getElementById("productPopular").checked,
           newArrival: document.getElementById("productNew").checked,
-          variants: [{ id: uid("v"), volume: document.getElementById("productVolume").value.trim(), price: Number(document.getElementById("productPrice").value), stock: Number(document.getElementById("productStock").value) }]
+          variants: [{ id: uid("v"), volume: volumeValue, price: priceValue, stock: stockValue }]
         });
-        const newCategory = document.getElementById("productCategory").value.trim();
+        const newCategory = categoryValue;
         if (newCategory && !fresh.categories.includes(newCategory)) {
           fresh.categories.push(newCategory);
         }
@@ -1372,11 +1462,17 @@
 
     const mine = state.deliveries.filter((d) => d.riderId === riderId);
     const pending = mine.filter((d) => d.status !== statuses[statuses.length - 1]);
+    const riderActiveCount = document.getElementById("riderActiveCount");
+    const riderCompletedCount = document.getElementById("riderCompletedCount");
+    if (riderActiveCount) riderActiveCount.textContent = String(pending.length);
+    if (riderCompletedCount) {
+      riderCompletedCount.textContent = String(mine.filter((d) => d.status === statuses[statuses.length - 1]).length);
+    }
     document.getElementById("assignedJobs").innerHTML =
       pending.map((d) => {
         const order = state.orders.find((o) => o.id === d.orderId);
         const ns = nextStatus(d.status);
-        return `<article class="card"><div class="card-body"><div class="row"><strong>${d.id}</strong><span class="badge gold">${d.status}</span></div><p class="small">Order: ${d.orderId} | Customer: ${order ? order.customerPhone : "-"}</p><p class="small">Items: ${order ? summarizeItems(order.items, 2) : "-"} | Total: ${order ? fmtKES(order.total) : "-"}</p>${ns ? `<button data-delivery="${d.id}" data-next="${ns}">Mark ${ns.replaceAll("_", " ")}</button>` : ""}</div></article>`;
+        return `<article class="card rider-job-card"><div class="card-body"><div class="row"><strong>${d.id}</strong><span class="badge gold">${d.status.replaceAll("_", " ")}</span></div><p class="small">Order: ${d.orderId} | Customer: ${order ? order.customerPhone : "-"}</p><p class="small">Items: ${order ? summarizeItems(order.items, 2) : "-"} | Total: ${order ? fmtKES(order.total) : "-"}</p>${ns ? `<button class="rider-status-btn" data-delivery="${d.id}" data-next="${ns}">Mark ${ns.replaceAll("_", " ")}</button>` : ""}</div></article>`;
       }).join("") || `<p class="small">No active deliveries.</p>`;
 
     document.getElementById("assignedJobs").onclick = (e) => {

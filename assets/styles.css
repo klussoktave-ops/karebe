@@ -19,9 +19,25 @@
 
 body {
   margin: 0;
-  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Manrope", "Avenir Next", "Nunito Sans", sans-serif;
   background: radial-gradient(circle at top right, #3a111d 0%, var(--bg) 35%);
   color: var(--text);
+}
+
+body[data-page="customer"],
+body[data-page="rider"] {
+  --bg: #f8f2e9;
+  --surface: #fffaf4;
+  --surface-2: #f7ede0;
+  --text: #2f251f;
+  --muted: #736558;
+  --accent: #de7c4a;
+  --gold: #e9b463;
+  --ok: #4f9a6d;
+  --warn: #c38b43;
+  --danger: #ca6461;
+  --shadow: 0 10px 24px rgba(112, 78, 47, 0.14);
+  background: radial-gradient(circle at top right, #f9ddc6 0%, #f8f2e9 48%);
 }
 
 body[data-page^="admin"] {
@@ -389,6 +405,20 @@ body[data-page^="admin"] textarea {
   color: var(--text);
 }
 
+.field-invalid {
+  border-color: #cf5b5b !important;
+  box-shadow: 0 0 0 2px rgba(207, 91, 91, 0.18);
+  animation: field-shake 0.18s linear 1;
+}
+
+@keyframes field-shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-1px); }
+  100% { transform: translateX(0); }
+}
+
 button {
   background: linear-gradient(140deg, var(--accent), #7a162a);
   border: 0;
@@ -477,6 +507,19 @@ body[data-page^="admin"] .catalog-row:hover td {
 
 body[data-page^="admin"] .catalog-row.is-selected td {
   background: #ffeddc;
+}
+
+body[data-page^="admin"] .catalog-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff4e8;
+  border: 1px solid #e6cab1;
+  font-size: 0.68rem;
+  font-weight: 700;
 }
 
 body[data-page^="admin"] .order-main-row {
@@ -656,6 +699,198 @@ body[data-page^="admin"] .toast {
   font-size: 1.15rem;
 }
 
+.customer-shell,
+.rider-shell {
+  animation: page-fade-in 0.24s ease;
+}
+
+.customer-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 14px;
+  align-items: start;
+}
+
+.customer-content {
+  display: grid;
+  gap: 14px;
+}
+
+.customer-checkout {
+  position: sticky;
+  top: 14px;
+}
+
+.sticky-cart {
+  border-color: #e6d5c2;
+  background: linear-gradient(160deg, #fffdf8, #f8efe3);
+}
+
+.customer-title,
+.rider-title {
+  margin-top: 0;
+  color: #8f4d2e;
+}
+
+.checkout-subtitle {
+  margin-top: 12px;
+  margin-bottom: 8px;
+  font-size: 0.92rem;
+}
+
+.customer-controls {
+  display: grid;
+  gap: 10px;
+}
+
+.context-grid {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.customer-map {
+  width: 100%;
+  height: 220px;
+  border-radius: 12px;
+  background: #eadfce;
+  border: 1px solid #ddcbb7;
+  display: none;
+}
+
+.products-wrap .card-body {
+  padding-top: 8px;
+}
+
+.product-card .actions {
+  margin-top: 8px;
+}
+
+.product-card .small {
+  margin-bottom: 0;
+}
+
+.qty-row {
+  margin-top: 8px;
+}
+
+.qty-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qty-label {
+  white-space: nowrap;
+}
+
+.qty-input {
+  width: 74px;
+}
+
+.cart-total-row {
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+
+.checkout-methods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+button.method-card {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  border-radius: 12px;
+  border: 1px solid #e3cfbc;
+  background: #fff8f0;
+  color: #5b4738;
+  padding: 10px;
+  font-weight: 700;
+}
+
+button.method-card .method-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2bda1;
+  background: #ffeddc;
+  color: #9f5a37;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+button.method-card.is-active {
+  border-color: #dfa77b;
+  background: linear-gradient(140deg, #f9a66d, #e48956);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(209, 133, 83, 0.22);
+}
+
+button.method-card.is-active .method-icon {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+button.method-card:disabled {
+  opacity: 0.6;
+}
+
+.customer-order-card {
+  border-color: #e5d7c8;
+}
+
+.rider-app-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.rider-hero {
+  border-color: #e6d5c2;
+  background: linear-gradient(150deg, #fffaf5, #f8ecde);
+}
+
+.rider-hero-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rider-hero-actions {
+  width: auto;
+}
+
+.rider-kpis {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.rider-map {
+  width: 100%;
+  height: 300px;
+  border-radius: 12px;
+  background: #eadfce;
+  border: 1px solid #ddcbb7;
+  display: none;
+}
+
+.rider-job-card {
+  border-color: #e7d6c5;
+}
+
+.rider-status-btn {
+  margin-top: 8px;
+}
+
 .admin-stack {
   display: grid;
   gap: 14px;
@@ -759,6 +994,25 @@ body[data-page^="admin"] td {
   .actions a,
   .actions button {
     flex: 1 1 calc(50% - 8px);
+  }
+  .customer-layout {
+    grid-template-columns: 1fr;
+  }
+  .customer-checkout {
+    position: static;
+  }
+  .checkout-methods {
+    grid-template-columns: 1fr;
+  }
+  .rider-hero-body {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .rider-hero-actions {
+    width: 100%;
+  }
+  .rider-map {
+    height: 220px;
   }
   .controls {
     grid-template-columns: 1fr;

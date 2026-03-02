@@ -65,12 +65,17 @@
           <div class="card-body">
             <h3 class="section-title">Product List</h3>
             <div class="controls">
-              <input id="catalogSearch" placeholder="Search by name or category" aria-label="Search products" />
+              <div>
+                <label class="small" for="catalogSearch">Search Catalog</label>
+                <input id="catalogSearch" placeholder="Search by name or category" aria-label="Search products" />
+                <p class="small">Type at least 2 letters to quickly narrow the table.</p>
+              </div>
             </div>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
+                    <th>Icon</th>
                     <th>Name</th>
                     <th>Category</th>
                     <th>Volume</th>

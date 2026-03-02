@@ -65,9 +65,21 @@
           <div class="card-body">
             <h3 class="section-title">Rider Management</h3>
             <form id="riderForm" class="controls">
-              <input id="riderName" placeholder="Rider full name" aria-label="Rider full name" required />
-              <input id="riderPhone" placeholder="Phone (+254...)" aria-label="Rider phone number" required />
-              <input id="riderPin" placeholder="PIN" aria-label="Rider PIN" required />
+              <div>
+                <label class="small" for="riderName">Rider Name</label>
+                <input id="riderName" placeholder="e.g. James Kariuki" aria-label="Rider full name" required />
+                <p class="small">Use legal name for easy assignment tracking.</p>
+              </div>
+              <div>
+                <label class="small" for="riderPhone">Rider Phone</label>
+                <input id="riderPhone" placeholder="+254..." aria-label="Rider phone number" required />
+                <p class="small">This phone is used for rider login and delivery contact.</p>
+              </div>
+              <div>
+                <label class="small" for="riderPin">Rider PIN</label>
+                <input id="riderPin" type="password" placeholder="4-digit PIN" aria-label="Rider PIN" required />
+                <p class="small">Keep PIN simple and share privately with the rider.</p>
+              </div>
               <button type="submit">Add Rider</button>
             </form>
             <div class="table-wrap">
@@ -89,8 +101,16 @@
           <div class="card-body">
             <h3 class="section-title">Assign Delivery</h3>
             <form id="assignForm" class="controls">
-              <select id="assignOrder" aria-label="Order to assign"></select>
-              <select id="assignRider" aria-label="Rider to assign"></select>
+              <div>
+                <label class="small" for="assignOrder">Order</label>
+                <select id="assignOrder" aria-label="Order to assign"></select>
+                <p class="small">Only unassigned orders appear here.</p>
+              </div>
+              <div>
+                <label class="small" for="assignRider">Rider</label>
+                <select id="assignRider" aria-label="Rider to assign"></select>
+                <p class="small">Choose an active rider before assigning.</p>
+              </div>
               <button type="submit">Assign Rider</button>
             </form>
           </div>
