@@ -24,7 +24,7 @@ body {
   color: var(--text);
 }
 
-body[data-page="admin"] {
+body[data-page^="admin"] {
   --bg: #f8f4ee;
   --surface: #fffaf3;
   --surface-2: #f7efe5;
@@ -39,6 +39,21 @@ body[data-page="admin"] {
   background: radial-gradient(circle at top right, #fbe7d6 0%, #f8f4ee 45%);
 }
 
+body[data-page^="admin"] .container {
+  animation: page-fade-in 0.24s ease;
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -48,6 +63,165 @@ a {
   width: min(1200px, 94vw);
   margin: 0 auto;
   padding: 18px 0 30px;
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.admin-nav {
+  position: sticky;
+  top: 14px;
+  padding: 14px;
+  border: 1px solid #e2cfbd;
+  background: linear-gradient(160deg, #fffdf9, #f8efe4);
+}
+
+.admin-nav-brand h1 {
+  margin: 0;
+  font-size: 1.08rem;
+}
+
+.admin-nav-brand p {
+  margin: 4px 0 0;
+  color: #8f7763;
+  font-size: 0.82rem;
+}
+
+.admin-nav-links {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.admin-nav-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #e6d4c3;
+  border-radius: 12px;
+  background: #fff;
+  padding: 9px 10px;
+  color: #5e4b3d;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.admin-nav-links a:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(110, 74, 44, 0.14);
+  border-color: #dfb896;
+}
+
+.secondary-links a {
+  font-weight: 500;
+  color: #816958;
+}
+
+.nav-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e3c7ae;
+  background: #fff3e7;
+  color: #a2562f;
+  font-size: 0.74rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+body[data-page="admin-dashboard"] .admin-nav-links a[href="admin.html"],
+body[data-page="admin-catalog"] .admin-nav-links a[href="admin-catalog.html"],
+body[data-page="admin-product-new"] .admin-nav-links a[href="admin-product-new.html"],
+body[data-page="admin-orders"] .admin-nav-links a[href="admin-orders.html"],
+body[data-page="admin-delivery"] .admin-nav-links a[href="admin-delivery.html"],
+body[data-page="admin-system"] .admin-nav-links a[href="admin-system.html"] {
+  border-color: #e0a779;
+  background: linear-gradient(140deg, #f8a86c, #e78757);
+  color: #fff;
+  box-shadow: 0 12px 20px rgba(193, 118, 71, 0.24);
+}
+
+body[data-page="admin-dashboard"] .admin-nav-links a[href="admin.html"] .nav-icon,
+body[data-page="admin-catalog"] .admin-nav-links a[href="admin-catalog.html"] .nav-icon,
+body[data-page="admin-product-new"] .admin-nav-links a[href="admin-product-new.html"] .nav-icon,
+body[data-page="admin-orders"] .admin-nav-links a[href="admin-orders.html"] .nav-icon,
+body[data-page="admin-delivery"] .admin-nav-links a[href="admin-delivery.html"] .nav-icon,
+body[data-page="admin-system"] .admin-nav-links a[href="admin-system.html"] .nav-icon {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.admin-main {
+  display: grid;
+  gap: 14px;
+}
+
+.page-header {
+  padding: 16px;
+  border-color: #e5d3c3;
+  background: linear-gradient(140deg, #fff9f3, #f7edde);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 1.34rem;
+  color: #7c4528;
+}
+
+.page-header p {
+  margin: 6px 0 0;
+  color: #7a6658;
+  font-size: 0.9rem;
+}
+
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #e8aa7a;
+  color: #fff;
+  background: linear-gradient(140deg, #e9955f, #d9784d);
+  font-weight: 700;
+  box-shadow: 0 10px 20px rgba(204, 122, 71, 0.2);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+}
+
+.button-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 22px rgba(204, 122, 71, 0.3);
+}
+
+.button-link:active {
+  transform: translateY(1px);
+}
+
+.button-link::before {
+  content: attr(data-icon);
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  font-size: 0.72rem;
 }
 
 .header {
@@ -85,7 +259,7 @@ a {
 }
 
 body[data-page="customer"] .nav a[href="index.html"],
-body[data-page="admin"] .nav a[href="admin.html"],
+body[data-page^="admin"] .nav a[href="admin.html"],
 body[data-page="rider"] .nav a[href="rider.html"] {
   border-color: transparent;
   background: var(--accent);
@@ -107,6 +281,12 @@ body[data-page="rider"] .nav a[href="rider.html"] {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+body[data-page^="admin"] .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 28px rgba(116, 83, 54, 0.16);
 }
 
 .card-body {
@@ -201,9 +381,9 @@ input, select, button, textarea {
   font-size: 0.9rem;
 }
 
-body[data-page="admin"] input,
-body[data-page="admin"] select,
-body[data-page="admin"] textarea {
+body[data-page^="admin"] input,
+body[data-page^="admin"] select,
+body[data-page^="admin"] textarea {
   background: #fff;
   border-color: #d6c6b5;
   color: var(--text);
@@ -217,7 +397,7 @@ button {
   transition: filter 0.16s ease, transform 0.08s ease, box-shadow 0.16s ease;
 }
 
-body[data-page="admin"] button {
+body[data-page^="admin"] button {
   background: linear-gradient(140deg, #e59462, #d8754f);
   color: #fff;
 }
@@ -227,7 +407,7 @@ button.secondary {
   border: 1px solid #4f3e46;
 }
 
-body[data-page="admin"] button.secondary {
+body[data-page^="admin"] button.secondary {
   background: #fff;
   color: #5e4d40;
   border-color: #d7c6b6;
@@ -236,6 +416,11 @@ body[data-page="admin"] button.secondary {
 button:hover,
 .nav a:hover {
   filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+body[data-page^="admin"] button:hover {
+  box-shadow: 0 10px 18px rgba(177, 116, 75, 0.24);
 }
 
 button:active {
@@ -281,6 +466,63 @@ th, td {
   text-align: left;
 }
 
+body[data-page^="admin"] .catalog-row {
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+body[data-page^="admin"] .catalog-row:hover td {
+  background: #fff4e8;
+}
+
+body[data-page^="admin"] .catalog-row.is-selected td {
+  background: #ffeddc;
+}
+
+body[data-page^="admin"] .order-main-row {
+  cursor: pointer;
+}
+
+body[data-page^="admin"] .order-main-row.is-expanded td {
+  background: #fff6ea;
+}
+
+body[data-page^="admin"] .order-detail-row td {
+  background: #fffbf6;
+  color: #5c4d41;
+}
+
+body[data-page^="admin"] .order-main-row button.secondary {
+  width: auto;
+  display: inline-flex;
+  margin-right: 8px;
+}
+
+body[data-page^="admin"] .status-step-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+body[data-page^="admin"] .status-step {
+  width: auto;
+  font-size: 0.76rem;
+  padding: 6px 8px;
+  border-radius: 999px;
+}
+
+body[data-page^="admin"] .status-step.is-current {
+  border-color: #e0a779;
+  color: #8b4c29;
+  background: #fff0e2;
+}
+
+body[data-page^="admin"] .status-step.is-done {
+  border-color: #badcc7;
+  color: #2f7e52;
+  background: #ebf8f0;
+}
+
 .kpis {
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
 }
@@ -292,7 +534,7 @@ th, td {
   padding: 11px;
 }
 
-body[data-page="admin"] .kpi {
+body[data-page^="admin"] .kpi {
   border-color: #e4d5c4;
 }
 
@@ -337,7 +579,7 @@ body[data-page="admin"] .kpi {
 .toast-root {
   position: fixed;
   right: 14px;
-  bottom: 14px;
+  top: 14px;
   z-index: 999;
   display: grid;
   gap: 8px;
@@ -362,7 +604,7 @@ body[data-page="admin"] .kpi {
   transform: translateY(0);
 }
 
-body[data-page="admin"] .toast {
+body[data-page^="admin"] .toast {
   background: #fff9f2;
   color: #3f2f23;
   border-color: #dfc9b2;
@@ -478,62 +720,33 @@ body[data-page="admin"] .toast {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
-.admin-tabs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 8px;
-}
-
-.admin-tab {
-  border: 1px solid #d7c5b4;
-  background: #fff;
-  color: #6f5643;
-  border-radius: 999px;
-  padding: 9px 12px;
-  font-weight: 700;
-}
-
-.admin-tab.active {
-  background: linear-gradient(140deg, #e59462, #d8754f);
-  color: #fff;
-  border-color: transparent;
-}
-
-.admin-tab-panel {
-  display: none;
-}
-
-.admin-tab-panel.active {
-  display: block;
-}
-
-body[data-page="admin"] .section-title {
+body[data-page^="admin"] .section-title {
   margin-top: 0;
   color: #b86f3f;
 }
 
-body[data-page="admin"] .card {
+body[data-page^="admin"] .card {
   border-color: #e5d6c6;
 }
 
-body[data-page="admin"] .controls {
+body[data-page^="admin"] .controls {
   border-color: #e5d6c6;
 }
 
-body[data-page="admin"] .nav a {
+body[data-page^="admin"] .nav a {
   border-color: #dccbb9;
 }
 
-body[data-page="admin"] .badge {
+body[data-page^="admin"] .badge {
   border-color: #d8c6b4;
 }
 
-body[data-page="admin"] .table-wrap {
+body[data-page^="admin"] .table-wrap {
   border-color: #e3d3c4;
 }
 
-body[data-page="admin"] th,
-body[data-page="admin"] td {
+body[data-page^="admin"] th,
+body[data-page^="admin"] td {
   border-bottom-color: #eadccc;
 }
 
@@ -559,13 +772,27 @@ body[data-page="admin"] td {
   .admin-panel .card-body {
     padding: 12px;
   }
-  .admin-tabs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .admin-layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .admin-nav {
+    position: static;
+  }
+  .admin-nav-links {
+    grid-template-columns: 1fr 1fr;
+  }
+  .secondary-links {
+    grid-template-columns: 1fr;
+  }
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
   .admin-map {
     height: 220px;
   }
-  body[data-page="admin"] table {
+  body[data-page^="admin"] table {
     min-width: 640px;
   }
 }

@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard | Karebe</title>
+  <title>Delivery | Karebe Admin</title>
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
-<body data-page="admin-dashboard">
+<body data-page="admin-delivery">
   <main class="container admin-layout">
     <aside class="card admin-nav">
       <div class="admin-nav-brand">
@@ -30,8 +30,8 @@
     <section class="admin-main">
       <header class="card page-header">
         <div>
-          <h2>Business Snapshot</h2>
-          <p>Revenue, delivery health, and quick access to team performance.</p>
+          <h2>Delivery Control</h2>
+          <p>Manage riders, assign orders, and track delivery status in one place.</p>
         </div>
         <a class="button-link" data-icon="&#10010;" href="admin-orders.html">Create Order</a>
       </header>
@@ -63,40 +63,57 @@
 
         <section class="card admin-panel">
           <div class="card-body">
-            <h3 class="section-title">Revenue Overview</h3>
-            <div class="grid kpis">
-              <article class="kpi">
-                <h4>Today Revenue</h4>
-                <p id="kpiToday">-</p>
-              </article>
-              <article class="kpi">
-                <h4>7-Day Revenue</h4>
-                <p id="kpiWeek">-</p>
-              </article>
-              <article class="kpi">
-                <h4>30-Day Revenue</h4>
-                <p id="kpiMonth">-</p>
-              </article>
-              <article class="kpi">
-                <h4>Active Deliveries</h4>
-                <p id="kpiActive">-</p>
-              </article>
+            <h3 class="section-title">Rider Management</h3>
+            <form id="riderForm" class="controls">
+              <input id="riderName" placeholder="Rider full name" aria-label="Rider full name" required />
+              <input id="riderPhone" placeholder="Phone (+254...)" aria-label="Rider phone number" required />
+              <input id="riderPin" placeholder="PIN" aria-label="Rider PIN" required />
+              <button type="submit">Add Rider</button>
+            </form>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="ridersTableBody"></tbody>
+              </table>
             </div>
           </div>
         </section>
 
         <section class="card admin-panel">
           <div class="card-body">
-            <h3 class="section-title">Performance</h3>
-            <div class="grid admin-insights">
-              <article class="kpi">
-                <h4>Most Ordered Products</h4>
-                <p class="small" id="topProducts"></p>
-              </article>
-              <article class="kpi">
-                <h4>Rider Performance</h4>
-                <p class="small" id="riderPerformance"></p>
-              </article>
+            <h3 class="section-title">Assign Delivery</h3>
+            <form id="assignForm" class="controls">
+              <select id="assignOrder" aria-label="Order to assign"></select>
+              <select id="assignRider" aria-label="Rider to assign"></select>
+              <button type="submit">Assign Rider</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="card admin-panel">
+          <div class="card-body">
+            <h3 class="section-title">Delivery Log</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Delivery</th>
+                    <th>Rider</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Status</th>
+                    <th>Last Update</th>
+                    <th>Update</th>
+                  </tr>
+                </thead>
+                <tbody id="deliveriesTableBody"></tbody>
+              </table>
             </div>
           </div>
         </section>

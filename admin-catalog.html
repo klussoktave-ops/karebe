@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard | Karebe</title>
+  <title>Admin Catalog | Karebe</title>
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
-<body data-page="admin-dashboard">
+<body data-page="admin-catalog">
   <main class="container admin-layout">
     <aside class="card admin-nav">
       <div class="admin-nav-brand">
@@ -30,10 +30,10 @@
     <section class="admin-main">
       <header class="card page-header">
         <div>
-          <h2>Business Snapshot</h2>
-          <p>Revenue, delivery health, and quick access to team performance.</p>
+          <h2>Catalog Management</h2>
+          <p>Search products, update stock, and maintain clean inventory listings.</p>
         </div>
-        <a class="button-link" data-icon="&#10010;" href="admin-orders.html">Create Order</a>
+        <a class="button-link" data-icon="&#10010;" href="admin-product-new.html">Add Product</a>
       </header>
 
       <section id="adminLogin" class="card login-card hidden">
@@ -63,40 +63,29 @@
 
         <section class="card admin-panel">
           <div class="card-body">
-            <h3 class="section-title">Revenue Overview</h3>
-            <div class="grid kpis">
-              <article class="kpi">
-                <h4>Today Revenue</h4>
-                <p id="kpiToday">-</p>
-              </article>
-              <article class="kpi">
-                <h4>7-Day Revenue</h4>
-                <p id="kpiWeek">-</p>
-              </article>
-              <article class="kpi">
-                <h4>30-Day Revenue</h4>
-                <p id="kpiMonth">-</p>
-              </article>
-              <article class="kpi">
-                <h4>Active Deliveries</h4>
-                <p id="kpiActive">-</p>
-              </article>
+            <h3 class="section-title">Product List</h3>
+            <div class="controls">
+              <input id="catalogSearch" placeholder="Search by name or category" aria-label="Search products" />
             </div>
-          </div>
-        </section>
-
-        <section class="card admin-panel">
-          <div class="card-body">
-            <h3 class="section-title">Performance</h3>
-            <div class="grid admin-insights">
-              <article class="kpi">
-                <h4>Most Ordered Products</h4>
-                <p class="small" id="topProducts"></p>
-              </article>
-              <article class="kpi">
-                <h4>Rider Performance</h4>
-                <p class="small" id="riderPerformance"></p>
-              </article>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Volume</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Stock</th>
+                    <th>Delete</th>
+                  </tr>
+                </thead>
+                <tbody id="productsTableBody"></tbody>
+              </table>
+            </div>
+            <div id="catalogSelectionCard" class="kpi hidden" style="margin-top: 12px;">
+              <h4>Selected Product</h4>
+              <p id="catalogSelectedState" class="small">Click a row to preview product details.</p>
             </div>
           </div>
         </section>

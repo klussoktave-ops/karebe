@@ -1,6 +1,8 @@
 (function () {
   const STORAGE_KEY = "karebe_state_v1";
   const ADMIN_SESSION_KEY = "karebe_admin_session";
+  const ADMIN_CATALOG_SELECTION_KEY = "karebe_admin_catalog_selection";
+  const ADMIN_ORDER_EXPANDED_KEY = "karebe_admin_expanded_order";
   const RIDER_SESSION_KEY = "karebe_rider_id";
   const CUSTOMER_BRANCH_KEY = "karebe_customer_branch";
   const PAYMENT_STATUSES = ["PENDING", "PAID"];
@@ -153,43 +155,6 @@
     el.textContent = message;
     el.classList.remove("ok", "warn", "danger");
     if (type) el.classList.add(type);
-  }
-
-  function setupAdminTabs(isSuper) {
-    const tabsWrap = document.getElementById("adminTabs");
-    if (!tabsWrap) return;
-    const tabs = Array.from(tabsWrap.querySelectorAll(".admin-tab"));
-    const panels = Array.from(document.querySelectorAll(".admin-tab-panel"));
-    const storageKey = "karebe_admin_tab";
-
-    const visibleTabs = tabs.filter((tab) => {
-      if (tab.dataset.tab !== "system") return true;
-      return isSuper;
-    });
-    tabs.forEach((tab) => {
-      tab.classList.toggle("hidden", !visibleTabs.includes(tab));
-    });
-
-    const hasPanelForTab = (tabName) =>
-      panels.some((panel) => panel.dataset.panel === tabName && !(panel.classList.contains("super-only") && !isSuper));
-
-    const applyTab = (tabName) => {
-      const target = hasPanelForTab(tabName) ? tabName : visibleTabs[0] ? visibleTabs[0].dataset.tab : "operations";
-      tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === target));
-      panels.forEach((panel) => {
-        const match = panel.dataset.panel === target;
-        panel.classList.toggle("active", match);
-      });
-      sessionStorage.setItem(storageKey, target);
-      logClient("info", "ADMIN", "Switched dashboard tab.", { tab: target });
-    };
-
-    visibleTabs.forEach((tab) => {
-      tab.onclick = () => applyTab(tab.dataset.tab);
-    });
-
-    const initial = sessionStorage.getItem(storageKey) || "operations";
-    applyTab(initial);
   }
 
   async function saveState(state, source) {
@@ -751,7 +716,6 @@
     appWrap.classList.remove("hidden");
     const isSuper = session.role === "super-admin";
     adminSyncLabel("ok", "Sync ready");
-    setupAdminTabs(isSuper);
     const identity = document.getElementById("adminIdentity");
     if (identity) identity.textContent = `${session.name || session.username} (${session.role})`;
     document.querySelectorAll(".super-only").forEach((el) => el.classList.toggle("hidden", !isSuper));
@@ -826,32 +790,50 @@
     }
 
     const variants = getAllVariants(state);
-    document.getElementById("kpiToday").textContent = fmtKES(
-      state.orders.filter((o) => dateOnly(o.createdAt) === dateOnly(nowISO())).reduce((s, o) => s + o.total, 0)
-    );
-    document.getElementById("kpiWeek").textContent = fmtKES(
-      state.orders.filter((o) => inRangeDays(o.createdAt, 7)).reduce((s, o) => s + o.total, 0)
-    );
-    document.getElementById("kpiMonth").textContent = fmtKES(
-      state.orders.filter((o) => inRangeDays(o.createdAt, 30)).reduce((s, o) => s + o.total, 0)
-    );
-    document.getElementById("kpiActive").textContent = String(
-      state.deliveries.filter((d) => d.status !== "DELIVERED").length
-    );
+    const kpiTodayEl = document.getElementById("kpiToday");
+    const kpiWeekEl = document.getElementById("kpiWeek");
+    const kpiMonthEl = document.getElementById("kpiMonth");
+    const kpiActiveEl = document.getElementById("kpiActive");
+    if (kpiTodayEl) {
+      kpiTodayEl.textContent = fmtKES(
+        state.orders.filter((o) => dateOnly(o.createdAt) === dateOnly(nowISO())).reduce((s, o) => s + o.total, 0)
+      );
+    }
+    if (kpiWeekEl) {
+      kpiWeekEl.textContent = fmtKES(
+        state.orders.filter((o) => inRangeDays(o.createdAt, 7)).reduce((s, o) => s + o.total, 0)
+      );
+    }
+    if (kpiMonthEl) {
+      kpiMonthEl.textContent = fmtKES(
+        state.orders.filter((o) => inRangeDays(o.createdAt, 30)).reduce((s, o) => s + o.total, 0)
+      );
+    }
+    if (kpiActiveEl) {
+      kpiActiveEl.textContent = String(
+        state.deliveries.filter((d) => d.status !== "DELIVERED").length
+      );
+    }
 
     const freq = {};
     state.orders.forEach((o) => o.items.forEach((i) => (freq[i.productName] = (freq[i.productName] || 0) + i.qty)));
-    document.getElementById("topProducts").textContent =
-      Object.entries(freq)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
-        .map(([name, qty]) => `${name} (${qty})`)
-        .join(", ") || "No orders yet";
+    const topProductsEl = document.getElementById("topProducts");
+    if (topProductsEl) {
+      topProductsEl.textContent =
+        Object.entries(freq)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([name, qty]) => `${name} (${qty})`)
+          .join(", ") || "No orders yet";
+    }
 
-    document.getElementById("riderPerformance").textContent =
-      state.riders
-        .map((r) => `${r.name}: ${state.deliveries.filter((d) => d.riderId === r.id && d.status === "DELIVERED").length}`)
-        .join(" | ") || "No rider data";
+    const riderPerformanceEl = document.getElementById("riderPerformance");
+    if (riderPerformanceEl) {
+      riderPerformanceEl.textContent =
+        state.riders
+          .map((r) => `${r.name}: ${state.deliveries.filter((d) => d.riderId === r.id && d.status === "DELIVERED").length}`)
+          .join(" | ") || "No rider data";
+    }
 
     const customerProfilesBody = document.getElementById("customerProfilesBody");
     if (customerProfilesBody) {
@@ -921,144 +903,319 @@
       categoryOptions.innerHTML = categories.map((c) => `<option value="${c}"></option>`).join("");
     }
 
-    document.getElementById("productsTableBody").innerHTML =
-      state.products
-        .map((p) => {
-          const v = p.variants[0];
-          return `<tr><td>${p.name}</td><td>${p.category}</td><td>${v.volume}</td><td>${fmtKES(v.price)}</td><td>${v.stock}</td><td><button data-act="stock" data-id="${p.id}" class="secondary">Toggle Stock</button></td><td><button data-act="del" data-id="${p.id}" class="secondary">Delete</button></td></tr>`;
-        })
-        .join("") || `<tr><td colspan="7">No products.</td></tr>`;
+    const productsTableBody = document.getElementById("productsTableBody");
+    if (productsTableBody) {
+      const searchInput = document.getElementById("catalogSearch");
+      const selectionCard = document.getElementById("catalogSelectionCard");
+      const selectionState = document.getElementById("catalogSelectedState");
 
-    document.getElementById("productsTableBody").onclick = async (e) => {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      const fresh = loadState();
-      const p = fresh.products.find((x) => x.id === btn.dataset.id);
-      if (!p) return;
-      let actionName = "";
-      if (btn.dataset.act === "stock") {
-        p.variants.forEach((v) => (v.stock = v.stock > 0 ? 0 : 10));
-        actionName = "toggle_product_stock";
-      }
-      if (btn.dataset.act === "del") {
-        fresh.products = fresh.products.filter((x) => x.id !== btn.dataset.id);
-        actionName = "delete_product";
-      }
-      if (!actionName) return;
-      await persistAdminState(fresh, actionName);
-    };
-
-    document.getElementById("productForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const btn = document.querySelector('#productForm button[type="submit"]');
-      const originalText = btn.textContent;
-
-      let imageUrl = "https://images.unsplash.com/photo-1516594798947-e65505dbb29d?auto=format&fit=crop&w=700&q=70";
-      const fileInput = document.getElementById("productImageFile");
-      if (fileInput && fileInput.files.length > 0 && window.supabaseClient) {
-        btn.textContent = "Uploading Image...";
-        btn.disabled = true;
-        const file = fileInput.files[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${uid('img')}.${fileExt}`;
-        const filePath = `products/${fileName}`;
-        const { error } = await window.supabaseClient.storage.from('product_images').upload(filePath, file);
-        if (!error) {
-          const { data } = window.supabaseClient.storage.from('product_images').getPublicUrl(filePath);
-          if (data && data.publicUrl) imageUrl = data.publicUrl;
-        } else {
-          console.error("Upload error:", error);
-          notify("Image upload failed. Using default image.", "warn");
+      const renderCatalogSelection = (product) => {
+        if (!selectionCard || !selectionState) return;
+        if (!product) {
+          selectionCard.classList.add("hidden");
+          selectionState.textContent = "Click a row to preview product details.";
+          return;
         }
-        btn.textContent = originalText;
-        btn.disabled = false;
-      }
+        const variantsSummary = (product.variants || [])
+          .map((v) => `${v.volume}: ${fmtKES(v.price)} (${v.stock} in stock)`)
+          .join(" | ");
+        selectionState.innerHTML = `<strong>${product.name}</strong><br>${product.category || "Uncategorized"}<br>${variantsSummary || "No variants configured."}`;
+        selectionCard.classList.remove("hidden");
+      };
 
-      const fresh = loadState();
-      fresh.products.push({
-        id: uid("p"),
-        name: document.getElementById("productName").value.trim(),
-        category: document.getElementById("productCategory").value.trim(),
-        description: document.getElementById("productDesc").value.trim(),
-        image: imageUrl,
-        popular: document.getElementById("productPopular").checked,
-        newArrival: document.getElementById("productNew").checked,
-        variants: [{ id: uid("v"), volume: document.getElementById("productVolume").value.trim(), price: Number(document.getElementById("productPrice").value), stock: Number(document.getElementById("productStock").value) }]
-      });
-      const newCategory = document.getElementById("productCategory").value.trim();
-      if (newCategory && !fresh.categories.includes(newCategory)) {
-        fresh.categories.push(newCategory);
-      }
-      await persistAdminState(fresh, "create_product");
-    };
+      const drawProducts = () => {
+        const fresh = loadState();
+        const term = searchInput ? String(searchInput.value || "").trim().toLowerCase() : "";
+        const selectedProductId = sessionStorage.getItem(ADMIN_CATALOG_SELECTION_KEY);
+        const rows = fresh.products
+          .filter((p) => {
+            if (!term) return true;
+            return p.name.toLowerCase().includes(term) || String(p.category || "").toLowerCase().includes(term);
+          })
+          .map((p) => {
+            const v = p.variants && p.variants[0] ? p.variants[0] : { volume: "-", price: 0, stock: 0 };
+            const rowClass = selectedProductId === p.id ? "catalog-row is-selected" : "catalog-row";
+            return `<tr class="${rowClass}" data-product-id="${p.id}"><td>${p.name}</td><td>${p.category || "-"}</td><td>${v.volume}</td><td>${fmtKES(v.price)}</td><td>${v.stock}</td><td><button data-act="stock" data-id="${p.id}" class="secondary">Toggle Stock</button></td><td><button data-act="del" data-id="${p.id}" class="secondary">Delete</button></td></tr>`;
+          })
+          .join("");
+        productsTableBody.innerHTML = rows || `<tr><td colspan="7">No products found.</td></tr>`;
+        if (!selectedProductId) return;
+        const selected = fresh.products.find((p) => p.id === selectedProductId);
+        if (selected) {
+          renderCatalogSelection(selected);
+        } else {
+          sessionStorage.removeItem(ADMIN_CATALOG_SELECTION_KEY);
+          renderCatalogSelection(null);
+        }
+      };
+      drawProducts();
+      if (searchInput) searchInput.oninput = drawProducts;
 
-    document.getElementById("ridersTableBody").innerHTML =
-      state.riders.map((r) => `<tr><td>${r.name}</td><td>${r.phone}</td><td>${r.active ? "Active" : "Inactive"}</td></tr>`).join("") || `<tr><td colspan="3">No riders.</td></tr>`;
-    document.getElementById("riderForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const fresh = loadState();
-      fresh.riders.push({ id: uid("r"), name: document.getElementById("riderName").value.trim(), phone: document.getElementById("riderPhone").value.trim(), pin: document.getElementById("riderPin").value.trim(), active: true });
-      await persistAdminState(fresh, "create_rider");
-    };
+      productsTableBody.onclick = async (e) => {
+        const btn = e.target.closest("button");
+        const row = e.target.closest("tr[data-product-id]");
+        if (btn) {
+          const fresh = loadState();
+          const p = fresh.products.find((x) => x.id === btn.dataset.id);
+          if (!p) return;
+          let actionName = "";
+          if (btn.dataset.act === "stock") {
+            p.variants.forEach((v) => (v.stock = v.stock > 0 ? 0 : 10));
+            actionName = "toggle_product_stock";
+          }
+          if (btn.dataset.act === "del") {
+            fresh.products = fresh.products.filter((x) => x.id !== btn.dataset.id);
+            if (sessionStorage.getItem(ADMIN_CATALOG_SELECTION_KEY) === btn.dataset.id) {
+              sessionStorage.removeItem(ADMIN_CATALOG_SELECTION_KEY);
+            }
+            actionName = "delete_product";
+          }
+          if (!actionName) return;
+          await persistAdminState(fresh, actionName);
+          return;
+        }
+        if (!row) return;
+        const fresh = loadState();
+        const selectedProduct = fresh.products.find((p) => p.id === row.dataset.productId);
+        if (!selectedProduct) {
+          sessionStorage.removeItem(ADMIN_CATALOG_SELECTION_KEY);
+          renderCatalogSelection(null);
+          drawProducts();
+          return;
+        }
+        sessionStorage.setItem(ADMIN_CATALOG_SELECTION_KEY, selectedProduct.id);
+        renderCatalogSelection(selectedProduct);
+        drawProducts();
+      };
+    }
+
+    const productForm = document.getElementById("productForm");
+    if (productForm) {
+      productForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = productForm.querySelector('button[type="submit"]');
+        const originalText = btn ? btn.textContent : "Save Product";
+
+        let imageUrl = "https://images.unsplash.com/photo-1516594798947-e65505dbb29d?auto=format&fit=crop&w=700&q=70";
+        const fileInput = document.getElementById("productImageFile");
+        if (btn && fileInput && fileInput.files.length > 0 && window.supabaseClient) {
+          btn.textContent = "Uploading Image...";
+          btn.disabled = true;
+          const file = fileInput.files[0];
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${uid('img')}.${fileExt}`;
+          const filePath = `products/${fileName}`;
+          const { error } = await window.supabaseClient.storage.from('product_images').upload(filePath, file);
+          if (!error) {
+            const { data } = window.supabaseClient.storage.from('product_images').getPublicUrl(filePath);
+            if (data && data.publicUrl) imageUrl = data.publicUrl;
+          } else {
+            console.error("Upload error:", error);
+            notify("Image upload failed. Using default image.", "warn");
+          }
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+
+        const fresh = loadState();
+        fresh.products.push({
+          id: uid("p"),
+          name: document.getElementById("productName").value.trim(),
+          category: document.getElementById("productCategory").value.trim(),
+          description: document.getElementById("productDesc").value.trim(),
+          image: imageUrl,
+          popular: document.getElementById("productPopular").checked,
+          newArrival: document.getElementById("productNew").checked,
+          variants: [{ id: uid("v"), volume: document.getElementById("productVolume").value.trim(), price: Number(document.getElementById("productPrice").value), stock: Number(document.getElementById("productStock").value) }]
+        });
+        const newCategory = document.getElementById("productCategory").value.trim();
+        if (newCategory && !fresh.categories.includes(newCategory)) {
+          fresh.categories.push(newCategory);
+        }
+        await persistAdminState(fresh, "create_product");
+      };
+    }
+
+    const ridersTableBody = document.getElementById("ridersTableBody");
+    if (ridersTableBody) {
+      ridersTableBody.innerHTML =
+        state.riders.map((r) => `<tr><td>${r.name}</td><td>${r.phone}</td><td>${r.active ? "Active" : "Inactive"}</td></tr>`).join("")
+        || `<tr><td colspan="3">No riders.</td></tr>`;
+    }
+    const riderForm = document.getElementById("riderForm");
+    if (riderForm) {
+      riderForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const fresh = loadState();
+        fresh.riders.push({ id: uid("r"), name: document.getElementById("riderName").value.trim(), phone: document.getElementById("riderPhone").value.trim(), pin: document.getElementById("riderPin").value.trim(), active: true });
+        await persistAdminState(fresh, "create_rider");
+      };
+    }
 
     const orderVariant = document.getElementById("orderVariant");
-    orderVariant.innerHTML = variants.map((row) => `<option value="${row.product.id}|${row.variant.id}">${row.product.name} - ${row.variant.volume} (${fmtKES(row.variant.price)})</option>`).join("");
     const paymentSel = document.getElementById("orderPayment");
-    paymentSel.innerHTML = PAYMENT_STATUSES.map((p) => `<option value="${p}">${p.replaceAll("_", " ")}</option>`).join("");
-    document.getElementById("orderForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const fresh = loadState();
-      const [pId, vId] = orderVariant.value.split("|");
-      const qty = Number(document.getElementById("orderQty").value);
-      const paymentStatus = document.getElementById("orderPayment").value;
-      const customerPhone = document.getElementById("orderCustomer").value.trim();
-      const prod = fresh.products.find((p) => p.id === pId);
-      const variant = prod ? prod.variants.find((v) => v.id === vId) : null;
-      if (!prod || !variant) {
-        notify("Invalid product variant selected.", "warn");
-        return;
-      }
-      if (variant.stock < qty) {
-        notify("Insufficient stock for selected quantity.", "warn");
-        return;
-      }
-      const total = qty * variant.price;
-      variant.stock -= qty;
-      fresh.orders.push({ id: uid("o"), customerPhone, source: "CALL", paymentStatus, status: "CONFIRMED", total, createdAt: nowISO(), createdBy: session.username, branchId: session.branchId, items: [{ productId: prod.id, productName: prod.name, variantId: variant.id, volume: variant.volume, qty, unitPrice: variant.price, lineTotal: total }] });
-      await persistAdminState(fresh, "create_call_order");
-    };
+    const orderForm = document.getElementById("orderForm");
+    if (orderVariant) {
+      orderVariant.innerHTML = variants.map((row) => `<option value="${row.product.id}|${row.variant.id}">${row.product.name} - ${row.variant.volume} (${fmtKES(row.variant.price)})</option>`).join("");
+    }
+    if (paymentSel) {
+      paymentSel.innerHTML = PAYMENT_STATUSES.map((p) => `<option value="${p}">${p.replaceAll("_", " ")}</option>`).join("");
+    }
+    if (orderForm && orderVariant) {
+      orderForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const fresh = loadState();
+        const [pId, vId] = orderVariant.value.split("|");
+        const qty = Number(document.getElementById("orderQty").value);
+        const paymentStatus = document.getElementById("orderPayment").value;
+        const customerPhone = document.getElementById("orderCustomer").value.trim();
+        const prod = fresh.products.find((p) => p.id === pId);
+        const variant = prod ? prod.variants.find((v) => v.id === vId) : null;
+        if (!prod || !variant) {
+          notify("Invalid product variant selected.", "warn");
+          return;
+        }
+        if (variant.stock < qty) {
+          notify("Insufficient stock for selected quantity.", "warn");
+          return;
+        }
+        const total = qty * variant.price;
+        variant.stock -= qty;
+        fresh.orders.push({ id: uid("o"), customerPhone, source: "CALL", paymentStatus, status: "CONFIRMED", total, createdAt: nowISO(), createdBy: session.username, branchId: session.branchId, items: [{ productId: prod.id, productName: prod.name, variantId: variant.id, volume: variant.volume, qty, unitPrice: variant.price, lineTotal: total }] });
+        await persistAdminState(fresh, "create_call_order");
+      };
+    }
 
-    const riderOptions = state.riders.map((r) => `<option value="${r.id}">${r.name}</option>`).join("");
-    document.getElementById("assignRider").innerHTML =
-      riderOptions || `<option value="">No active riders. Add one in Rider Management.</option>`;
-    const assigned = new Set(state.deliveries.map((d) => d.orderId));
-    const unassignedOrders = state.orders.filter((o) => !assigned.has(o.id));
-    document.getElementById("assignOrder").innerHTML =
-      unassignedOrders.map((o) => `<option value="${o.id}">${o.id} - ${fmtKES(o.total)} - ${o.customerPhone}</option>`).join("")
-      || `<option value="">No unassigned orders. Create order first.</option>`;
-    document.getElementById("assignForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const orderId = document.getElementById("assignOrder").value;
-      const riderId = document.getElementById("assignRider").value;
-      if (!orderId) {
-        notify("No unassigned order is available right now.", "warn");
-        return;
-      }
-      const fresh = loadState();
-      const start = DELIVERY_STATUSES[0];
-      fresh.deliveries.push({ id: uid("d"), orderId, riderId, status: start, timeline: [{ status: start, at: nowISO() }] });
-      await persistAdminState(fresh, "assign_delivery");
-    };
+    const assignOrderEl = document.getElementById("assignOrder");
+    const assignRiderEl = document.getElementById("assignRider");
+    const assignForm = document.getElementById("assignForm");
+    if (assignRiderEl) {
+      const riderOptions = state.riders.map((r) => `<option value="${r.id}">${r.name}</option>`).join("");
+      assignRiderEl.innerHTML = riderOptions || `<option value="">No active riders. Add one in Rider Management.</option>`;
+    }
+    if (assignOrderEl) {
+      const assigned = new Set(state.deliveries.map((d) => d.orderId));
+      const unassignedOrders = state.orders.filter((o) => !assigned.has(o.id));
+      assignOrderEl.innerHTML =
+        unassignedOrders.map((o) => `<option value="${o.id}">${o.id} - ${fmtKES(o.total)} - ${o.customerPhone}</option>`).join("")
+        || `<option value="">No unassigned orders. Create order first.</option>`;
+    }
+    if (assignForm && assignOrderEl && assignRiderEl) {
+      assignForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const orderId = assignOrderEl.value;
+        const riderId = assignRiderEl.value;
+        if (!orderId) {
+          notify("No unassigned order is available right now.", "warn");
+          return;
+        }
+        const fresh = loadState();
+        const start = DELIVERY_STATUSES[0];
+        fresh.deliveries.push({ id: uid("d"), orderId, riderId, status: start, timeline: [{ status: start, at: nowISO() }] });
+        await persistAdminState(fresh, "assign_delivery");
+      };
+    }
 
-    document.getElementById("ordersTableBody").innerHTML =
-      state.orders.map((o) => `<tr><td>${o.id}</td><td>${o.customerPhone}</td><td>${summarizeItems(o.items, 2)}</td><td>${fmtKES(o.total)}</td><td>${o.paymentStatus}</td><td>${dateOnly(o.createdAt)}</td></tr>`).join("") || `<tr><td colspan="6">No orders yet. Create your first call order in Operations.</td></tr>`;
+    const ordersTableBody = document.getElementById("ordersTableBody");
+    if (ordersTableBody) {
+      const paymentBadgeClass = (status) => (status === "PAID" ? "ok" : "warn");
+      const paymentLabel = (status) => String(status || "-").replaceAll("_", " ");
 
-    document.getElementById("deliveriesTableBody").innerHTML =
-      state.deliveries.map((d) => {
-        const rider = state.riders.find((r) => r.id === d.riderId);
-        const order = state.orders.find((o) => o.id === d.orderId);
-        return `<tr><td>${d.id}</td><td>${rider ? rider.name : "Unknown"}</td><td>${order ? order.customerPhone : "-"}</td><td>${order ? summarizeItems(order.items, 1) : "-"}</td><td>${d.status}</td><td>${d.timeline[d.timeline.length - 1].at.replace("T", " ").slice(0, 16)}</td></tr>`;
-      }).join("") || `<tr><td colspan="6">No deliveries yet. Assign a rider from the Delivery tab.</td></tr>`;
+      const drawOrders = () => {
+        const fresh = loadState();
+        const expandedId = sessionStorage.getItem(ADMIN_ORDER_EXPANDED_KEY);
+        ordersTableBody.innerHTML =
+          fresh.orders
+            .map((o) => {
+              const isExpanded = expandedId === o.id;
+              const details = (o.items || [])
+                .map((item) => `${item.productName} ${item.volume} x${item.qty} = ${fmtKES(item.lineTotal)}`)
+                .join("<br>");
+              return `<tr class="order-main-row ${isExpanded ? "is-expanded" : ""}" data-order-id="${o.id}"><td><button class="secondary" data-act="expand-order" data-id="${o.id}">${isExpanded ? "Hide" : "View"}</button> ${o.id}</td><td>${o.customerPhone}</td><td>${summarizeItems(o.items, 2)}</td><td>${fmtKES(o.total)}</td><td><span class="badge ${paymentBadgeClass(o.paymentStatus)}">${paymentLabel(o.paymentStatus)}</span></td><td>${dateOnly(o.createdAt)}</td></tr><tr class="order-detail-row ${isExpanded ? "" : "hidden"}" data-order-detail-id="${o.id}"><td colspan="6"><strong>Order Details</strong><br>${details || "No items captured."}<br><span class="small">Source: ${o.source || "-"} | Created by: ${o.createdBy || "-"} | Branch: ${o.branchId || "-"}</span></td></tr>`;
+            })
+            .join("") || `<tr><td colspan="6">No orders yet. Create your first call order in Operations.</td></tr>`;
+      };
+
+      drawOrders();
+      ordersTableBody.onclick = (e) => {
+        const trigger = e.target.closest("[data-act='expand-order']");
+        const row = e.target.closest("tr[data-order-id]");
+        const orderId = trigger ? trigger.dataset.id : row ? row.dataset.orderId : "";
+        if (!orderId) return;
+        const expandedId = sessionStorage.getItem(ADMIN_ORDER_EXPANDED_KEY);
+        if (expandedId === orderId) {
+          sessionStorage.removeItem(ADMIN_ORDER_EXPANDED_KEY);
+        } else {
+          sessionStorage.setItem(ADMIN_ORDER_EXPANDED_KEY, orderId);
+        }
+        drawOrders();
+      };
+    }
+
+    const deliveriesTableBody = document.getElementById("deliveriesTableBody");
+    if (deliveriesTableBody) {
+      const deliveryTone = (status) => {
+        if (status === "DELIVERED") return "ok";
+        if (status === "ON_THE_WAY") return "gold";
+        return "warn";
+      };
+      const deliveryLabel = (status) => String(status || "-").replaceAll("_", " ");
+      const deliveryIcon = (status) => {
+        const map = {
+          ASSIGNED: "A",
+          PICKED_UP: "P",
+          ON_THE_WAY: "O",
+          DELIVERED: "D"
+        };
+        return map[status] || "?";
+      };
+
+      const drawDeliveries = () => {
+        const fresh = loadState();
+        deliveriesTableBody.innerHTML =
+          fresh.deliveries
+            .map((d) => {
+              const rider = fresh.riders.find((r) => r.id === d.riderId);
+              const order = fresh.orders.find((o) => o.id === d.orderId);
+              const currentIndex = DELIVERY_STATUSES.indexOf(d.status);
+              const updateControls = DELIVERY_STATUSES.map((status, index) => {
+                const isCurrent = status === d.status;
+                const canAdvance = index === currentIndex + 1;
+                const done = index <= currentIndex;
+                const classes = `secondary status-step${isCurrent ? " is-current" : ""}${done ? " is-done" : ""}`;
+                const disabled = canAdvance ? "" : "disabled";
+                return `<button class="${classes}" data-act="set-delivery-status" data-id="${d.id}" data-status="${status}" ${disabled}>${deliveryIcon(status)} ${deliveryLabel(status)}</button>`;
+              }).join("");
+              const latest = d.timeline && d.timeline.length ? d.timeline[d.timeline.length - 1].at : nowISO();
+              return `<tr><td>${d.id}</td><td>${rider ? rider.name : "Unknown"}</td><td>${order ? order.customerPhone : "-"}</td><td>${order ? summarizeItems(order.items, 1) : "-"}</td><td><span class="badge ${deliveryTone(d.status)}">${deliveryLabel(d.status)}</span></td><td>${latest.replace("T", " ").slice(0, 16)}</td><td><div class="status-step-group">${updateControls}</div></td></tr>`;
+            })
+            .join("") || `<tr><td colspan="7">No deliveries yet. Assign a rider from the Delivery page.</td></tr>`;
+      };
+
+      drawDeliveries();
+      deliveriesTableBody.onclick = async (e) => {
+        const btn = e.target.closest("button[data-act='set-delivery-status']");
+        if (!btn || btn.disabled) return;
+        const fresh = loadState();
+        const delivery = fresh.deliveries.find((d) => d.id === btn.dataset.id);
+        if (!delivery) return;
+        const currentIndex = DELIVERY_STATUSES.indexOf(delivery.status);
+        const targetStatus = btn.dataset.status;
+        const targetIndex = DELIVERY_STATUSES.indexOf(targetStatus);
+        if (targetIndex !== currentIndex + 1) {
+          notify("Delivery can only move one step forward at a time.", "warn");
+          return;
+        }
+        delivery.status = targetStatus;
+        delivery.timeline = Array.isArray(delivery.timeline) ? delivery.timeline : [];
+        delivery.timeline.push({ status: targetStatus, at: nowISO() });
+        if (targetStatus === "DELIVERED") {
+          const order = fresh.orders.find((o) => o.id === delivery.orderId);
+          if (order) order.status = "COMPLETED";
+        }
+        await persistAdminState(fresh, "update_delivery_status");
+      };
+    }
 
     const shiftBranch = document.getElementById("shiftBranch");
     const shiftUser = document.getElementById("shiftUser");
@@ -1269,7 +1426,7 @@
 
     const page = document.body.dataset.page;
     if (page === "customer") renderCustomer();
-    if (page === "admin") renderAdmin();
+    if (page && page.startsWith("admin")) renderAdmin();
     if (page === "rider") renderRider();
   }
 

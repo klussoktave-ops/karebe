@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard | Karebe</title>
+  <title>Orders | Karebe Admin</title>
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
-<body data-page="admin-dashboard">
+<body data-page="admin-orders">
   <main class="container admin-layout">
     <aside class="card admin-nav">
       <div class="admin-nav-brand">
@@ -30,10 +30,10 @@
     <section class="admin-main">
       <header class="card page-header">
         <div>
-          <h2>Business Snapshot</h2>
-          <p>Revenue, delivery health, and quick access to team performance.</p>
+          <h2>Order Operations</h2>
+          <p>Create call orders and monitor all incoming order activity.</p>
         </div>
-        <a class="button-link" data-icon="&#10010;" href="admin-orders.html">Create Order</a>
+        <a class="button-link" data-icon="&#8594;" href="admin-delivery.html">Go to Delivery</a>
       </header>
 
       <section id="adminLogin" class="card login-card hidden">
@@ -63,40 +63,45 @@
 
         <section class="card admin-panel">
           <div class="card-body">
-            <h3 class="section-title">Revenue Overview</h3>
-            <div class="grid kpis">
-              <article class="kpi">
-                <h4>Today Revenue</h4>
-                <p id="kpiToday">-</p>
-              </article>
-              <article class="kpi">
-                <h4>7-Day Revenue</h4>
-                <p id="kpiWeek">-</p>
-              </article>
-              <article class="kpi">
-                <h4>30-Day Revenue</h4>
-                <p id="kpiMonth">-</p>
-              </article>
-              <article class="kpi">
-                <h4>Active Deliveries</h4>
-                <p id="kpiActive">-</p>
-              </article>
-            </div>
+            <h3 class="section-title">Create Call Order</h3>
+            <form id="orderForm" class="controls">
+              <label class="small" for="orderVariant">Product</label>
+              <select id="orderVariant" aria-label="Order product variant"></select>
+
+              <label class="small" for="orderQty">Quantity</label>
+              <input id="orderQty" type="number" min="1" value="1" aria-label="Order quantity" required />
+
+              <label class="small" for="orderCustomer">Customer phone</label>
+              <input id="orderCustomer" placeholder="+254..." aria-label="Customer phone number" required />
+
+              <label class="small" for="orderPayment">Payment status</label>
+              <select id="orderPayment" aria-label="Order payment status">
+                <option value="PENDING">Payment Pending</option>
+                <option value="PAID">Paid</option>
+              </select>
+
+              <button type="submit">Create Order</button>
+            </form>
           </div>
         </section>
 
         <section class="card admin-panel">
           <div class="card-body">
-            <h3 class="section-title">Performance</h3>
-            <div class="grid admin-insights">
-              <article class="kpi">
-                <h4>Most Ordered Products</h4>
-                <p class="small" id="topProducts"></p>
-              </article>
-              <article class="kpi">
-                <h4>Rider Performance</h4>
-                <p class="small" id="riderPerformance"></p>
-              </article>
+            <h3 class="section-title">Order Log</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="ordersTableBody"></tbody>
+              </table>
             </div>
           </div>
         </section>
