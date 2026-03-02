@@ -188,6 +188,19 @@ Objective: Rebuild to a modern, warm, tactile, icon-driven multi-page SaaS UI.
 - [x] Validation pass after Add Product validation updates:
   - `node --check assets/app.js`
   - `npm test` (100/100 passing)
+- [x] Applied full dark urban design system pass:
+  - Added global color tokens (deep charcoal + neon accents) and spacing tokens.
+  - Added sticky glass navbar treatment and stronger visual hierarchy.
+  - Unified customer/admin/rider surfaces, cards, buttons, forms, and badges under one theme.
+  - Added dark table refinements and mobile table-to-card responsive behavior.
+  - Added reduced-motion support and stronger focus/hover glow feedback patterns.
+- [x] Added supporting behavior updates in `assets/app.js`:
+  - Responsive table label hydration for mobile table cards.
+  - Cart count badge bump animation trigger.
+  - Customer checkout method CTA persistence and interaction polish.
+- [x] Validation pass after urban-system updates:
+  - `node --check assets/app.js`
+  - `npm test` (100/100 passing)
 
 ## Resume Notes
 - Current phase: **Phase 6 + Phase 7 (in progress)**.

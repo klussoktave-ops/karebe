@@ -49,6 +49,19 @@
     return String(phone || "").replace(/[^\d]/g, "");
   }
 
+  function refreshResponsiveTables(scope) {
+    const root = scope || document;
+    root.querySelectorAll(".table-wrap table").forEach((table) => {
+      const headers = Array.from(table.querySelectorAll("thead th")).map((th) => String(th.textContent || "").trim());
+      if (!headers.length) return;
+      table.querySelectorAll("tbody tr").forEach((tr) => {
+        Array.from(tr.children).forEach((cell, idx) => {
+          if (cell && cell.setAttribute) cell.setAttribute("data-label", headers[idx] || "Value");
+        });
+      });
+    });
+  }
+
   function reconcile(state, seed) {
     const next = clone(state || {});
     next.users = Array.isArray(next.users) ? next.users : clone(seed.users || []);
@@ -283,6 +296,7 @@
     const checkoutMethods = document.getElementById("checkoutMethods");
     const checkoutHint = document.getElementById("checkoutHint");
     const cartClear = document.getElementById("cartClear");
+    const cartCountBadge = document.getElementById("cartCountBadge");
     const activeTill = document.getElementById("activeTill");
     const customerMeta = document.getElementById("customerMeta");
     const selectableOrders = document.getElementById("selectableOrders");
@@ -454,6 +468,7 @@
       const profile = currentProfile(fresh);
       const items = profile.cart.filter((i) => i.branchId === branchId);
       const total = items.reduce((s, i) => s + i.lineTotal, 0);
+      const itemCount = items.reduce((sum, i) => sum + Number(i.qty || 0), 0);
       const contact = getShiftContact(fresh, branchId);
       const till = getTillForBranch(fresh, branchId);
       cartItems.innerHTML = items.length
@@ -466,6 +481,13 @@
         : `<p class="small">Your cart is empty. Add an item from the catalog to start checkout.</p>`;
       cartTotal.textContent = fmtKES(total);
       syncCheckoutMethodUI(items.length > 0);
+      if (cartCountBadge) {
+        cartCountBadge.textContent = String(itemCount);
+        cartCountBadge.classList.remove("bump");
+        // Retrigger bump animation after every cart mutation.
+        void cartCountBadge.offsetWidth;
+        cartCountBadge.classList.add("bump");
+      }
       if (shiftContact) shiftContact.textContent = `On shift: ${contact.label} - ${contact.phone}`;
       if (activeTill) {
         activeTill.textContent = till
@@ -611,7 +633,7 @@
       syncLegacyCart(fresh, profile);
       saveState(fresh);
       renderCart();
-      notify("Item added to cart.", "ok");
+      notify("Added to cart.", "ok");
     }
 
     function card(product, variant) {
@@ -702,6 +724,7 @@
     }
     draw();
     renderSelectableOrders();
+    refreshResponsiveTables();
   }
 
   function getAllVariants(state) {
@@ -1379,6 +1402,8 @@
         });
       };
     }
+
+    refreshResponsiveTables();
   }
 
   function renderRider() {
@@ -1495,6 +1520,7 @@
         const order = state.orders.find((o) => o.id === d.orderId);
         return `<tr><td>${d.id}</td><td>${order ? summarizeItems(order.items, 2) : "-"}</td><td>${d.status}</td><td>${d.timeline[d.timeline.length - 1].at.replace("T", " ").slice(0, 16)}</td></tr>`;
       }).join("") || `<tr><td colspan="4">No history yet. Completed jobs will appear here.</td></tr>`;
+    refreshResponsiveTables();
   }
 
   async function initApp() {
