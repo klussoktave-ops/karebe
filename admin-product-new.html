@@ -1,11 +1,13 @@
 ﻿<!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Add Product | Karebe Admin</title>
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
+
 <body data-page="admin-product-new">
   <main class="container admin-layout">
     <aside class="card admin-nav">
@@ -41,9 +43,11 @@
           <h3 class="section-title">Secure Login</h3>
           <form id="adminLoginForm" class="grid">
             <label class="small" for="adminUser">Username</label>
-            <input id="adminUser" placeholder="Enter username" autocomplete="username" aria-label="Admin username" required />
+            <input id="adminUser" placeholder="Enter username" autocomplete="username" aria-label="Admin username"
+              required />
             <label class="small" for="adminPass">Password</label>
-            <input id="adminPass" placeholder="Enter password" type="password" autocomplete="current-password" aria-label="Admin password" required />
+            <input id="adminPass" placeholder="Enter password" type="password" autocomplete="current-password"
+              aria-label="Admin password" required />
             <p class="small">Test login: karebe / karebe1234</p>
             <button type="submit">Login</button>
           </form>
@@ -69,24 +73,28 @@
               <input id="productName" placeholder="e.g. Jameson Black Barrel" aria-label="Product name" required />
 
               <label class="small" for="productCategory">Category</label>
-              <input id="productCategory" list="productCategoryOptions" placeholder="e.g. Whiskey" aria-label="Product category" required />
+              <input id="productCategory" list="productCategoryOptions" placeholder="e.g. Whiskey"
+                aria-label="Product category" required />
               <datalist id="productCategoryOptions"></datalist>
 
               <label class="small" for="productVolume">Volume</label>
               <input id="productVolume" placeholder="e.g. 750ml" aria-label="Product volume" required />
 
               <label class="small" for="productPrice">Price (KES)</label>
-              <input id="productPrice" type="number" min="1" placeholder="e.g. 3600" aria-label="Product price in KES" required />
+              <input id="productPrice" type="number" min="1" placeholder="e.g. 3600" aria-label="Product price in KES"
+                required />
 
               <label class="small" for="productStock">Stock quantity</label>
-              <input id="productStock" type="number" min="0" placeholder="e.g. 12" aria-label="Product stock quantity" required />
+              <input id="productStock" type="number" min="0" placeholder="e.g. 12" aria-label="Product stock quantity"
+                required />
 
               <label class="small" for="productImageFile">Product image</label>
               <input id="productImageFile" type="file" accept="image/*" aria-label="Product image file" />
               <p class="small">Optional: if omitted, a default image is used.</p>
 
               <label class="small" for="productDesc">Description</label>
-              <input id="productDesc" placeholder="Short tasting note or product summary" aria-label="Product description" required />
+              <input id="productDesc" placeholder="Short tasting note or product summary"
+                aria-label="Product description" required />
 
               <label class="small"><input id="productPopular" type="checkbox" /> Mark as Popular</label>
               <label class="small"><input id="productNew" type="checkbox" /> Mark as New Arrival</label>
@@ -102,6 +110,8 @@
   <script src="data/seed.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/supabase.js"></script>
+  <script src="assets/realtime.js"></script>
   <script src="assets/app.js"></script>
 </body>
+
 </html>

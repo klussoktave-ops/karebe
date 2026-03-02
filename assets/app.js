@@ -282,6 +282,13 @@
 
   function renderCustomer() {
     const state = loadState();
+    const adminSession = getAdminSession();
+    const riderSession = getRiderSession();
+
+    // Show/hide admin and rider links based on authentication
+    document.querySelectorAll('.auth-only').forEach(el => {
+      el.style.display = (adminSession || riderSession) ? 'inline' : 'none';
+    });
     const categorySel = document.getElementById("categoryFilter");
     const popularSel = document.getElementById("popularFilter");
     const newSel = document.getElementById("newFilter");
@@ -759,11 +766,13 @@
     const state = loadState();
     const loginWrap = document.getElementById("adminLogin");
     const appWrap = document.getElementById("adminApp");
+    const navWrap = document.getElementById("adminNav");
     const session = getAdminSession();
 
     if (!session) {
       loginWrap.classList.remove("hidden");
       appWrap.classList.add("hidden");
+      if (navWrap) navWrap.classList.add("hidden");
       document.getElementById("adminLoginForm").onsubmit = async (e) => {
         e.preventDefault();
         const u = document.getElementById("adminUser").value.trim();
@@ -784,6 +793,7 @@
 
     loginWrap.classList.add("hidden");
     appWrap.classList.remove("hidden");
+    if (navWrap) navWrap.classList.remove("hidden");
     const isSuper = session.role === "super-admin";
     adminSyncLabel("ok", "Sync ready");
     const identity = document.getElementById("adminIdentity");

@@ -1,14 +1,16 @@
 ﻿<!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard | Karebe</title>
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
+
 <body data-page="admin-dashboard">
   <main class="container admin-layout">
-    <aside class="card admin-nav">
+    <aside class="card admin-nav hidden" id="adminNav">
       <div class="admin-nav-brand">
         <h1>Karebe Admin</h1>
         <p>Operations command center</p>
@@ -41,9 +43,11 @@
           <h3 class="section-title">Secure Login</h3>
           <form id="adminLoginForm" class="grid">
             <label class="small" for="adminUser">Username</label>
-            <input id="adminUser" placeholder="Enter username" autocomplete="username" aria-label="Admin username" required />
+            <input id="adminUser" placeholder="Enter username" autocomplete="username" aria-label="Admin username"
+              required />
             <label class="small" for="adminPass">Password</label>
-            <input id="adminPass" placeholder="Enter password" type="password" autocomplete="current-password" aria-label="Admin password" required />
+            <input id="adminPass" placeholder="Enter password" type="password" autocomplete="current-password"
+              aria-label="Admin password" required />
             <p class="small">Test login: karebe / karebe1234</p>
             <button type="submit">Login</button>
           </form>
@@ -107,6 +111,8 @@
   <script src="data/seed.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/supabase.js"></script>
+  <script src="assets/realtime.js"></script>
   <script src="assets/app.js"></script>
 </body>
+
 </html>

@@ -12,5 +12,39 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/seed",
+      "destination": "/api/seed.js"
+    },
+    {
+      "source": "/api/cart",
+      "destination": "/api/cart.js"
+    },
+    {
+      "source": "/api/orders",
+      "destination": "/api/orders.js"
+    },
+    {
+      "source": "/api/delivery",
+      "destination": "/api/delivery.js"
+    },
+    {
+      "source": "/api/products",
+      "destination": "/api/products.js"
+    },
+    {
+      "source": "/api/admin/login",
+      "destination": "/api/admin/login.js"
+    },
+    {
+      "source": "/api/payments/daraja/stkpush",
+      "destination": "/api/payments/daraja/stkpush.js"
+    },
+    {
+      "source": "/api/payments/daraja/callback",
+      "destination": "/api/payments/daraja/callback.js"
+    }
   ]
 }

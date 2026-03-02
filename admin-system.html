@@ -1,11 +1,13 @@
 ﻿<!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>System | Karebe Admin</title>
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
+
 <body data-page="admin-system">
   <main class="container admin-layout">
     <aside class="card admin-nav">
@@ -40,9 +42,11 @@
           <h3 class="section-title">Secure Login</h3>
           <form id="adminLoginForm" class="grid">
             <label class="small" for="adminUser">Username</label>
-            <input id="adminUser" placeholder="Enter username" autocomplete="username" aria-label="Admin username" required />
+            <input id="adminUser" placeholder="Enter username" autocomplete="username" aria-label="Admin username"
+              required />
             <label class="small" for="adminPass">Password</label>
-            <input id="adminPass" placeholder="Enter password" type="password" autocomplete="current-password" aria-label="Admin password" required />
+            <input id="adminPass" placeholder="Enter password" type="password" autocomplete="current-password"
+              aria-label="Admin password" required />
             <p class="small">Test login: karebe / karebe1234</p>
             <button type="submit">Login</button>
           </form>
@@ -96,11 +100,13 @@
               </div>
               <div>
                 <label class="small" for="newBranchLat">Latitude</label>
-                <input id="newBranchLat" placeholder="Auto-filled from map click" aria-label="Branch latitude" readonly required />
+                <input id="newBranchLat" placeholder="Auto-filled from map click" aria-label="Branch latitude" readonly
+                  required />
               </div>
               <div>
                 <label class="small" for="newBranchLng">Longitude</label>
-                <input id="newBranchLng" placeholder="Auto-filled from map click" aria-label="Branch longitude" readonly required />
+                <input id="newBranchLng" placeholder="Auto-filled from map click" aria-label="Branch longitude" readonly
+                  required />
               </div>
               <button type="submit">Create Branch</button>
             </form>
@@ -121,7 +127,8 @@
               </div>
               <div>
                 <label class="small" for="managerPassword">Password</label>
-                <input id="managerPassword" type="password" placeholder="Temporary password" aria-label="Manager password" required />
+                <input id="managerPassword" type="password" placeholder="Temporary password"
+                  aria-label="Manager password" required />
               </div>
               <div>
                 <label class="small" for="managerPhone">Phone</label>
@@ -191,10 +198,14 @@
     </section>
   </main>
 
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places,geometry&callback=initMap" async defer></script>
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places,geometry&callback=initMap"
+    async defer></script>
   <script src="data/seed.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/supabase.js"></script>
+  <script src="assets/realtime.js"></script>
   <script src="assets/app.js"></script>
 </body>
+
 </html>

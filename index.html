@@ -16,10 +16,10 @@
         <h1>Karebe Wines & Spirits</h1>
         <p>Warm, guided checkout for premium delivery across Kenya.</p>
       </div>
-      <nav class="nav">
+      <nav class="nav" id="mainNav">
         <a href="index.html">Catalog</a>
-        <a href="admin.html">Admin Dashboard</a>
-        <a href="rider.html">Rider</a>
+        <a href="admin.html" class="auth-only" style="display:none">Admin Dashboard</a>
+        <a href="rider.html" class="auth-only" style="display:none">Rider</a>
       </nav>
     </header>
 
@@ -87,7 +87,8 @@
 
         <section class="card promo">
           <div class="promo-grid">
-            <img src="https://images.pexels.com/photos/1267696/pexels-photo-1267696.jpeg?auto=compress&cs=tinysrgb&w=900"
+            <img
+              src="https://images.pexels.com/photos/1267696/pexels-photo-1267696.jpeg?auto=compress&cs=tinysrgb&w=900"
               alt="Fresh keg service at Karebe" loading="lazy" />
             <div class="promo-body">
               <span class="badge gold">Keg Corner</span>
@@ -165,6 +166,7 @@
   <script src="data/seed.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/supabase.js"></script>
+  <script src="assets/realtime.js"></script>
   <script src="assets/app.js"></script>
 </body>
 
