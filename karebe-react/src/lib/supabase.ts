@@ -1,8 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Get env vars - these come from Vercel environment or .env file
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Handle both VITE_SUPABASE_URL and legacy SUPABASE_URL formats
+let supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.SUPABASE_URL || '';
+let supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.SUPABASE_ANON_KEY || '';
+
+// Strip any KEY= prefix if present (e.g., from .env file without VITE_)
+if (supabaseUrl.includes('=')) {
+  supabaseUrl = supabaseUrl.split('=')[1] || '';
+}
+if (supabaseAnonKey.includes('=')) {
+  supabaseAnonKey = supabaseAnonKey.split('=')[1] || '';
+}
 
 // Debug: Log raw values
 console.log('[Supabase] Raw URL value:', JSON.stringify(supabaseUrl));
