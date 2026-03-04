@@ -108,6 +108,7 @@ create table if not exists orders (
   payment_status text not null default 'PENDING',
   delivery_channel delivery_channel not null default 'PICKUP',
   delivery_address text,
+  delivery_notes text,
   branch_id text references branches(id),
   source text,
   created_by text,
