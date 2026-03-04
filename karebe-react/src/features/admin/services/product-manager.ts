@@ -1,5 +1,10 @@
 import { supabase } from '@/lib/supabase';
 
+// Generate UUID for product IDs
+function generateProductId(): string {
+  return 'prod-' + crypto.randomUUID().substring(0, 8);
+}
+
 // Category mapping - frontend labels to database IDs
 const CATEGORY_MAP: Record<string, string> = {
   'Wine': 'cat-wines',
@@ -140,11 +145,13 @@ export class ProductManager {
 
   static async createProduct(input: ProductCreateInput): Promise<Product> {
     const categoryId = this.getCategoryId(input.category);
+    const newProductId = generateProductId();
     
     // Create the product
     const { data: product, error: productError } = await supabase
       .from('products')
       .insert({
+        id: newProductId,
         name: input.name,
         description: input.description || null,
         price: input.price,
