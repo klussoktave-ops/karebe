@@ -112,6 +112,7 @@ create table if not exists orders (
   branch_id text references branches(id),
   source text,
   created_by text,
+  idempotency_key text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShoppingCart, Eye, Heart, Package } from 'lucide-react';
+import { ShoppingCart, Eye, Heart, Package, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +41,7 @@ export function ProductCard({
     product.variants?.find((v) => v.isDefault) || product.variants?.[0]
   );
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [quantity, setQuantity] = useState(1);
 
   // Get display price
   const displayPrice = selectedVariant?.price || product.price;
@@ -54,6 +55,16 @@ export function ProductCard({
   const handleAddToCart = () => {
     if (!isOutOfStock && onAddToCart) {
       onAddToCart(product, selectedVariant);
+    }
+  };
+
+  const handleQuickAdd = () => {
+    if (!isOutOfStock && onAddToCart) {
+      // Add the selected quantity
+      for (let i = 0; i < quantity; i++) {
+        onAddToCart(product, selectedVariant);
+      }
+      setQuantity(1); // Reset after adding
     }
   };
 
@@ -179,15 +190,43 @@ export function ProductCard({
             </div>
 
             {showActions && (
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={handleAddToCart}
-                disabled={isOutOfStock}
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <ShoppingCart className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                {/* Quantity selector */}
+                <div className="flex items-center border rounded">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="px-2 py-1 text-brand-600 hover:bg-brand-50"
+                    disabled={quantity <= 1}
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max={stockQuantity}
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, Math.min(stockQuantity, parseInt(e.target.value) || 1)))}
+                    className="w-10 text-center text-sm border-x py-1"
+                  />
+                  <button
+                    onClick={() => setQuantity(Math.min(stockQuantity, quantity + 1))}
+                    className="px-2 py-1 text-brand-600 hover:bg-brand-50"
+                    disabled={quantity >= stockQuantity}
+                  >
+                    +
+                  </button>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={handleQuickAdd}
+                  disabled={isOutOfStock}
+                  className="ml-1"
+                >
+                  <Plus className="h-4 w-4" /> Add
+                </Button>
+              </div>
             )}
           </div>
         </CardContent>

@@ -95,7 +95,7 @@ export function FloatingCartSummary({
             <span className="text-sm text-gray-500">Total: </span>
             <span className="font-bold text-lg">KES {getTotal().toLocaleString()}</span>
           </div>
-          <Link to="/cart">
+          <Link to="/cart" onClick={() => setIsVisible(false)}>
             <Button size="sm" className="gap-1">
               View Cart
               <ChevronRight className="h-4 w-4" />
