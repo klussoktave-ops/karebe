@@ -1,46 +1,31 @@
 -- =============================================================================
--- Karebe Complete Schema Migration
--- Run this in Supabase SQL Editor to create all required tables and columns
+-- Karebe Complete Schema Migration (Fixed for existing tables)
+-- Run this in Supabase SQL Editor
 -- =============================================================================
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- =============================================================================
--- TABLE: branches
+-- Fix branches table - add missing columns if they don't exist
 -- =============================================================================
-CREATE TABLE IF NOT EXISTS branches (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  address TEXT,
-  phone TEXT,
-  is_main BOOLEAN DEFAULT FALSE,
-  is_active BOOLEAN DEFAULT TRUE,
-  mpesa_shortcode TEXT,
-  mpesa_passkey TEXT,
-  mpesa_env_key TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+ALTER TABLE branches ADD COLUMN IF NOT EXISTS is_main BOOLEAN DEFAULT FALSE;
+ALTER TABLE branches ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
+ALTER TABLE branches ADD COLUMN IF NOT EXISTS mpesa_shortcode TEXT;
+ALTER TABLE branches ADD COLUMN IF NOT EXISTS mpesa_passkey TEXT;
+ALTER TABLE branches ADD COLUMN IF NOT EXISTS mpesa_env_key TEXT;
 
--- Insert default branch if not exists
+-- Insert default branch if not exists (only if id doesn't exist)
 INSERT INTO branches (id, name, address, phone, is_main) 
 VALUES ('main-branch', 'Main Branch', '123 Main St, Nairobi', '+254712345678', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- =============================================================================
--- TABLE: riders
+-- Fix riders table - add missing columns
 -- =============================================================================
-CREATE TABLE IF NOT EXISTS riders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID,
-  full_name TEXT NOT NULL,
-  phone TEXT,
-  whatsapp_number TEXT,
-  branch_id TEXT REFERENCES branches(id),
-  is_active BOOLEAN DEFAULT TRUE,
-  status VARCHAR(20) DEFAULT 'AVAILABLE',
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+ALTER TABLE riders ADD COLUMN IF NOT EXISTS whatsapp_number TEXT;
+ALTER TABLE riders ADD COLUMN IF NOT EXISTS branch_id TEXT;
+ALTER TABLE riders ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'AVAILABLE';
 
 -- Insert demo rider if not exists
 INSERT INTO riders (id, full_name, phone, whatsapp_number, branch_id, is_active)
@@ -55,41 +40,26 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- =============================================================================
--- TABLE: orders
+-- Fix orders table - add missing columns
 -- =============================================================================
-CREATE TABLE IF NOT EXISTS orders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  status VARCHAR(50) DEFAULT 'CART_DRAFT',
-  customer_phone TEXT,
-  customer_name TEXT,
-  customer_email TEXT,
-  delivery_address TEXT,
-  delivery_notes TEXT,
-  branch_id TEXT REFERENCES branches(id),
-  rider_id UUID REFERENCES riders(id),
-  total_amount DECIMAL(10, 2) DEFAULT 0,
-  confirmation_method VARCHAR(20),
-  confirmation_by UUID,
-  confirmation_at TIMESTAMPTZ,
-  last_actor_type VARCHAR(20),
-  last_actor_id UUID,
-  state_version INTEGER DEFAULT 1,
-  idempotency_key VARCHAR(64),
-  metadata JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS confirmation_method VARCHAR(20);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS confirmation_by UUID;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS confirmation_at TIMESTAMPTZ;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS last_actor_type VARCHAR(20);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS last_actor_id UUID;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS state_version INTEGER DEFAULT 1;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(64);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb;
 
--- Create index for idempotency
+-- Create indexes if they don't exist
 CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_idempotency_key 
 ON orders(idempotency_key) 
 WHERE idempotency_key IS NOT NULL;
 
--- Create index for status queries
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 
 -- =============================================================================
--- TABLE: order_items
+-- Create order_items table if not exists
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS order_items (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -104,7 +74,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 );
 
 -- =============================================================================
--- TABLE: order_state_transitions (Audit Trail)
+-- Create order_state_transitions table (Audit Trail)
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS order_state_transitions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -126,7 +96,7 @@ CREATE INDEX IF NOT EXISTS idx_order_state_transitions_order_id
 ON order_state_transitions(order_id);
 
 -- =============================================================================
--- TABLE: categories
+-- Create categories table if not exists
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS categories (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -139,7 +109,7 @@ CREATE TABLE IF NOT EXISTS categories (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Insert default categories
+-- Insert default categories (will fail gracefully if they exist)
 INSERT INTO categories (id, name, slug, sort_order, is_active) VALUES
   (gen_random_uuid(), 'Wine', 'wine', 1, true),
   (gen_random_uuid(), 'Whisky', 'whisky', 2, true),
@@ -149,33 +119,24 @@ INSERT INTO categories (id, name, slug, sort_order, is_active) VALUES
   (gen_random_uuid(), 'Gin', 'gin', 6, true),
   (gen_random_uuid(), 'Rum', 'rum', 7, true),
   (gen_random_uuid(), 'Brandy', 'brandy', 8, true),
-  (gen_random_uuid(), 'Tequila', 'tequila', 9, true);
+  (gen_random_uuid(), 'Tequila', 'tequila', 9, true)
+ON CONFLICT DO NOTHING;
 
 -- =============================================================================
--- TABLE: products
+-- Fix products table - add missing columns
 -- =============================================================================
-CREATE TABLE IF NOT EXISTS products (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  description TEXT,
-  price DECIMAL(10, 2) NOT NULL,
-  category_id UUID REFERENCES categories(id),
-  image TEXT,
-  stock_quantity INTEGER DEFAULT 0,
-  is_featured BOOLEAN DEFAULT FALSE,
-  is_available BOOLEAN DEFAULT TRUE,
-  is_visible BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id UUID;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS is_visible BOOLEAN DEFAULT TRUE;
 
--- Create indexes for products
+-- Create indexes if they don't exist
 CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_is_visible ON products(is_visible);
 CREATE INDEX IF NOT EXISTS idx_products_is_available ON products(is_available);
 
 -- =============================================================================
--- TABLE: product_variants
+-- Create product_variants table if not exists
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS product_variants (
   id TEXT PRIMARY KEY,
@@ -192,19 +153,7 @@ CREATE TABLE IF NOT EXISTS product_variants (
 CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON product_variants(product_id);
 
 -- =============================================================================
--- TABLE: profiles
--- =============================================================================
-CREATE TABLE IF NOT EXISTS profiles (
-  id UUID PRIMARY KEY,
-  email TEXT,
-  role VARCHAR(20) DEFAULT 'customer',
-  full_name TEXT,
-  phone TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- =============================================================================
--- TABLE: order_locks (for optimistic locking)
+-- Create order_locks table if not exists
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS order_locks (
   order_id UUID PRIMARY KEY REFERENCES orders(id) ON DELETE CASCADE,
@@ -215,7 +164,7 @@ CREATE TABLE IF NOT EXISTS order_locks (
 );
 
 -- =============================================================================
--- TABLE: admin_settings (for phone numbers, etc)
+-- Create admin_settings table if not exists
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS admin_settings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
