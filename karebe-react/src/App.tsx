@@ -1,5 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Suspense, lazy, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { DemoBanner } from './components/demo/demo-banner';
 
@@ -10,6 +10,7 @@ const CheckoutPage = lazy(() => import('./pages/customer/checkout'));
 const AdminDashboardPage = lazy(() => import('./pages/admin/dashboard'));
 const AdminLoginPage = lazy(() => import('./pages/admin/login'));
 const AdminOrdersPage = lazy(() => import('./pages/admin/orders'));
+const AdminProductsPage = lazy(() => import('./pages/admin/products'));
 const BranchConfigPage = lazy(() => import('./pages/admin/branch-config'));
 const RiderPortalPage = lazy(() => import('./pages/rider/portal'));
 
@@ -23,6 +24,20 @@ function PageLoader() {
 }
 
 function App() {
+  const location = useLocation();
+  
+  useEffect(() => {
+    console.log('[Router] Navigation to:', location.pathname);
+    // Check if current admin route is defined
+    const knownAdminRoutes = ['/admin', '/admin/orders', '/admin/branches', '/admin/login'];
+    const isKnownRoute = knownAdminRoutes.some(path => 
+      location.pathname === path || location.pathname.startsWith(path + '/')
+    );
+    if (location.pathname.startsWith('/admin') && !isKnownRoute) {
+      console.warn('[Router] WARNING: Route', location.pathname, 'not defined - will redirect to /admin');
+    }
+  }, [location.pathname]);
+  
   return (
     <div className="min-h-screen bg-brand-50">
       <DemoBanner />
@@ -37,6 +52,7 @@ function App() {
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
+          <Route path="/admin/products" element={<AdminProductsPage />} />
           <Route path="/admin/branches" element={<BranchConfigPage />} />
           <Route path="/admin/*" element={<AdminDashboardPage />} />
           

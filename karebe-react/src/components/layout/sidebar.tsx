@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Wine,
+  Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -56,6 +57,7 @@ export interface SidebarProps {
 const defaultNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/admin', icon: <LayoutDashboard className="h-5 w-5" /> },
   { label: 'Products', href: '/admin/products', icon: <Package className="h-5 w-5" /> },
+  { label: 'Branches', href: '/admin/branches', icon: <Building2 className="h-5 w-5" /> },
   { label: 'Orders', href: '/admin/orders', icon: <ShoppingCart className="h-5 w-5" /> },
   { label: 'Delivery', href: '/admin/delivery', icon: <Truck className="h-5 w-5" /> },
   { label: 'Customers', href: '/admin/customers', icon: <Users className="h-5 w-5" /> },
