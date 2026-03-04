@@ -30,9 +30,12 @@ BEGIN
     ON CONFLICT (id) DO NOTHING;
 
     -- =============================================================================
-    -- Create cart_items table (use TEXT for user_id to match existing IDs like "user-admin-001")
+    -- Create or fix cart_items table (use TEXT for user_id to match existing IDs like "user-admin-001")
     -- =============================================================================
-    CREATE TABLE IF NOT EXISTS cart_items (
+    -- Drop existing cart_items if it exists with wrong schema (UUID user_id)
+    DROP TABLE IF EXISTS cart_items;
+    
+    CREATE TABLE cart_items (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         user_id TEXT NOT NULL,
         product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
