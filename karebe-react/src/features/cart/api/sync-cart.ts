@@ -365,7 +365,7 @@ export async function fetchCart(customerId: string): Promise<Cart | null> {
     const { data: cartItems, error } = await supabase
       .from('cart_items')
       .select('*, product:products(*), variant:product_variants(*)')
-      .eq('customer_id', customerId)
+      .eq('user_id', customerId)
       .order('created_at', { ascending: false });
 
     if (error) {
