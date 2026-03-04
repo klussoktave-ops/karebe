@@ -1,10 +1,11 @@
 import { supabase } from '@/lib/supabase';
 import { demoBranches } from '@/lib/demo-data';
 import type { Branch } from '../stores/branch-store';
+import type { SupabaseClient } from '@/lib/supabase';
 
-// Check if Supabase is configured with real credentials
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const isSupabaseConfigured = supabaseUrl && !supabaseUrl.includes('placeholder') && !supabaseUrl.includes('your-project');
+// Check if Supabase is properly configured
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const isSupabaseConfigured = supabaseUrl.startsWith('https://') && supabaseUrl.includes('.supabase.co');
 
 // Helper to simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -30,7 +31,7 @@ function transformDemoBranch(demoBranch: typeof demoBranches[0]): Branch {
 
 export async function getBranches(): Promise<Branch[]> {
   // Use demo data if Supabase is not configured
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured || !supabase) {
     await delay(300);
     return demoBranches
       .filter(b => b.isActive)
@@ -38,7 +39,8 @@ export async function getBranches(): Promise<Branch[]> {
       .map(transformDemoBranch);
   }
 
-  const { data, error } = await supabase
+  const supabaseClient = supabase as SupabaseClient;
+  const { data, error } = await supabaseClient
     .from('branches')
     .select('*')
     .order('is_main', { ascending: false })
@@ -63,13 +65,14 @@ export async function getBranches(): Promise<Branch[]> {
 
 export async function getBranchById(id: string): Promise<Branch | null> {
   // Use demo data if Supabase is not configured
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured || !supabase) {
     await delay(300);
     const demoBranch = demoBranches.find(b => b.id === id);
     return demoBranch ? transformDemoBranch(demoBranch) : null;
   }
 
-  const { data, error } = await supabase
+  const supabaseClient = supabase as SupabaseClient;
+  const { data, error } = await supabaseClient
     .from('branches')
     .select('*')
     .eq('id', id)

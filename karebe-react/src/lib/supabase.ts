@@ -1,30 +1,48 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Get env vars - these come from Vercel environment or .env file
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Validate Supabase credentials and provide graceful fallback
-const isValidUrl = supabaseUrl && !supabaseUrl.includes('your-project');
-const isValidKey = supabaseAnonKey && !supabaseAnonKey.includes('your-anon-key');
+// Check if valid credentials exist
+const hasValidUrl = typeof supabaseUrl === 'string' && 
+  supabaseUrl.length > 0 && 
+  supabaseUrl.startsWith('https://') && 
+  supabaseUrl.includes('.supabase.co');
+  
+const hasValidKey = typeof supabaseAnonKey === 'string' && 
+  supabaseAnonKey.length > 20 && 
+  supabaseAnonKey.startsWith('eyJ');
 
-if (!isValidUrl || !isValidKey) {
-  console.warn(
-    '[Supabase] Missing or invalid Supabase credentials. ' +
-    'Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables. ' +
-    'Auth and data features will not work until configured.'
-  );
+// Log for debugging
+if (typeof window !== 'undefined') {
+  console.log('[Supabase] Env check - URL:', hasValidUrl ? 'VALID' : 'MISSING/INVALID');
+  console.log('[Supabase] Env check - Key:', hasValidKey ? 'VALID' : 'MISSING/INVALID');
 }
 
-// Use placeholder values if missing to prevent crashes during development
-const safeUrl = isValidUrl ? supabaseUrl : 'https://placeholder.supabase.co';
-const safeKey = isValidKey ? supabaseAnonKey : 'placeholder-key';
+// Create client only with valid credentials
+let supabase: ReturnType<typeof createClient> | null = null;
 
-export const supabase = createClient(safeUrl, safeKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-});
+if (hasValidUrl && hasValidKey) {
+  try {
+    supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    });
+    if (typeof window !== 'undefined') {
+      console.log('[Supabase] Client initialized - using live data');
+    }
+  } catch (e) {
+    console.error('[Supabase] Failed to create client:', e);
+  }
+} else {
+  if (typeof window !== 'undefined') {
+    console.warn('[Supabase] Invalid credentials - using demo data');
+  }
+}
 
-export type SupabaseClient = typeof supabase;
+export { supabase };
+export type SupabaseClient = ReturnType<typeof createClient>;
