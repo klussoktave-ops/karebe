@@ -2,10 +2,11 @@ import { supabase } from '@/lib/supabase';
 import { demoProducts, demoCategories } from '@/lib/demo-data';
 import type { ProductFilters, ProductDisplay, ProductWithVariants, Category } from '../types';
 import type { PaginatedResponse } from '@/types';
+import type { SupabaseClient } from '@/lib/supabase';
 
-// Check if Supabase is configured with real credentials
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const isSupabaseConfigured = supabaseUrl && !supabaseUrl.includes('placeholder') && !supabaseUrl.includes('your-project');
+// Check if Supabase is properly configured
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const isSupabaseConfigured = supabaseUrl.startsWith('https://') && supabaseUrl.includes('.supabase.co');
 
 // Helper to simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -155,11 +156,13 @@ async function getDemoProducts(filters: ProductFilters): Promise<PaginatedRespon
 export async function getProducts(
   filters: ProductFilters = {}
 ): Promise<PaginatedResponse<ProductDisplay>> {
-  // Use demo data if Supabase is not configured
-  if (!isSupabaseConfigured) {
+  // Use demo data if Supabase is not configured or client is null
+  if (!isSupabaseConfigured || !supabase) {
     return getDemoProducts(filters);
   }
 
+  const supabaseClient = supabase as SupabaseClient;
+  
   const {
     categoryId,
     search,
@@ -293,8 +296,8 @@ export async function getProducts(
  * Fetch a single product by ID with all details
  */
 export async function getProductById(id: string): Promise<ProductDisplay> {
-  // Use demo data if Supabase is not configured
-  if (!isSupabaseConfigured) {
+  // Use demo data if Supabase is not configured or client is null
+  if (!isSupabaseConfigured || !supabase) {
     await delay(300);
     const demoProduct = demoProducts.find(p => p.id === id);
     if (!demoProduct) {
@@ -303,7 +306,8 @@ export async function getProductById(id: string): Promise<ProductDisplay> {
     return transformDemoProduct(demoProduct);
   }
 
-  const { data, error } = await supabase
+  const supabaseClient = supabase as SupabaseClient;
+  const { data, error } = await supabaseClient
     .from('products')
     .select('*, category:categories(*), variants:product_variants(*)')
     .eq('id', id)
@@ -329,8 +333,8 @@ export async function getProductById(id: string): Promise<ProductDisplay> {
  * Fetch all categories
  */
 export async function getCategories(): Promise<Category[]> {
-  // Use demo data if Supabase is not configured
-  if (!isSupabaseConfigured) {
+  // Use demo data if Supabase is not configured or client is null
+  if (!isSupabaseConfigured || !supabase) {
     await delay(300);
     return demoCategories.map(c => ({
       id: c.id,
@@ -342,7 +346,8 @@ export async function getCategories(): Promise<Category[]> {
     }));
   }
 
-  const { data, error } = await supabase
+  const supabaseClient = supabase as SupabaseClient;
+  const { data, error } = await supabaseClient
     .from('categories')
     .select('*')
     .order('sort_order', { ascending: true });
@@ -381,8 +386,8 @@ export async function getCategories(): Promise<Category[]> {
  * Fetch featured/promoted products
  */
 export async function getFeaturedProducts(limit: number = 8): Promise<ProductDisplay[]> {
-  // Use demo data if Supabase is not configured
-  if (!isSupabaseConfigured) {
+  // Use demo data if Supabase is not configured or client is null
+  if (!isSupabaseConfigured || !supabase) {
     await delay(300);
     return demoProducts
       .filter(p => p.isFeatured && p.isActive)
@@ -390,7 +395,8 @@ export async function getFeaturedProducts(limit: number = 8): Promise<ProductDis
       .map(transformDemoProduct);
   }
 
-  const { data, error } = await supabase
+  const supabaseClient = supabase as SupabaseClient;
+  const { data, error } = await supabaseClient
     .from('products')
     .select('*, category:categories(*), variants:product_variants(*)')
     .eq('is_visible', true)
