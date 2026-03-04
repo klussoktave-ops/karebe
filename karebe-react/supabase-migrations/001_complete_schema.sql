@@ -221,7 +221,10 @@ BEGIN
     INSERT INTO admin_settings (setting_key, setting_value, description) VALUES
         ('default_branch_id', 'main-branch', 'Default branch for orders'),
         ('whatsapp_business_number', '+254712345678', 'WhatsApp business phone number'),
-        ('support_phone', '+254712345678', 'Customer support phone number')
+        ('support_phone', '+254712345678', 'Customer support phone number'),
+        ('business_name', 'Karebe Wines & Spirits', 'Business name'),
+        ('delivery_fee', '300', 'Default delivery fee in KES'),
+        ('free_delivery_threshold', '5000', 'Free delivery minimum order amount')
     ON CONFLICT (setting_key) DO NOTHING;
 
 END $$;

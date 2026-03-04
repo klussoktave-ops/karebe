@@ -58,10 +58,9 @@ const defaultNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/admin', icon: <LayoutDashboard className="h-5 w-5" /> },
   { label: 'Products', href: '/admin/products', icon: <Package className="h-5 w-5" /> },
   { label: 'Branches', href: '/admin/branches', icon: <Building2 className="h-5 w-5" /> },
+  { label: 'Riders', href: '/admin/riders', icon: <Truck className="h-5 w-5" /> },
   { label: 'Orders', href: '/admin/orders', icon: <ShoppingCart className="h-5 w-5" /> },
-  { label: 'Delivery', href: '/admin/delivery', icon: <Truck className="h-5 w-5" /> },
-  { label: 'Customers', href: '/admin/customers', icon: <Users className="h-5 w-5" /> },
-  { label: 'System', href: '/admin/system', icon: <Settings className="h-5 w-5" /> },
+  { label: 'Settings', href: '/admin/settings', icon: <Settings className="h-5 w-5" /> },
 ];
 
 /**
