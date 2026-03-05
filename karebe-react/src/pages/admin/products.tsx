@@ -131,17 +131,266 @@ const getSizesForCategory = (category: string): { value: string; label: string }
   ];
 };
 
-// Handle image file selection
-const handleImageFile = (file: File, setProduct: React.Dispatch<React.SetStateAction<ProductCreateInput>>, setPreview: React.Dispatch<React.SetStateAction<string>>) => {
+// Handle image file selection with progress simulation
+const handleImageFile = (
+  file: File, 
+  setProduct: React.Dispatch<React.SetStateAction<ProductCreateInput>>, 
+  setPreview: React.Dispatch<React.SetStateAction<string>>,
+  setUploadProgress: React.Dispatch<React.SetStateAction<number>>
+) => {
   if (file && file.type.startsWith('image/')) {
+    // Simulate upload progress
+    setUploadProgress(0);
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev: number) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + 10;
+      });
+    }, 100);
+
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPreview(reader.result as string);
-      setProduct((prev) => ({ ...prev, image_url: reader.result as string }));
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      setTimeout(() => {
+        setPreview(reader.result as string);
+        setProduct((prev) => ({ ...prev, image_url: reader.result as string }));
+        setUploadProgress(0);
+      }, 300);
     };
     reader.readAsDataURL(file);
   }
 };
+
+// Handle URL input for image
+const handleImageUrl = (
+  url: string,
+  setProduct: React.Dispatch<React.SetStateAction<ProductCreateInput>>,
+  setPreview: React.Dispatch<React.SetStateAction<string>>,
+  setUrlError: React.Dispatch<React.SetStateAction<string>>
+) => {
+  setUrlError('');
+  if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+    setUrlError('Please enter a valid URL starting with http:// or https://');
+    return;
+  }
+  setPreview(url);
+  setProduct((prev) => ({ ...prev, image_url: url }));
+};
+
+// Image Upload Component
+function ImageUploadSection({
+  imageMode,
+  setImageMode,
+  imagePreview,
+  setImagePreview,
+  setNewProduct,
+  uploadProgress,
+  setUploadProgress,
+  urlError,
+  setUrlError,
+  fileInputRef,
+}: {
+  imageMode: 'url' | 'upload' | 'camera';
+  setImageMode: (mode: 'url' | 'upload' | 'camera') => void;
+  imagePreview: string;
+  setImagePreview: (url: string) => void;
+  setNewProduct: React.Dispatch<React.SetStateAction<ProductCreateInput>>;
+  uploadProgress: number;
+  setUploadProgress: React.Dispatch<React.SetStateAction<number>>;
+  urlError: string;
+  setUrlError: (error: string) => void;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+}) {
+  const [urlInput, setUrlInput] = useState('');
+
+  return (
+    <div className="grid gap-3">
+      <Label>Product Image</Label>
+      
+      {/* Mode Tabs */}
+      <div className="flex rounded-lg border bg-gray-50 p-1">
+        <button
+          type="button"
+          onClick={() => setImageMode('upload')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+            imageMode === 'upload' 
+              ? 'bg-white shadow-sm text-brand-600' 
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Upload className="h-4 w-4" />
+          Upload
+        </button>
+        <button
+          type="button"
+          onClick={() => setImageMode('url')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+            imageMode === 'url' 
+              ? 'bg-white shadow-sm text-brand-600' 
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <LinkIcon className="h-4 w-4" />
+          URL
+        </button>
+        <button
+          type="button"
+          onClick={() => setImageMode('camera')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+            imageMode === 'camera' 
+              ? 'bg-white shadow-sm text-brand-600' 
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Camera className="h-4 w-4" />
+          Camera
+        </button>
+      </div>
+
+      {/* Upload Mode */}
+      {imageMode === 'upload' && (
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-brand-400 transition-colors">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                handleImageFile(file, setNewProduct, setImagePreview, setUploadProgress);
+              }
+            }}
+          />
+          {imagePreview ? (
+            <div className="relative">
+              <img src={imagePreview} alt="Preview" className="w-full h-40 object-cover rounded-lg" />
+              <button
+                type="button"
+                onClick={() => {
+                  setImagePreview('');
+                  setNewProduct((prev) => ({ ...prev, image_url: '' }));
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex flex-col items-center gap-2 text-gray-500 hover:text-brand-600"
+            >
+              <Upload className="h-8 w-8" />
+              <span className="text-sm">Click to upload image</span>
+              <span className="text-xs text-gray-400">PNG, JPG, GIF up to 5MB</span>
+            </button>
+          )}
+          {uploadProgress > 0 && uploadProgress < 100 && (
+            <div className="mt-3">
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-brand-500 transition-all duration-300" 
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Uploading... {uploadProgress}%</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* URL Mode */}
+      {imageMode === 'url' && (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <Input
+              placeholder="https://example.com/image.jpg"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleImageUrl(urlInput, setNewProduct, setImagePreview, setUrlError);
+                }
+              }}
+              className="flex-1"
+            />
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={() => handleImageUrl(urlInput, setNewProduct, setImagePreview, setUrlError)}
+            >
+              Add
+            </Button>
+          </div>
+          {urlError && <p className="text-xs text-red-500">{urlError}</p>}
+          {imagePreview && (
+            <div className="relative">
+              <img src={imagePreview} alt="Preview" className="w-full h-40 object-cover rounded-lg border" />
+              <button
+                type="button"
+                onClick={() => {
+                  setImagePreview('');
+                  setUrlInput('');
+                  setNewProduct((prev) => ({ ...prev, image_url: '' }));
+                }}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Camera Mode */}
+      {imageMode === 'camera' && (
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            id="camera-input"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                handleImageFile(file, setNewProduct, setImagePreview, setUploadProgress);
+              }
+            }}
+          />
+          {imagePreview ? (
+            <div className="relative">
+              <img src={imagePreview} alt="Preview" className="w-full h-40 object-cover rounded-lg" />
+              <button
+                type="button"
+                onClick={() => {
+                  setImagePreview('');
+                  setNewProduct((prev) => ({ ...prev, image_url: '' }));
+                }}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <label htmlFor="camera-input" className="flex flex-col items-center gap-2 text-gray-500 hover:text-brand-600 cursor-pointer">
+              <Camera className="h-8 w-8" />
+              <span className="text-sm">Take photo with camera</span>
+              <span className="text-xs text-gray-400">Tap to open camera</span>
+            </label>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -165,6 +414,8 @@ export default function AdminProductsPage() {
 
   const [imagePreview, setImagePreview] = useState<string>('');
   const [imageMode, setImageMode] = useState<'url' | 'upload' | 'camera'>('url');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [urlError, setUrlError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -421,12 +672,17 @@ export default function AdminProductsPage() {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="image_url">Image URL</Label>
-                <Input
-                  id="image_url"
-                  value={newProduct.image_url}
-                  onChange={(e) => setNewProduct({ ...newProduct, image_url: e.target.value })}
-                  placeholder="https://..."
+                <ImageUploadSection
+                  imageMode={imageMode}
+                  setImageMode={setImageMode}
+                  imagePreview={imagePreview}
+                  setImagePreview={setImagePreview}
+                  setNewProduct={setNewProduct}
+                  uploadProgress={uploadProgress}
+                  setUploadProgress={setUploadProgress}
+                  urlError={urlError}
+                  setUrlError={setUrlError}
+                  fileInputRef={fileInputRef}
                 />
               </div>
             </div>

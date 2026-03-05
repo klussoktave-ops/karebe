@@ -1,5 +1,29 @@
 import { supabase } from '@/lib/supabase';
 
+/**
+ * Force clear all storage
+ */
+function clearAllStorage() {
+  // Clear sessionStorage completely
+  sessionStorage.clear();
+  
+  // Clear localStorage items used by the app
+  const keysToRemove = [
+    'karebe-auth',       // Auth store persisted state
+    'karebe-cart',       // Cart store persisted state
+    'karebe-demo-cart',  // Demo cart
+    'karebe-branch',     // Branch selection
+  ];
+  
+  keysToRemove.forEach(key => {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {
+      // Ignore errors for individual key removal
+    }
+  });
+}
+
 export interface LogoutResponse {
   success: boolean;
   message?: string;
@@ -12,16 +36,18 @@ export interface LogoutResponse {
 export async function logout(): Promise<LogoutResponse> {
   try {
     // Sign out from Supabase (for customer sessions)
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      console.warn('Supabase signout error (non-critical):', error);
-      // Continue with local logout even if Supabase fails
+    if (supabase) {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.warn('Supabase signout error (non-critical):', error);
+        // Continue with local logout even if Supabase fails
+      }
     }
 
-    // Clear any additional session data from local/session storage
-    // The auth store's persist middleware handles sessionStorage clearing
-    // when logout action is dispatched
+    // Clear ALL storage including auth store, cart, and any other persisted state
+    // This ensures complete session cleanup between different user roles
+    clearAllStorage();
 
     return {
       success: true,
@@ -31,6 +57,10 @@ export async function logout(): Promise<LogoutResponse> {
     console.error('Logout error:', error);
     // Even on error, we consider logout successful locally
     // since the client-side state will be cleared
+    
+    // Force clear storage on error too
+    clearAllStorage();
+    
     return {
       success: true,
       message: 'Logged out locally',
@@ -44,6 +74,9 @@ export async function logout(): Promise<LogoutResponse> {
  */
 export async function validateSession(): Promise<boolean> {
   try {
+    if (!supabase) {
+      return false;
+    }
     const { data: { session }, error } = await supabase.auth.getSession();
     
     if (error) {
