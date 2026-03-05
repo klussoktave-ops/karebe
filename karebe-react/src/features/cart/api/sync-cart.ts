@@ -384,16 +384,15 @@ export async function fetchCart(customerId: string): Promise<Cart | null> {
       throw new Error('Supabase client not initialized');
     }
     
-    // Build the query explicitly to see what's happening
-    const query = supabase
+    // Build the query - fetch cart items without embedding to avoid FK issues
+    const { data: cartItems, error } = await supabase
       .from('cart_items')
-      .select('*, product:products(*), variant:product_variants(*)')
-      .eq('user_id', customerId);
+      .select('*')
+      .eq('user_id', customerId)
+      .order('created_at', { ascending: false });
     
     console.log('[Cart Debug] Executing cart query with user_id:', customerId);
     
-    const { data: cartItems, error } = await query.order('created_at', { ascending: false });
-
     if (error) {
       console.error('[Cart Debug] Supabase error details:', {
         message: error.message,
@@ -408,16 +407,32 @@ export async function fetchCart(customerId: string): Promise<Cart | null> {
       return null;
     }
 
-    const items = cartItems.map((item) => ({
-      id: item.variant_id ? `${item.product_id}:${item.variant_id}` : item.product_id,
-      productId: item.product_id,
-      variantId: item.variant_id,
-      quantity: item.quantity,
-      unitPrice: item.unit_price,
-      product: item.product,
-      variant: item.variant,
-      addedAt: item.created_at,
-    }));
+    // Manually fetch products and variants since we can't embed due to FK issues
+    const productIds = [...new Set(cartItems.map((item: any) => item.product_id))];
+    const variantIds = [...new Set(cartItems.map((item: any) => item.variant_id).filter(Boolean))];
+    
+    const [productsRes, variantsRes] = await Promise.all([
+      supabase.from('products').select('*').in('id', productIds),
+      variantIds.length > 0 ? supabase.from('product_variants').select('*').in('id', variantIds) : Promise.resolve({ data: [] })
+    ]);
+    
+    const products = productsRes.data || [];
+    const variants = variantsRes.data || [];
+
+    const items = cartItems.map((item: any) => {
+      const product = products.find((p: any) => p.id === item.product_id);
+      const variant = variants.find((v: any) => v.id === item.variant_id);
+      return {
+        id: item.variant_id ? `${item.product_id}:${item.variant_id}` : item.product_id,
+        productId: item.product_id,
+        variantId: item.variant_id,
+        quantity: item.quantity,
+        unitPrice: variant?.price || product?.price || 0,
+        product,
+        variant,
+        addedAt: item.created_at,
+      };
+    });
 
     const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
     const tax = subtotal * 0.16;
