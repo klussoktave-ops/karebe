@@ -272,23 +272,143 @@ export class ProductManager {
   }
 
   static async uploadProductImage(file: File): Promise<string> {
+    console.log('[ProductManager] Starting image upload:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+    });
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `products/${fileName}`;
 
+    console.log('[ProductManager] Upload path:', filePath);
+
+    // Check if Supabase is available
+    if (!supabase) {
+      console.warn('[ProductManager] Supabase not initialized - using demo mode');
+      // Fallback for demo mode: convert to data URL
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          console.log('[ProductManager] Demo mode: converted to data URL');
+          resolve(reader.result as string);
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Check bucket existence
+    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+    if (bucketError) {
+      console.error('[ProductManager] Bucket list error:', bucketError);
+      throw new Error(`Storage error: ${bucketError.message}`);
+    }
+
+    const bucketExists = buckets?.some(b => b.name === 'product-images');
+    if (!bucketExists) {
+      console.error('[ProductManager] Bucket not found! Available:', buckets?.map(b => b.name));
+      throw new Error('Storage bucket "product-images" does not exist. Create it in Supabase Dashboard > Storage.');
+    }
+
+    console.log('[ProductManager] Uploading to bucket...');
     const { error: uploadError } = await supabase.storage
       .from('product-images')
       .upload(filePath, file);
 
     if (uploadError) {
+      console.error('[ProductManager] Upload failed:', uploadError);
       throw new Error(`Failed to upload image: ${uploadError.message}`);
     }
 
+    console.log('[ProductManager] Upload successful, getting public URL...');
     const { data: { publicUrl } } = supabase.storage
       .from('product-images')
       .getPublicUrl(filePath);
 
+    console.log('[ProductManager] Public URL:', publicUrl);
     return publicUrl;
+  }
+
+  /**
+   * Upload multiple images
+   */
+  static async uploadMultipleImages(files: File[]): Promise<string[]> {
+    console.log('[ProductManager] Starting multiple image upload:', {
+      count: files.length,
+      files: files.map(f => ({ name: f.name, size: f.size })),
+    });
+
+    const results: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      try {
+        const url = await this.uploadProductImage(files[i]);
+        results.push(url);
+        console.log(`[ProductManager] Uploaded ${i + 1}/${files.length}:`, url);
+      } catch (error) {
+        console.error(`[ProductManager] Failed to upload ${files[i].name}:`, error);
+        throw error;
+      }
+    }
+
+    console.log('[ProductManager] All uploads complete:', { total: results.length });
+    return results;
+  }
+
+  /**
+   * Validate image URL - test if image is accessible
+   */
+  static async validateImageUrl(url: string): Promise<{ valid: boolean; error?: string; width?: number; height?: number }> {
+    console.log('[ProductManager] Validating image URL:', url);
+
+    // Handle data URLs
+    if (url.startsWith('data:')) {
+      console.log('[ProductManager] Data URL - valid by default');
+      return { valid: true };
+    }
+
+    // If no Supabase, just try loading
+    if (!supabase) {
+      console.log('[ProductManager] No Supabase - testing with Image object');
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          console.log('[ProductManager] Image loaded:', { width: img.width, height: img.height });
+          resolve({ valid: true, width: img.width, height: img.height });
+        };
+        img.onerror = () => {
+          console.error('[ProductManager] Image load failed');
+          resolve({ valid: false, error: 'Failed to load image' });
+        };
+        img.src = url;
+      });
+    }
+
+    // For Supabase URLs, verify bucket and path
+    try {
+      const pathParts = url.split('/');
+      const fileName = pathParts[pathParts.length - 1];
+      
+      console.log('[ProductManager] Checking Supabase file:', fileName);
+      
+      const { data, error } = await supabase.storage
+        .from('product-images')
+        .download(fileName);
+
+      if (error) {
+        console.error('[ProductManager] Download check failed:', error);
+        return { valid: false, error: error.message };
+      }
+
+      console.log('[ProductManager] Download check successful');
+      return { valid: true };
+    } catch (err) {
+      console.error('[ProductManager] Validation error:', err);
+      return { valid: false, error: err instanceof Error ? err.message : 'Unknown error' };
+    }
   }
 
   /**

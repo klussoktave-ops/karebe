@@ -123,3 +123,6 @@ export {
 
 // Textarea
 export { Textarea, type TextareaProps } from './textarea';
+
+// Image Gallery
+export { ImageGallery, type ImageGalleryProps } from './image-gallery';

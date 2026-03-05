@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
+import { ImageGallery } from '@/components/ui/image-gallery';
 import { ProductManager, Product, ProductCreateInput } from '@/features/admin/services/product-manager';
 import { AuthGuard } from '@/features/auth/components/auth-guard';
 
@@ -422,14 +423,28 @@ export default function AdminProductsPage() {
   const loadProducts = async () => {
     setLoading(true);
     try {
+      console.log('[Admin Products] Loading products...', { searchQuery, categoryFilter });
       const filters = {
         ...(searchQuery && { search: searchQuery }),
         ...(categoryFilter !== 'all' && { category: categoryFilter }),
       };
+      console.log('[Admin Products] Fetch with filters:', filters);
       const data = await ProductManager.getProducts(filters);
+      console.log('[Admin Products] Products loaded:', { count: data.length });
+      
+      // Debug: Log image URLs for each product
+      data.forEach((product, index) => {
+        console.log(`[Admin Products] Product ${index + 1}/${data.length}:`, {
+          id: product.id,
+          name: product.name,
+          imageUrl: product.image_url,
+          hasImage: !!product.image_url,
+        });
+      });
+      
       setProducts(data);
     } catch (error) {
-      console.error('Failed to load products:', error);
+      console.error('[Admin Products] Failed to load products:', error);
     } finally {
       setLoading(false);
     }
@@ -441,7 +456,9 @@ export default function AdminProductsPage() {
 
   const handleAddProduct = async () => {
     try {
+      console.log('[Admin Products] Adding product:', newProduct);
       await ProductManager.createProduct(newProduct);
+      console.log('[Admin Products] Product added successfully');
       setIsAddDialogOpen(false);
       setNewProduct({
         name: '',
@@ -455,13 +472,18 @@ export default function AdminProductsPage() {
       });
       loadProducts();
     } catch (error) {
-      console.error('Failed to add product:', error);
+      console.error('[Admin Products] Failed to add product:', error);
     }
   };
 
   const handleUpdateProduct = async () => {
     if (!editingProduct) return;
     try {
+      console.log('[Admin Products] Updating product:', {
+        id: editingProduct.id,
+        name: editingProduct.name,
+        imageUrl: editingProduct.image_url,
+      });
       await ProductManager.updateProduct(editingProduct.id, {
         name: editingProduct.name,
         description: editingProduct.description || undefined,
@@ -472,25 +494,33 @@ export default function AdminProductsPage() {
         unit_size: editingProduct.unit_size || undefined,
         is_featured: editingProduct.is_featured,
       });
+      console.log('[Admin Products] Product updated successfully');
       setIsEditDialogOpen(false);
       setEditingProduct(null);
       loadProducts();
     } catch (error) {
-      console.error('Failed to update product:', error);
+      console.error('[Admin Products] Failed to update product:', error);
     }
   };
 
   const handleDeleteProduct = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
     try {
+      console.log('[Admin Products] Deleting product:', id);
       await ProductManager.deleteProduct(id);
+      console.log('[Admin Products] Product deleted successfully');
       loadProducts();
     } catch (error) {
-      console.error('Failed to delete product:', error);
+      console.error('[Admin Products] Failed to delete product:', error);
     }
   };
 
   const openEditDialog = (product: Product) => {
+    console.log('[Admin Products] Opening edit dialog for:', {
+      id: product.id,
+      name: product.name,
+      imageUrl: product.image_url,
+    });
     setEditingProduct({ ...product });
     setIsEditDialogOpen(true);
   };
@@ -568,7 +598,28 @@ export default function AdminProductsPage() {
                 <Card key={product.id} className="overflow-hidden">
                   <div className="h-40 bg-gray-100 relative">
                     {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                      <img 
+                        src={product.image_url} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('[Admin Products] Image load error:', {
+                            productId: product.id,
+                            productName: product.name,
+                            imageUrl: product.image_url,
+                            error: 'Image failed to load',
+                          });
+                          // Show placeholder on error
+                          const target = e.currentTarget as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                        onLoad={() => {
+                          console.log('[Admin Products] Image loaded:', {
+                            productId: product.id,
+                            imageUrl: product.image_url,
+                          });
+                        }}
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Package className="h-12 w-12 text-gray-300" />
@@ -672,17 +723,11 @@ export default function AdminProductsPage() {
                 </div>
               </div>
               <div className="grid gap-2">
-                <ImageUploadSection
-                  imageMode={imageMode}
-                  setImageMode={setImageMode}
-                  imagePreview={imagePreview}
-                  setImagePreview={setImagePreview}
-                  setNewProduct={setNewProduct}
-                  uploadProgress={uploadProgress}
-                  setUploadProgress={setUploadProgress}
-                  urlError={urlError}
-                  setUrlError={setUrlError}
-                  fileInputRef={fileInputRef}
+                <ImageGallery
+                  images={newProduct.image_url ? [newProduct.image_url] : []}
+                  onImagesChange={(images) => setNewProduct({ ...newProduct, image_url: images[0] || '' })}
+                  maxImages={1}
+                  label="Product Image"
                 />
               </div>
             </div>
@@ -760,11 +805,16 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-image_url">Image URL</Label>
-                  <Input
-                    id="edit-image_url"
-                    value={editingProduct.image_url || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
+                  <Label>Product Images</Label>
+                  <ImageGallery
+                    images={editingProduct?.image_url ? [editingProduct.image_url] : []}
+                    onImagesChange={(images) => {
+                      if (editingProduct) {
+                        setEditingProduct({ ...editingProduct, image_url: images[0] || '' });
+                      }
+                    }}
+                    maxImages={1}
+                    label=""
                   />
                 </div>
               </div>

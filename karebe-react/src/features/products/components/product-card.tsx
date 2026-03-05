@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ShoppingCart, Eye, Heart, Package, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ProductDisplay, ProductVariant } from '../types';
+import { getProductImage, validateImageUrl, normalizeProductImages } from '@/lib/image-utils';
 
 interface ProductCardProps {
   product: ProductDisplay;
@@ -41,6 +42,9 @@ export function ProductCard({
     product.variants?.find((v) => v.isDefault) || product.variants?.[0]
   );
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string>('');
+  const [debugInfo, setDebugInfo] = useState<Record<string, unknown>>({});
 
   // Get display price
   const displayPrice = selectedVariant?.price || product.price;
@@ -50,6 +54,45 @@ export function ProductCard({
   const stockQuantity = selectedVariant?.stock || product.stockQuantity;
   const isOutOfStock = stockQuantity <= 0;
   const isLowStock = stockQuantity > 0 && stockQuantity <= 5;
+
+  // Handle image URL with fallback
+  useEffect(() => {
+    const loadImage = async () => {
+      // Normalize images - handle both old single image and new array format
+      const normalizedImages = normalizeProductImages(
+        'image' in product ? (product as unknown as { image?: string }).image : undefined,
+        product.images
+      );
+
+      // Get best available image with fallback
+      const imageResult = getProductImage(
+        normalizedImages,
+        product.name,
+        product.categoryName,
+        { width: 400, height: 400, debug: true }
+      );
+
+      setCurrentImageUrl(imageResult.url);
+      setDebugInfo(imageResult.debug);
+
+      // Validate the image URL
+      const validation = await validateImageUrl(imageResult.url);
+      if (!validation.valid) {
+        console.warn('[ProductCard] Image validation failed:', {
+          productId: product.id,
+          productName: product.name,
+          url: imageResult.url,
+          error: validation.error,
+          checks: validation.checks,
+        });
+        setImageError(true);
+      } else {
+        setImageError(false);
+      }
+    };
+
+    loadImage();
+  }, [product]);
 
   const handleAddToCart = () => {
     if (!isOutOfStock && onAddToCart) {
@@ -78,20 +121,56 @@ export function ProductCard({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
+        {/* Debug: Log image info in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="absolute top-0 left-0 z-50 opacity-0 hover:opacity-100 bg-black/80 text-white text-xs p-1">
+            <div>Source: {debugInfo.source as string || 'unknown'}</div>
+            <div>URL: {(debugInfo.imageUrl as string || debugInfo.placeholderUrl as string)?.substring(0, 30) || 'placeholder'}...</div>
+          </div>
+        )}
+
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden bg-brand-50">
-          {!imageLoaded && (
+          {!imageLoaded && !imageError && (
             <Skeleton className="absolute inset-0" />
           )}
-          <img
-            src={product.images[0] || '/placeholder-product.png'}
-            alt={product.name}
-            className={`h-full w-full object-cover transition-transform duration-500 ${
-              isHovered ? 'scale-110' : 'scale-100'
-            } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onLoad={() => setImageLoaded(true)}
-            loading="lazy"
-          />
+          
+          {/* Error State - Show placeholder with error indicator */}
+          {imageError ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100">
+              <Package className="h-12 w-12 text-gray-400 mb-2" />
+              <span className="text-xs text-gray-500">Image unavailable</span>
+              <span className="text-[10px] text-gray-400">Using fallback</span>
+            </div>
+          ) : (
+            <img
+              src={currentImageUrl || '/placeholder-product.png'}
+              alt={product.name}
+              className={`h-full w-full object-cover transition-transform duration-500 ${
+                isHovered ? 'scale-110' : 'scale-100'
+              } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              onLoad={() => {
+                setImageLoaded(true);
+                console.log('[ProductCard] Image loaded:', { 
+                  productId: product.id, 
+                  url: currentImageUrl 
+                });
+              }}
+              onError={(e) => {
+                console.error('[ProductCard] Image load error:', {
+                  productId: product.id,
+                  productName: product.name,
+                  url: currentImageUrl,
+                  error: 'Image failed to load',
+                });
+                setImageError(true);
+                // Hide broken image
+                const target = e.currentTarget as HTMLImageElement;
+                target.style.display = 'none';
+              }}
+              loading="lazy"
+            />
+          )}
 
           {/* Badges */}
           <div className="absolute left-3 top-3 flex flex-col gap-2">
