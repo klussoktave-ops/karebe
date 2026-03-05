@@ -50,13 +50,18 @@ export function CartItem({ item, customerId, compact = false }: CartItemProps) {
         <img
           src={image}
           alt={product.name}
-          className="w-16 h-16 object-cover rounded-lg bg-brand-50"
+          className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg bg-brand-50 flex-shrink-0"
         />
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-medium text-brand-900 truncate">
-            {displayName}
+            {product.name}
           </h4>
-          <p className="text-sm text-brand-500 mt-0.5">
+          {variant && (
+            <p className="text-xs text-brand-500 mt-0.5">
+              {variant.volume}
+            </p>
+          )}
+          <p className="text-sm text-brand-600 mt-1">
             KES {item.unitPrice.toLocaleString()}
           </p>
           <div className="flex items-center gap-3 mt-2">
@@ -88,7 +93,7 @@ export function CartItem({ item, customerId, compact = false }: CartItemProps) {
             </button>
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-right flex-shrink-0">
           <p className="font-medium text-brand-900">
             KES {totalPrice.toLocaleString()}
           </p>

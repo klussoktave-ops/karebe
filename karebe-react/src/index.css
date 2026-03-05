@@ -48,6 +48,34 @@
   animation: slide-down 0.3s ease-in forwards;
 }
 
+/* Cart highlight animation for scroll-to-cart feature */
+@keyframes cart-highlight {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.3);
+  }
+}
+
+.animate-cart-highlight {
+  animation: cart-highlight 1s ease-in-out 2;
+}
+
+/* Pulse glow variant for cart section */
+@keyframes cart-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(20, 83, 45, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 4px rgba(20, 83, 45, 0.2);
+  }
+}
+
+.animate-cart-glow {
+  animation: cart-glow 1.5s ease-in-out 3;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

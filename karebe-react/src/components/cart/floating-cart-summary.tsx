@@ -48,7 +48,7 @@ export function FloatingCartSummary({
 
   return (
     <div 
-      className={`fixed bottom-24 left-4 right-4 md:left-auto md:right-4 md:w-96 z-60 transition-all duration-300 ${
+      className={`fixed bottom-24 left-4 md:left-4 md:right-auto md:w-96 z-70 transition-all duration-300 ${
         isVisible ? 'animate-slide-up' : 'animate-slide-down pointer-events-none'
       }`}
     >
