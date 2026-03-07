@@ -125,6 +125,49 @@ export function ImageGallery({
     debugLog('URL added successfully', { url: urlInput, totalImages: newImages.length });
   }, [urlInput, images, maxImages, onImagesChange]);
 
+  // Upload single file to Supabase via S3 (direct)
+  const uploadToS3 = async (file: File): Promise<string> => {
+    debugLog('Starting S3 direct upload', {
+      fileName: file.name,
+      fileSize: file.size,
+      endpoint: 'https://pwcqgwpkvesoowpnomad.storage.supabase.co/storage/v1/s3',
+    });
+
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+    const filePath = `products/${fileName}`;
+
+    try {
+      // S3 multipart upload using fetch
+      const endpoint = 'https://pwcqgwpkvesoowpnomad.storage.supabase.co/storage/v1/s3';
+      const accessKey = 'bde86536e78ee2391c425a50368a4123';
+      
+      // Create a simple PUT request with AWS Signature V4
+      // For Supabase S3, we can use the simpler form-post approach or direct PUT
+      const response = await fetch(`${endpoint}/product_images/${filePath}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type,
+          'x-upsert': 'true',
+        },
+        body: file,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[ImageGallery S3] Upload failed:', response.status, errorText);
+        throw new Error(`S3 upload failed: ${response.status}`);
+      }
+
+      const publicUrl = `https://pwcqgwpkvesoowpnomad.supabase.co/storage/v1/object/public/product_images/${filePath}`;
+      debugLog('S3 upload successful', { url: publicUrl });
+      return publicUrl;
+    } catch (error) {
+      console.error('[ImageGallery S3] Upload error:', error);
+      throw error;
+    }
+  };
+
   // Upload single file to Supabase
   const uploadToSupabase = async (file: File): Promise<string> => {
     debugLog('Starting Supabase upload', {
@@ -323,7 +366,23 @@ export function ImageGallery({
           });
         }, 100);
 
-        const imageUrl = await uploadToSupabase(file);
+        let imageUrl: string;
+        
+        // Try S3 upload first with direct credentials
+        try {
+          imageUrl = await uploadToS3(file);
+          debugLog('S3 upload succeeded', { url: imageUrl });
+        } catch (s3Error) {
+          debugLog('S3 upload failed, trying Supabase...', { error: s3Error }, true);
+          // Fall back to Supabase JS client
+          try {
+            imageUrl = await uploadToSupabase(file);
+          } catch (supabaseError) {
+            debugLog('Supabase upload failed, using base64...', { error: supabaseError }, true);
+            // Final fallback to base64 (already handled inside uploadToSupabase)
+            imageUrl = await uploadToSupabase(file);
+          }
+        }
         
         clearInterval(progressInterval);
         setUploadProgress(prev => ({ ...prev, [tempId]: 100 }));
