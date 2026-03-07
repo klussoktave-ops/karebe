@@ -4,9 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/features/cart/hooks/use-cart';
-
-// WhatsApp number (Kenya format)
-const WHATSAPP_NUMBER = '254720123456';
+import { getWhatsAppNumber } from '@/features/settings/hooks/use-settings';
 
 interface WhatsAppQuickOrderFabProps {
   position?: 'bottom-right' | 'bottom-left';
@@ -19,6 +17,7 @@ export function WhatsAppQuickOrderFab({
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const { items, total } = useCart();
+  const whatsappNumber = getWhatsAppNumber();
 
   // Generate pre-filled WhatsApp message with cart contents
   const generateCartMessage = () => {
@@ -53,7 +52,7 @@ export function WhatsAppQuickOrderFab({
 
     // Encode message for WhatsApp
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${encodedMessage}`;
 
     // Open WhatsApp in new tab
     window.open(whatsappUrl, '_blank');

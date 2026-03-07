@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { CallButton } from '@/features/orders/components/CallButton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useCartStore } from '@/features/cart/stores/cart-store';
+import { useSettings, getSupportPhone, getWhatsAppNumber } from '@/features/settings/hooks/use-settings';
 
 export interface FloatingActionsProps {
   /** Number of items in cart */
@@ -47,8 +48,8 @@ const STORE_WHATSAPP = '+254720123456';
 export function FloatingActions({
   cartItemCount = 0,
   onCartClick: _onCartClick,
-  phoneNumber = STORE_PHONE,
-  whatsappNumber = STORE_WHATSAPP,
+  phoneNumber: _phoneNumber,
+  whatsappNumber: _whatsappNumber,
   isLoggedIn: _isLoggedIn,
   userRole,
   onAdminClick,
@@ -56,6 +57,9 @@ export function FloatingActions({
   onLoginClick: _onLoginClick,
   className,
 }: FloatingActionsProps) {
+  const { settings } = useSettings();
+  const phoneNumber = _phoneNumber || getSupportPhone();
+  const whatsappNumber = _whatsappNumber || getWhatsAppNumber();
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(false);
   const { items, getTotal } = useCartStore();
