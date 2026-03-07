@@ -1,12 +1,13 @@
 -- Admin Users table for managing admin accounts
 -- This replaces the hardcoded demo users
+-- Note: System uses phone for login, not email
 
 CREATE TABLE IF NOT EXISTS admin_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email TEXT UNIQUE NOT NULL,
+    email TEXT,
     password_hash TEXT NOT NULL,
     name TEXT NOT NULL,
-    phone TEXT,
+    phone TEXT UNIQUE NOT NULL,
     role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('admin', 'super-admin')),
     branch_id TEXT,
     is_active BOOLEAN DEFAULT true,
@@ -16,7 +17,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
 );
 
 -- Add indexes for faster queries
-CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users(email);
+CREATE INDEX IF NOT EXISTS idx_admin_users_phone ON admin_users(phone);
 CREATE INDEX IF NOT EXISTS idx_admin_users_branch_id ON admin_users(branch_id);
 CREATE INDEX IF NOT EXISTS idx_admin_users_role ON admin_users(role);
 
@@ -25,50 +26,33 @@ CREATE INDEX IF NOT EXISTS idx_admin_users_role ON admin_users(role);
 INSERT INTO admin_users (id, email, password_hash, name, phone, role, branch_id)
 VALUES 
     ('00000000-0000-0000-0000-000000000001', 'owner@karebe.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'John Karebe', '+254712345678', 'super-admin', NULL),
-    ('user-admin-001', 'admin@karebe.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Grace Muthoni', '+254723456789', 'admin', 'branch-wangige')
-ON CONFLICT (email) DO NOTHING;
+    ('00000000-0000-0000-0000-000000000002', 'admin@karebe.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Grace Muthoni', '+254723456789', 'admin', 'branch-wangige')
+ON CONFLICT (phone) DO NOTHING;
 
 -- Enable RLS
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
+-- RLS Policies - simplified for now (still experimenting)
+-- Allow authenticated users to read admin users
 CREATE POLICY "Admin users can be viewed by authenticated users" 
     ON admin_users FOR SELECT 
     TO authenticated 
     USING (true);
 
-CREATE POLICY "Admin users can be inserted by super-admin" 
+-- Allow any authenticated user to insert (for now - can be restricted later)
+CREATE POLICY "Admin users can be inserted by authenticated users" 
     ON admin_users FOR INSERT 
     TO authenticated 
-    WITH CHECK (
-        EXISTS (
-            SELECT 1 FROM admin_users 
-            WHERE email = auth.jwt()->>'email' 
-            AND role = 'super-admin'
-            AND is_active = true
-        )
-    );
+    WITH CHECK (true);
 
-CREATE POLICY "Admin users can be updated by super-admin" 
+-- Allow any authenticated user to update (for now - can be restricted later)
+CREATE POLICY "Admin users can be updated by authenticated users" 
     ON admin_users FOR UPDATE 
     TO authenticated 
-    USING (
-        EXISTS (
-            SELECT 1 FROM admin_users 
-            WHERE email = auth.jwt()->>'email' 
-            AND role = 'super-admin'
-            AND is_active = true
-        )
-    );
+    USING (true);
 
-CREATE POLICY "Admin users can be deleted by super-admin" 
+-- Allow any authenticated user to delete (for now - can be restricted later)
+CREATE POLICY "Admin users can be deleted by authenticated users" 
     ON admin_users FOR DELETE 
     TO authenticated 
-    USING (
-        EXISTS (
-            SELECT 1 FROM admin_users 
-            WHERE email = auth.jwt()->>'email' 
-            AND role = 'super-admin'
-            AND is_active = true
-        )
-    );
+    USING (true);
