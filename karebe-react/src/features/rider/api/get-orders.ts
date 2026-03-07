@@ -36,12 +36,25 @@ export async function getRiderOrders(riderId: string, status?: string): Promise<
     console.log('[RiderAPI] Fetching orders from:', url);
     
     const response = await fetch(url);
-    const data = await response.json();
+    console.log('[RiderAPI] Response status:', response.status, response.statusText);
+    
+    // Debug: Get raw text first to see what's being returned
+    const rawText = await response.text();
+    console.log('[RiderAPI] Raw response:', rawText.substring(0, 500));
+    
+    // Try to parse as JSON
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (parseError) {
+      console.error('[RiderAPI] JSON parse failed:', parseError);
+      throw new Error(`Server returned ${response.status}: ${rawText.substring(0, 100)}`);
+    }
     
     console.log('[RiderAPI] Orders response:', data);
     
     if (!response.ok || !data.success) {
-      throw new Error(data.error || 'Failed to fetch orders');
+      throw new Error(data.error || `Failed to fetch orders (${response.status})`);
     }
     
     return data;

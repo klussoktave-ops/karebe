@@ -15,10 +15,18 @@ function supabaseAdmin() {
 }
 
 module.exports = async function handler(req, res) {
+    // Debug: Log all incoming requests
+    console.log('[RiderAPI] === INCOMING REQUEST ===');
+    console.log('[RiderAPI] Method:', req.method);
+    console.log('[RiderAPI] URL:', req.url);
+    console.log('[RiderAPI] Query:', JSON.stringify(req.query));
+    
     const supabase = supabaseAdmin();
     const urlParts = req.url.split('/').filter(Boolean);
+    console.log('[RiderAPI] URL parts:', urlParts);
     
     if (urlParts.length < 2 || urlParts[0] !== 'riders') {
+        console.log('[RiderAPI] Not a riders request, passing through');
         return res.status(404).json({ ok: false, error: "Not found" });
     }
 
