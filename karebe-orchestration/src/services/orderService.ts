@@ -246,7 +246,8 @@ export class OrderService {
 
     if (error) {
       logger.error('Failed to assign rider - RPC error', { error, orderId, request });
-      throw error;
+      // Return a more descriptive error
+      throw new Error(error.message || 'Database error assigning rider');
     }
 
     const result = data as { success: boolean; error?: string; current_status?: string; current_order?: string };

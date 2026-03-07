@@ -239,24 +239,13 @@ router.post('/:id/assign-rider', async (req: Request, res: Response) => {
       message: 'Rider assigned successfully',
     });
   } catch (error) {
-    logger.error('Error assigning rider', { error, orderId: req.params.id, body: req.body, errorMessage: error instanceof Error ? error.message : 'Unknown', errorStack: error instanceof Error ? error.stack : null });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error assigning rider', { error, orderId: req.params.id, body: req.body, errorMessage });
     
-    if (error instanceof Error) {
-      if (error.name === 'RiderUnavailableError') {
-        return res.status(400).json({
-          success: false,
-          error: 'Rider unavailable',
-          message: error.message,
-        });
-      }
-      // Log the full error for debugging
-      logger.error('Full error details', { error: JSON.stringify(error) });
-    }
-    
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to assign rider',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message: errorMessage,
     });
   }
 });
