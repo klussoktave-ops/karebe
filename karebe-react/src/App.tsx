@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Suspense, lazy, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { DemoBanner } from './components/demo/demo-banner';
+import { AdminLayout } from './components/layout/admin-layout';
 
 // Lazy load pages for code splitting
 const CatalogPage = lazy(() => import('./pages/customer/catalog'));
@@ -43,7 +44,7 @@ function App() {
   
   return (
     <div className="min-h-screen bg-brand-50">
-      <DemoBanner />
+      {!location.pathname.startsWith('/admin') && <DemoBanner />}
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Customer Routes */}
@@ -51,16 +52,16 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           
-          {/* Admin Routes */}
+          {/* Admin Routes - with Sidebar Layout } */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin" element={<AdminDashboardPage />} />
-          <Route path="/admin/orders" element={<AdminOrdersPage />} />
-          <Route path="/admin/products" element={<AdminProductsPage />} />
-          <Route path="/admin/branches" element={<BranchConfigPage />} />
-          <Route path="/admin/settings" element={<SettingsPage />} />
-          <Route path="/admin/riders" element={<RidersPage />} />
-          <Route path="/admin/admins" element={<AdminsPage />} />
-          <Route path="/admin/*" element={<AdminDashboardPage />} />
+          <Route path="/admin" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
+          <Route path="/admin/orders" element={<AdminLayout><AdminOrdersPage /></AdminLayout>} />
+          <Route path="/admin/products" element={<AdminLayout><AdminProductsPage /></AdminLayout>} />
+          <Route path="/admin/branches" element={<AdminLayout><BranchConfigPage /></AdminLayout>} />
+          <Route path="/admin/settings" element={<AdminLayout><SettingsPage /></AdminLayout>} />
+          <Route path="/admin/riders" element={<AdminLayout><RidersPage /></AdminLayout>} />
+          <Route path="/admin/admins" element={<AdminLayout><AdminsPage /></AdminLayout>} />
+          <Route path="/admin/*" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
           
           {/* Rider Routes */}
           <Route path="/rider" element={<RiderPortalPage />} />
