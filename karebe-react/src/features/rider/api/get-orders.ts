@@ -1,0 +1,133 @@
+/**
+ * Rider API - Get orders assigned to rider
+ */
+
+export interface RiderOrder {
+  id: string;
+  order_number: string;
+  status: string;
+  customer_name: string;
+  customer_phone: string;
+  delivery_address: string;
+  delivery_notes?: string;
+  branch_id: string;
+  rider_id?: string;
+  total_amount: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GetRiderOrdersResponse {
+  success: boolean;
+  data: RiderOrder[];
+}
+
+/**
+ * Fetch orders assigned to a rider
+ */
+export async function getRiderOrders(riderId: string, status?: string): Promise<GetRiderOrdersResponse> {
+  try {
+    const params = new URLSearchParams();
+    if (status) {
+      params.append('status', status);
+    }
+    
+    const url = `/api/riders/${riderId}/orders${params.toString() ? '?' + params.toString() : ''}`;
+    console.log('[RiderAPI] Fetching orders from:', url);
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    console.log('[RiderAPI] Orders response:', data);
+    
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || 'Failed to fetch orders');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('[RiderAPI] Error fetching orders:', error);
+    return {
+      success: false,
+      data: [],
+    };
+  }
+}
+
+/**
+ * Confirm rider for an order (digital confirmation)
+ */
+export async function confirmRider(orderId: string, riderId: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    const response = await fetch(`/api/orders/${orderId}/confirm-rider`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ rider_id: riderId, actor_type: 'rider' }),
+    });
+    
+    const data = await response.json();
+    console.log('[RiderAPI] Confirm rider response:', data);
+    
+    return data;
+  } catch (error) {
+    console.error('[RiderAPI] Error confirming rider:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to confirm',
+    };
+  }
+}
+
+/**
+ * Start delivery (mark as picked up / out for delivery)
+ */
+export async function startDelivery(orderId: string, riderId: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    const response = await fetch(`/api/orders/${orderId}/start-delivery`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ rider_id: riderId, actor_type: 'rider' }),
+    });
+    
+    const data = await response.json();
+    console.log('[RiderAPI] Start delivery response:', data);
+    
+    return data;
+  } catch (error) {
+    console.error('[RiderAPI] Error starting delivery:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to start delivery',
+    };
+  }
+}
+
+/**
+ * Complete delivery (mark as delivered)
+ */
+export async function completeDelivery(orderId: string, riderId: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    const response = await fetch(`/api/orders/${orderId}/complete`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ rider_id: riderId, actor_type: 'rider' }),
+    });
+    
+    const data = await response.json();
+    console.log('[RiderAPI] Complete delivery response:', data);
+    
+    return data;
+  } catch (error) {
+    console.error('[RiderAPI] Error completing delivery:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to complete delivery',
+    };
+  }
+}

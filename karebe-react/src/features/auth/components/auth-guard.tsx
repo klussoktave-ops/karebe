@@ -36,7 +36,7 @@ export function AuthGuard({
   fallback,
   redirectTo = '/login',
 }: AuthGuardProps) {
-  const { isAuthenticated, isLoading, hasRole } = useAuth();
+  const { isAuthenticated, isLoading, hasRole, user, logout } = useAuth();
   const location = useLocation();
 
   // Show loading state
@@ -61,6 +61,13 @@ export function AuthGuard({
 
   // Check role requirements
   if (requiredRole && !hasRole(requiredRole)) {
+    // DEBUG: Log detailed information about access denial
+    console.error('[AuthGuard] Access Denied Debug:', {
+      user: user ? { id: user.id, role: user.role, name: user.name } : null,
+      requiredRole,
+      isAuthenticated,
+    });
+    
     if (fallback) {
       return <>{fallback}</>;
     }
@@ -74,12 +81,25 @@ export function AuthGuard({
           <p className="text-brand-600 mb-6">
             You don't have permission to access this page. Please contact your administrator if you believe this is a mistake.
           </p>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
-          >
-            Go Home
-          </a>
+          {/* DEBUG: Show role info to help diagnose */}
+          <div className="bg-brand-100 p-3 rounded-lg text-left text-sm mb-4">
+            <p><strong>Your role:</strong> {user?.role || 'Not logged in'}</p>
+            <p><strong>Required role:</strong> {Array.isArray(requiredRole) ? requiredRole.join(' or ') : requiredRole}</p>
+          </div>
+          <div className="flex gap-2 justify-center">
+            <button
+              onClick={() => logout()}
+              className="inline-flex items-center justify-center px-6 py-2 bg-error-100 text-error-700 rounded-lg hover:bg-error-200 transition-colors"
+            >
+              Logout & Switch Role
+            </button>
+            <a
+              href="/admin/login"
+              className="inline-flex items-center justify-center px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
+            >
+              Go to Login
+            </a>
+          </div>
         </div>
       </div>
     );

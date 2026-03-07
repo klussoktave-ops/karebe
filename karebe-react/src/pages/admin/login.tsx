@@ -104,8 +104,9 @@ function LoginContent() {
 }
 
 export function AdminLoginPage() {
+  // Use role-based redirect - if rider goes to admin login, redirect to rider portal
   return (
-    <PublicOnlyGuard redirectTo="/admin">
+    <PublicOnlyGuard redirectTo="/rider">
       <LoginContent />
     </PublicOnlyGuard>
   );

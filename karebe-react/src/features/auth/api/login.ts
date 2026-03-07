@@ -32,11 +32,14 @@ async function demoLogin(credentials: LoginCredentials): Promise<LoginResponse> 
   );
 
   if (!user) {
+    console.warn('[DemoLogin] User not found for:', credentials.username);
     return {
       success: false,
       message: 'Invalid email or password. Try: owner@karebe.com / owner123',
     };
   }
+
+  console.log('[DemoLogin] Success for user:', { email: user.email, role: user.role, name: user.name });
 
   const authUser: AuthUser = {
     id: user.id,

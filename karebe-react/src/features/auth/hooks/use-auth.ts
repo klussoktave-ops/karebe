@@ -37,6 +37,7 @@ export function useAuth(): UseAuthReturn {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: (data) => {
+      console.log('[useAuth] Login success:', data);
       if (data.success && data.user) {
         loginStore(data.user);
         // Invalidate any auth-related queries
