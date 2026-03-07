@@ -36,9 +36,9 @@ END $$;
 UPDATE riders SET name = phone WHERE name IS NULL OR name = '';
 
 -- Insert demo riders (will not fail if they exist)
-INSERT INTO riders (id, name, phone, whatsapp_number, status, branch_id, is_active)
+INSERT INTO riders (name, phone, whatsapp_number, status, branch_id, is_active)
 VALUES 
-    ('rider-001', 'John Doe', '+254712345678', '+254712345678', 'AVAILABLE', 'branch-wangige', true),
-    ('rider-002', 'Jane Smith', '+254723456789', '+254723456789', 'BUSY', 'branch-kikuyu', true),
-    ('rider-003', 'Mike Johnson', '+254734567890', NULL, 'OFFLINE', 'branch-githurai', true)
+    ('John Doe', '+254712345678', '+254712345678', 'AVAILABLE', 'branch-wangige', true),
+    ('Jane Smith', '+254723456789', '+254723456789', 'BUSY', 'branch-kikuyu', true),
+    ('Mike Johnson', '+254734567890', NULL, 'OFFLINE', 'branch-githurai', true)
 ON CONFLICT (phone) DO NOTHING;
