@@ -55,7 +55,15 @@
       "destination": "/api/payments/daraja/callback.js"
     },
     {
-      "source": "/(.*)",
+      "source": "/admin/:path*",
+      "destination": "/karebe-react/dist/index.html"
+    },
+    {
+      "source": "/rider/:path*",
+      "destination": "/karebe-react/dist/index.html"
+    },
+    {
+      "source": "/:path*",
       "destination": "/karebe-react/dist/index.html"
     }
   ]
