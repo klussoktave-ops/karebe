@@ -36,7 +36,8 @@ export async function getRiderOrders(riderId: string, status?: string): Promise<
     }
     
     // Use orchestration API URL if available, otherwise fall back to relative path
-    const baseUrl = ORCHESTRATION_API_URL || '/api';
+    // Note: When using Railway URL, we need to include /api prefix
+    const baseUrl = ORCHESTRATION_API_URL ? `${ORCHESTRATION_API_URL}/api` : '/api';
     const url = `${baseUrl}/riders/${riderId}/orders${params.toString() ? '?' + params.toString() : ''}`;
     console.log('[RiderAPI] Fetching orders from:', url);
     
@@ -77,7 +78,7 @@ export async function getRiderOrders(riderId: string, status?: string): Promise<
  */
 export async function confirmRider(orderId: string, riderId: string): Promise<{ success: boolean; message?: string }> {
   try {
-    const baseUrl = ORCHESTRATION_API_URL || '/api';
+    const baseUrl = ORCHESTRATION_API_URL ? `${ORCHESTRATION_API_URL}/api` : '/api';
     const response = await fetch(`${baseUrl}/orders/${orderId}/confirm-rider`, {
       method: 'POST',
       headers: {
@@ -104,7 +105,7 @@ export async function confirmRider(orderId: string, riderId: string): Promise<{ 
  */
 export async function startDelivery(orderId: string, riderId: string): Promise<{ success: boolean; message?: string }> {
   try {
-    const baseUrl = ORCHESTRATION_API_URL || '/api';
+    const baseUrl = ORCHESTRATION_API_URL ? `${ORCHESTRATION_API_URL}/api` : '/api';
     const response = await fetch(`${baseUrl}/orders/${orderId}/start-delivery`, {
       method: 'POST',
       headers: {
@@ -131,7 +132,7 @@ export async function startDelivery(orderId: string, riderId: string): Promise<{
  */
 export async function completeDelivery(orderId: string, riderId: string): Promise<{ success: boolean; message?: string }> {
   try {
-    const baseUrl = ORCHESTRATION_API_URL || '/api';
+    const baseUrl = ORCHESTRATION_API_URL ? `${ORCHESTRATION_API_URL}/api` : '/api';
     const response = await fetch(`${baseUrl}/orders/${orderId}/complete`, {
       method: 'POST',
       headers: {
