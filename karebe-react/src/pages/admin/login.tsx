@@ -24,6 +24,7 @@ function LoginContent() {
   // Redirect after successful login based on user role
   useEffect(() => {
     if (user) {
+      console.log('[AdminLogin] User detected, redirecting based on role:', user.role);
       // Determine redirect based on role
       switch (user.role) {
         case 'rider':
@@ -41,6 +42,7 @@ function LoginContent() {
 
   // Quick login for dev mode
   const handleQuickLogin = async (role: 'admin' | 'rider' | 'super-admin') => {
+    console.log('[AdminLogin] Quick login clicked for role:', role);
     const credentials = {
       admin: { username: 'admin@karebe.com', password: 'admin123' },
       'super-admin': { username: 'owner@karebe.com', password: 'owner123' },
