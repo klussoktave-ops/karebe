@@ -2,6 +2,9 @@
  * Rider API - Get orders assigned to rider
  */
 
+// Get orchestration API URL from environment
+const ORCHESTRATION_API_URL = import.meta.env.VITE_ORCHESTRATION_API_URL || '';
+
 export interface RiderOrder {
   id: string;
   order_number: string;
@@ -32,7 +35,9 @@ export async function getRiderOrders(riderId: string, status?: string): Promise<
       params.append('status', status);
     }
     
-    const url = `/api/riders/${riderId}/orders${params.toString() ? '?' + params.toString() : ''}`;
+    // Use orchestration API URL if available, otherwise fall back to relative path
+    const baseUrl = ORCHESTRATION_API_URL || '/api';
+    const url = `${baseUrl}/riders/${riderId}/orders${params.toString() ? '?' + params.toString() : ''}`;
     console.log('[RiderAPI] Fetching orders from:', url);
     
     const response = await fetch(url);
@@ -72,7 +77,8 @@ export async function getRiderOrders(riderId: string, status?: string): Promise<
  */
 export async function confirmRider(orderId: string, riderId: string): Promise<{ success: boolean; message?: string }> {
   try {
-    const response = await fetch(`/api/orders/${orderId}/confirm-rider`, {
+    const baseUrl = ORCHESTRATION_API_URL || '/api';
+    const response = await fetch(`${baseUrl}/orders/${orderId}/confirm-rider`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -98,7 +104,8 @@ export async function confirmRider(orderId: string, riderId: string): Promise<{ 
  */
 export async function startDelivery(orderId: string, riderId: string): Promise<{ success: boolean; message?: string }> {
   try {
-    const response = await fetch(`/api/orders/${orderId}/start-delivery`, {
+    const baseUrl = ORCHESTRATION_API_URL || '/api';
+    const response = await fetch(`${baseUrl}/orders/${orderId}/start-delivery`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -124,7 +131,8 @@ export async function startDelivery(orderId: string, riderId: string): Promise<{
  */
 export async function completeDelivery(orderId: string, riderId: string): Promise<{ success: boolean; message?: string }> {
   try {
-    const response = await fetch(`/api/orders/${orderId}/complete`, {
+    const baseUrl = ORCHESTRATION_API_URL || '/api';
+    const response = await fetch(`${baseUrl}/orders/${orderId}/complete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
