@@ -3,7 +3,7 @@
  * Mobile-friendly floating buttons for Call, WhatsApp, and Cart
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, MessageCircle, ShoppingCart, User, Plus, Send, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -46,18 +46,35 @@ const STORE_WHATSAPP = '+254720123456';
 
 export function FloatingActions({
   cartItemCount = 0,
-  onCartClick,
+  onCartClick: _onCartClick,
   phoneNumber = STORE_PHONE,
   whatsappNumber = STORE_WHATSAPP,
-  isLoggedIn = false,
+  isLoggedIn: _isLoggedIn,
   userRole,
   onAdminClick,
   onRiderClick,
-  onLoginClick,
+  onLoginClick: _onLoginClick,
   className,
 }: FloatingActionsProps) {
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [isNearBottom, setIsNearBottom] = useState(false);
   const { items, getTotal } = useCartStore();
+  
+  // Detect when user scrolls near the bottom (cart section)
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + window.innerHeight;
+      const pageHeight = document.documentElement.scrollHeight;
+      // Show FAB when within 400px of bottom (cart section)
+      const threshold = pageHeight - 400;
+      setIsNearBottom(scrollPosition > threshold);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial check
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   
   const formatCartMessage = () => {
     if (items.length === 0) return '';
@@ -103,7 +120,7 @@ export function FloatingActions({
 
   return (
     <>
-      <div className={cn('fixed bottom-4 right-4 z-40 flex flex-col gap-2', className)}>
+      <div className={cn('fixed bottom-4 right-4 z-40 flex flex-col gap-2', className, isNearBottom && 'opacity-0 pointer-events-none transition-opacity duration-300')}>
         {/* User/Admin Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -115,11 +132,6 @@ export function FloatingActions({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="mb-2">
-            {!isLoggedIn && (
-              <DropdownMenuItem onClick={onLoginClick}>
-                Admin/Rider Login
-              </DropdownMenuItem>
-            )}
             {(userRole === 'super-admin' || userRole === 'admin') && (
               <DropdownMenuItem onClick={onAdminClick}>
                 Admin Dashboard

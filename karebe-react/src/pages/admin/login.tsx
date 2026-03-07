@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Shield, Bike, UserCog } from 'lucide-react';
 import { Container } from '@/components/layout/container';
 import { LoginForm } from '@/features/auth/components/login-form';
@@ -12,13 +13,31 @@ const isDevMode = import.meta.env.DEV || import.meta.env.VITE_DEV_MODE === 'true
 
 function LoginContent() {
   const navigate = useNavigate();
-  const { login, isLoading, error } = useAuth();
+  const { login, isLoading, error, user } = useAuth();
 
+  // Handle login with proper role-based redirect
   const handleLogin = async (credentials: { username: string; password: string }) => {
     await login(credentials);
-    // Navigate on success
-    navigate('/admin');
+    // Navigation will be handled by the useEffect below that watches user changes
   };
+
+  // Redirect after successful login based on user role
+  useEffect(() => {
+    if (user) {
+      // Determine redirect based on role
+      switch (user.role) {
+        case 'rider':
+          navigate('/rider', { replace: true });
+          break;
+        case 'super-admin':
+        case 'admin':
+          navigate('/admin', { replace: true });
+          break;
+        default:
+          navigate('/', { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   // Quick login for dev mode
   const handleQuickLogin = async (role: 'admin' | 'rider' | 'super-admin') => {
@@ -29,11 +48,7 @@ function LoginContent() {
     };
     
     await login(credentials[role]);
-    if (role === 'rider') {
-      navigate('/rider');
-    } else {
-      navigate('/admin');
-    }
+    // Role-based redirect handled by useEffect
   };
 
   return (

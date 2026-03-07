@@ -6,7 +6,8 @@ import { CartItem } from '@/features/cart/components/cart-item';
 import { CartSummary } from '@/features/cart/components/cart-summary';
 import { useCart } from '@/features/cart/hooks/use-cart';
 import { useAuth } from '@/features/auth/hooks/use-auth';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Phone, MessageCircle, LogIn, LayoutDashboard } from 'lucide-react';
+import { getDashboardRoute } from '@/features/auth/utils/role-utils';
 
 export function CartPage() {
   const navigate = useNavigate();
@@ -66,6 +67,48 @@ export function CartPage() {
           <div>
             <CartSummary onCheckout={() => navigate('/checkout')} />
           </div>
+        </div>
+        
+        {/* Quick Action Buttons */}
+        <div className="flex flex-wrap gap-3 justify-center mt-8">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => window.location.href = 'tel:+254724721627'}
+          >
+            <Phone className="w-4 h-4" />
+            Call to Order
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-2 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+            onClick={() => {
+              const message = encodeURIComponent('Hi Karebe! I would like to inquire about my order.');
+              window.open(`https://wa.me/254724721627?text=${message}`, '_blank');
+            }}
+          >
+            <MessageCircle className="w-4 h-4" />
+            WhatsApp
+          </Button>
+          {user ? (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => navigate(getDashboardRoute(user.role))}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              {user.role === 'rider' ? 'Rider Portal' : 'Admin Dashboard'}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => navigate('/admin/login')}
+            >
+              <LogIn className="w-4 h-4" />
+              Admin/Rider Login
+            </Button>
+          )}
         </div>
       </Container>
     </div>

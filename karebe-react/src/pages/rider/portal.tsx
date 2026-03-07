@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Package, 
   MapPin, 
@@ -7,7 +8,10 @@ import {
   Phone,
   Navigation,
   Clock,
-  RefreshCw
+  RefreshCw,
+  ArrowLeftRight,
+  Shield,
+  LayoutDashboard
 } from 'lucide-react';
 import { Container } from '@/components/layout/container';
 import { Button } from '@/components/ui/button';
@@ -16,6 +20,15 @@ import { Badge } from '@/components/ui/badge';
 import { AuthGuard } from '@/features/auth/components/auth-guard';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { useRiderOrders } from '@/features/rider/hooks/use-rider-orders';
+import { getAvailableRoleSwitches } from '@/features/auth/utils/role-utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import type { UserRole } from '@/features/auth/stores/auth-store';
 
 // Helper to format status
 const formatStatus = (status: string) => {
@@ -41,7 +54,8 @@ const getStatusVariant = (status: string): 'default' | 'warning' | 'success' | '
 };
 
 function RiderPortalContent() {
-  const { logout, user } = useAuth();
+  const navigate = useNavigate();
+  const { logout, user, switchRole } = useAuth();
   const {
     orders,
     pendingOrders,
@@ -94,6 +108,42 @@ function RiderPortalContent() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Role Switcher - only show if user has multiple role options */}
+              {user && (() => {
+                const roleSwitches = getAvailableRoleSwitches(user.role);
+                if (roleSwitches.length > 1) {
+                  return (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <ArrowLeftRight className="w-4 h-4 mr-1" />
+                          Switch
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Switch to Role</DropdownMenuLabel>
+                        {roleSwitches.map((switchOption) => (
+                          <DropdownMenuItem
+                            key={switchOption.role}
+                            onClick={() => {
+                              switchRole(switchOption.role);
+                              navigate(switchOption.route);
+                            }}
+                            className={user.role === switchOption.role ? 'bg-brand-50 font-medium' : ''}
+                          >
+                            {switchOption.role === 'admin' && <Shield className="h-4 w-4 mr-2" />}
+                            {switchOption.role === 'rider' && <Navigation className="h-4 w-4 mr-2" />}
+                            {switchOption.role === 'customer' && <LayoutDashboard className="h-4 w-4 mr-2" />}
+                            {switchOption.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                }
+                return null;
+              })()}
+
               <Button variant="ghost" size="sm" onClick={refetch} disabled={isLoading}>
                 <RefreshCw className={`w-4 h-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh

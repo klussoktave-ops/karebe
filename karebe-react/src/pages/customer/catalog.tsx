@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { ShoppingCart, LogIn, Phone, CreditCard } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { ShoppingCart, LogIn, Phone, CreditCard, LayoutDashboard, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Container } from '@/components/layout/container';
 import { FloatingActions } from '@/components/layout/floating-actions';
@@ -11,6 +11,7 @@ import { useProductFilterStore, useProductFilters } from '@/features/products/st
 import { useCart } from '@/features/cart/hooks/use-cart';
 import { useCartMutations } from '@/features/cart/hooks/use-cart-mutations';
 import { useAuth } from '@/features/auth/hooks/use-auth';
+import { getDashboardRoute } from '@/features/auth/utils/role-utils';
 import type { ProductDisplay, ProductVariant } from '@/features/products/types';
 
 /**
@@ -24,7 +25,7 @@ export function CatalogPage() {
   const filters = useProductFilters();
   const setPage = useProductFilterStore((state) => state.setPage);
   const { data, isLoading } = useProducts(filters);
-  const { toggleCart, items: cartItems } = useCart(user?.id);
+  const { items: cartItems } = useCart(user?.id);
   const { addToCart } = useCartMutations(user?.id);
   const cartSectionRef = useRef<HTMLDivElement>(null);
   const [isCartHighlighted, setIsCartHighlighted] = useState(false);
@@ -100,11 +101,20 @@ export function CatalogPage() {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => navigate('/admin/login')}
+              onClick={() => user ? navigate(getDashboardRoute(user.role)) : navigate('/admin/login')}
               className="flex items-center gap-2"
             >
-              <LogIn className="w-4 h-4" />
-              Login
+              {user ? (
+                <>
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4" />
+                  Login
+                </>
+              )}
             </Button>
           </div>
 
@@ -221,6 +231,50 @@ export function CatalogPage() {
               <p className="text-sm text-brand-500 mt-1">Add items to see them here</p>
             </div>
           )}
+        </Container>
+        
+        {/* Quick Action Buttons for Cart Section */}
+        <Container>
+          <div className="flex flex-wrap gap-3 justify-center mt-4">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => window.location.href = 'tel:+254724721627'}
+            >
+              <Phone className="w-4 h-4" />
+              Call to Order
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+              onClick={() => {
+                const message = encodeURIComponent('Hi Karebe! I would like to inquire about my order.');
+                window.open(`https://wa.me/254724721627?text=${message}`, '_blank');
+              }}
+            >
+              <MessageCircle className="w-4 h-4" />
+              WhatsApp
+            </Button>
+            {user ? (
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => navigate(getDashboardRoute(user.role))}
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                {user.role === 'rider' ? 'Rider Portal' : 'Admin Dashboard'}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => navigate('/admin/login')}
+              >
+                <LogIn className="w-4 h-4" />
+                Admin/Rider Login
+              </Button>
+            )}
+          </div>
         </Container>
       </div>
     </div>

@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect } from 'react';
 import { useAuthStore, type AuthUser, type UserRole } from '../stores/auth-store';
-import { login, customerLogin, type LoginCredentials } from '../api/login';
-import { logout, validateSession } from '../api/logout';
+import { login as loginApi, customerLogin, type LoginCredentials } from '../api/login';
+import { logout as logoutApi, validateSession } from '../api/logout';
+import { getDashboardRoute } from '../utils/role-utils';
 
 interface UseAuthReturn {
   // State
@@ -15,8 +16,11 @@ interface UseAuthReturn {
   login: (credentials: LoginCredentials) => Promise<void>;
   customerLogin: (phone: string) => Promise<void>;
   logout: () => Promise<void>;
+  switchRole: (role: UserRole) => void;
   clearError: () => void;
   hasRole: (role: UserRole | UserRole[]) => boolean;
+  // Helper to get dashboard route based on current role
+  getDashboardRoute: () => string;
 }
 
 /**
@@ -32,10 +36,11 @@ export function useAuth(): UseAuthReturn {
   const setErrorStore = useAuthStore((state) => state.setError);
   const loginStore = useAuthStore((state) => state.login);
   const logoutStore = useAuthStore((state) => state.logout);
+  const switchRoleStore = useAuthStore((state) => state.switchRole);
 
   // Admin/Staff login mutation
   const loginMutation = useMutation({
-    mutationFn: login,
+    mutationFn: loginApi,
     onSuccess: (data) => {
       console.log('[useAuth] Login success:', data);
       if (data.success && data.user) {
@@ -69,7 +74,7 @@ export function useAuth(): UseAuthReturn {
 
   // Logout mutation
   const logoutMutation = useMutation({
-    mutationFn: logout,
+    mutationFn: logoutApi,
     onSuccess: () => {
       logoutStore();
       // Clear all queries on logout
@@ -121,6 +126,14 @@ export function useAuth(): UseAuthReturn {
     await logoutMutation.mutateAsync();
   }, [logoutMutation]);
 
+  // Role switching - switch to a different role without full logout
+  const handleSwitchRole = useCallback(
+    (role: UserRole) => {
+      switchRoleStore(role);
+    },
+    [switchRoleStore]
+  );
+
   return {
     user: store.user,
     isAuthenticated: store.isAuthenticated,
@@ -129,8 +142,10 @@ export function useAuth(): UseAuthReturn {
     login: handleLogin,
     customerLogin: handleCustomerLogin,
     logout: handleLogout,
+    switchRole: handleSwitchRole,
     clearError: store.clearError,
     hasRole: store.hasRole,
+    getDashboardRoute: () => getDashboardRoute(store.user?.role),
   };
 }
 
