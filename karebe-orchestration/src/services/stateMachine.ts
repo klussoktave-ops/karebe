@@ -29,7 +29,7 @@ const VALID_TRANSITIONS: ValidStateTransition[] = [
   { from_status: OrderStatus.CONFIRMED_BY_MANAGER, to_status: OrderStatus.CANCELLED, allowed_actors: [ActorType.ADMIN, ActorType.CUSTOMER], requires_lock: false, description: 'Order cancelled' },
 
   // Rider confirmation (hybrid paths)
-  { from_status: OrderStatus.DELIVERY_REQUEST_STARTED, to_status: OrderStatus.RIDER_CONFIRMED_DIGITAL, allowed_actors: [ActorType.RIDER, ActorType.WEBHOOK], requires_lock: true, description: 'Rider confirmed via WhatsApp' },
+  { from_status: OrderStatus.DELIVERY_REQUEST_STARTED, to_status: OrderStatus.RIDER_CONFIRMED_DIGITAL, allowed_actors: [ActorType.RIDER, ActorType.WEBHOOK, ActorType.ADMIN], requires_lock: true, description: 'Rider confirmed via WhatsApp or admin manually' },
   { from_status: OrderStatus.DELIVERY_REQUEST_STARTED, to_status: OrderStatus.RIDER_CONFIRMED_MANUAL, allowed_actors: [ActorType.ADMIN], requires_lock: true, description: 'Admin marked rider confirmed after phone call' },
   { from_status: OrderStatus.DELIVERY_REQUEST_STARTED, to_status: OrderStatus.CANCELLED, allowed_actors: [ActorType.ADMIN, ActorType.CUSTOMER], requires_lock: false, description: 'Order cancelled' },
 

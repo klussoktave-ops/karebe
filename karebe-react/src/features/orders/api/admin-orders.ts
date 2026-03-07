@@ -142,7 +142,7 @@ export interface AssignRiderRequest {
 }
 
 export async function assignRider(orderId: string, request: AssignRiderRequest): Promise<Order> {
-  const response = await fetch(`${ORCHESTRATION_API_URL}/orders/${orderId}/assign`, {
+  const response = await fetch(`${ORCHESTRATION_API_URL}/orders/${orderId}/assign-rider`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),

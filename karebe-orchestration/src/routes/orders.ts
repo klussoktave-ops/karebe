@@ -45,8 +45,8 @@ const updateStatusSchema = z.object({
 });
 
 const assignRiderSchema = z.object({
-  rider_id: z.string().uuid(),
-  admin_id: z.string().uuid(),
+  rider_id: z.string().min(1),  // Accept any string for demo data
+  admin_id: z.string().min(1),  // Accept any string for demo data
   notes: z.string().optional(),
 });
 
