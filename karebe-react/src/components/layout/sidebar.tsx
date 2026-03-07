@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Wine,
   Building2,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -59,6 +60,7 @@ const defaultNavItems: NavItem[] = [
   { label: 'Products', href: '/admin/products', icon: <Package className="h-5 w-5" /> },
   { label: 'Branches', href: '/admin/branches', icon: <Building2 className="h-5 w-5" /> },
   { label: 'Riders', href: '/admin/riders', icon: <Truck className="h-5 w-5" /> },
+  { label: 'Admins', href: '/admin/admins', icon: <Shield className="h-5 w-5" /> },
   { label: 'Orders', href: '/admin/orders', icon: <ShoppingCart className="h-5 w-5" /> },
   { label: 'Settings', href: '/admin/settings', icon: <Settings className="h-5 w-5" /> },
 ];

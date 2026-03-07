@@ -12,6 +12,7 @@ interface MpesaPaymentSectionProps {
   orderId: string;
   branchId?: string;
   paymentType?: 'buy_goods' | 'stk_push' | 'both';
+  tillNumber?: string;
   onPaymentComplete?: (mpesaCode: string) => void;
 }
 
@@ -20,6 +21,7 @@ export function MpesaPaymentSection({
   orderId,
   branchId,
   paymentType = 'buy_goods',
+  tillNumber: propTillNumber,
   onPaymentComplete,
 }: MpesaPaymentSectionProps) {
   const [copied, setCopied] = useState(false);
@@ -27,9 +29,10 @@ export function MpesaPaymentSection({
   const [timeRemaining] = useState(30); // 30 min timeout
   const [manualCode, setManualCode] = useState('');
 
-  // Get M-Pesa config for branch
+  // Get M-Pesa config for branch - use prop or fallback to default
   const mpesaManager = new BranchMpesaManager();
-  const [tillNumber] = useState('123456'); // Would fetch from manager in real implementation
+  const [localTillNumber] = useState(propTillNumber || '123456');
+  const tillNumber = propTillNumber || localTillNumber || '123456';
   const formattedTill = tillNumber.replace(/(\d{3})(\d{3})/, '$1 $2');
 
   const copyToClipboard = () => {

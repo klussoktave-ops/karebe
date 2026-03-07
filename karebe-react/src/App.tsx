@@ -14,6 +14,7 @@ const AdminProductsPage = lazy(() => import('./pages/admin/products'));
 const BranchConfigPage = lazy(() => import('./pages/admin/branch-config'));
 const SettingsPage = lazy(() => import('./pages/admin/settings'));
 const RidersPage = lazy(() => import('./pages/admin/riders'));
+const AdminsPage = lazy(() => import('./pages/admin/admins'));
 const RiderPortalPage = lazy(() => import('./pages/rider/portal'));
 
 // Loading fallback
@@ -31,7 +32,7 @@ function App() {
   useEffect(() => {
     console.log('[Router] Navigation to:', location.pathname);
     // Check if current admin route is defined
-    const knownAdminRoutes = ['/admin', '/admin/orders', '/admin/branches', '/admin/login', '/admin/settings', '/admin/riders', '/admin/products'];
+    const knownAdminRoutes = ['/admin', '/admin/orders', '/admin/branches', '/admin/login', '/admin/settings', '/admin/riders', '/admin/products', '/admin/admins'];
     const isKnownRoute = knownAdminRoutes.some(path => 
       location.pathname === path || location.pathname.startsWith(path + '/')
     );
@@ -58,6 +59,7 @@ function App() {
           <Route path="/admin/branches" element={<BranchConfigPage />} />
           <Route path="/admin/settings" element={<SettingsPage />} />
           <Route path="/admin/riders" element={<RidersPage />} />
+          <Route path="/admin/admins" element={<AdminsPage />} />
           <Route path="/admin/*" element={<AdminDashboardPage />} />
           
           {/* Rider Routes */}

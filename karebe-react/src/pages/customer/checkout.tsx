@@ -9,6 +9,11 @@ import { MpesaPaymentSection } from '@/features/checkout/components/mpesa-paymen
 import { useCartStore } from '@/features/cart/stores/cart-store';
 import { supabase } from '@/lib/supabase';
 
+interface BranchConfig {
+  mpesa_payment_type: 'buy_goods' | 'stk_push' | 'both';
+  mpesa_shortcode: string;
+}
+
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { items, getTotal } = useCartStore();
@@ -20,13 +25,17 @@ export default function CheckoutPage() {
     deliveryNotes: '',
   });
   const [paymentType, setPaymentType] = useState<'buy_goods' | 'stk_push' | 'both'>('buy_goods');
+  const [tillNumber, setTillNumber] = useState('123456');
 
   // Fetch branch payment config
   useEffect(() => {
     async function fetchPaymentConfig() {
-      const { data } = await supabase.from('branches').select('mpesa_payment_type').eq('is_main', true).single();
+      const { data } = await supabase.from('branches').select('mpesa_payment_type, mpesa_shortcode').eq('is_main', true).single() as { data: BranchConfig | null };
       if (data?.mpesa_payment_type) {
         setPaymentType(data.mpesa_payment_type);
+      }
+      if (data?.mpesa_shortcode) {
+        setTillNumber(data.mpesa_shortcode);
       }
     }
     fetchPaymentConfig();
@@ -208,6 +217,7 @@ export default function CheckoutPage() {
               amount={total}
               orderId="ORDER-001"
               paymentType={paymentType}
+              tillNumber={tillNumber}
               onPaymentComplete={handlePaymentComplete}
             />
 
