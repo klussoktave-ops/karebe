@@ -35,6 +35,10 @@
       "destination": "/api/delivery.js"
     },
     {
+      "source": "/api/riders/(.*)",
+      "destination": "/api/riders.js"
+    },
+    {
       "source": "/api/products",
       "destination": "/api/products.js"
     },
