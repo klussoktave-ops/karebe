@@ -131,7 +131,7 @@ export function ImageGallery({
       fileName: file.name,
       fileSize: file.size,
       fileType: file.type,
-      bucket: 'product-images',
+      bucket: 'product_images',
       path: uploadPath,
     });
 
@@ -164,7 +164,7 @@ export function ImageGallery({
 
     debugLog('Uploading to Supabase Storage', {
       filePath,
-      bucket: 'product-images',
+      bucket: 'product_images',
     });
 
     // Check if bucket exists
@@ -174,17 +174,17 @@ export function ImageGallery({
       throw new Error(`Storage bucket error: ${bucketError.message}`);
     }
 
-    const bucketExists = buckets?.some(b => b.name === 'product-images');
+    const bucketExists = buckets?.some(b => b.name === 'product_images');
     if (!bucketExists) {
       debugLog('Bucket does not exist', { 
         availableBuckets: buckets?.map(b => b.name),
       }, true);
-      throw new Error('Storage bucket "product-images" does not exist. Please create it in Supabase Dashboard.');
+      throw new Error('Storage bucket "product_images" does not exist. Please create it in Supabase Dashboard.');
     }
 
     // Upload the file
     const { data, error } = await supabase.storage
-      .from('product-images')
+      .from('product_images')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false,
@@ -202,7 +202,7 @@ export function ImageGallery({
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from('product-images')
+      .from('product_images')
       .getPublicUrl(filePath);
 
     if (!urlData?.publicUrl) {
@@ -351,7 +351,7 @@ export function ImageGallery({
         // Try to verify the URL is accessible
         if (supabase) {
           const { data, error } = await supabase.storage
-            .from('product-images')
+            .from('product_images')
             .getPublicUrl(url.split('/').pop() || '');
           
           if (error) {
