@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, MapPin, Phone, User, Truck, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { MpesaPaymentSection } from '@/features/checkout/components/mpesa-payment-section';
 import { useCartStore } from '@/features/cart/stores/cart-store';
+import { supabase } from '@/lib/supabase';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -18,6 +19,18 @@ export default function CheckoutPage() {
     address: '',
     deliveryNotes: '',
   });
+  const [paymentType, setPaymentType] = useState<'buy_goods' | 'stk_push' | 'both'>('buy_goods');
+
+  // Fetch branch payment config
+  useEffect(() => {
+    async function fetchPaymentConfig() {
+      const { data } = await supabase.from('branches').select('mpesa_payment_type').eq('is_main', true).single();
+      if (data?.mpesa_payment_type) {
+        setPaymentType(data.mpesa_payment_type);
+      }
+    }
+    fetchPaymentConfig();
+  }, []);
 
   const subtotal = getTotal();
   const deliveryFee = 200;
@@ -194,6 +207,7 @@ export default function CheckoutPage() {
             <MpesaPaymentSection
               amount={total}
               orderId="ORDER-001"
+              paymentType={paymentType}
               onPaymentComplete={handlePaymentComplete}
             />
 

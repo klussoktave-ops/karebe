@@ -19,6 +19,7 @@ interface Branch {
   is_main: boolean;
   is_active: boolean;
   mpesa_shortcode: string;
+  mpesa_payment_type: 'buy_goods' | 'stk_push' | 'both';
 }
 
 export default function BranchConfigPage() {
@@ -33,6 +34,7 @@ export default function BranchConfigPage() {
     phone: '',
     is_main: false,
     mpesa_shortcode: '',
+    mpesa_payment_type: 'buy_goods' as const,
   });
 
   useEffect(() => {
@@ -70,12 +72,13 @@ export default function BranchConfigPage() {
         is_main: newBranch.is_main,
         is_active: true,
         mpesa_shortcode: newBranch.mpesa_shortcode,
+        mpesa_payment_type: newBranch.mpesa_payment_type,
       });
 
       if (error) throw error;
 
       setIsAddDialogOpen(false);
-      setNewBranch({ id: '', name: '', address: '', phone: '', is_main: false, mpesa_shortcode: '' });
+      setNewBranch({ id: '', name: '', address: '', phone: '', is_main: false, mpesa_shortcode: '', mpesa_payment_type: 'buy_goods' });
       loadBranches();
     } catch (error) {
       console.error('Failed to add branch:', error);
@@ -95,6 +98,7 @@ export default function BranchConfigPage() {
           phone: editingBranch.phone,
           is_main: editingBranch.is_main,
           mpesa_shortcode: editingBranch.mpesa_shortcode,
+          mpesa_payment_type: editingBranch.mpesa_payment_type,
         })
         .eq('id', editingBranch.id);
 
@@ -329,6 +333,41 @@ export default function BranchConfigPage() {
                   onChange={(e) => setNewBranch({ ...newBranch, mpesa_shortcode: e.target.value })}
                 />
               </div>
+              <div className="space-y-2">
+                <Label>M-Pesa Payment Type</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="paymentType"
+                      value="buy_goods"
+                      checked={newBranch.mpesa_payment_type === 'buy_goods'}
+                      onChange={() => setNewBranch({ ...newBranch, mpesa_payment_type: 'buy_goods' })}
+                    />
+                    <span className="text-sm">Buy Goods</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="paymentType"
+                      value="stk_push"
+                      checked={newBranch.mpesa_payment_type === 'stk_push'}
+                      onChange={() => setNewBranch({ ...newBranch, mpesa_payment_type: 'stk_push' })}
+                    />
+                    <span className="text-sm">STK Push</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="paymentType"
+                      value="both"
+                      checked={newBranch.mpesa_payment_type === 'both'}
+                      onChange={() => setNewBranch({ ...newBranch, mpesa_payment_type: 'both' })}
+                    />
+                    <span className="text-sm">Both</span>
+                  </label>
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 <Switch
                   id="isMain"
@@ -389,6 +428,41 @@ export default function BranchConfigPage() {
                     value={editingBranch.mpesa_shortcode}
                     onChange={(e) => setEditingBranch({ ...editingBranch, mpesa_shortcode: e.target.value })}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>M-Pesa Payment Type</Label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="editPaymentType"
+                        value="buy_goods"
+                        checked={!editingBranch.mpesa_payment_type || editingBranch.mpesa_payment_type === 'buy_goods'}
+                        onChange={() => setEditingBranch({ ...editingBranch, mpesa_payment_type: 'buy_goods' })}
+                      />
+                      <span className="text-sm">Buy Goods</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="editPaymentType"
+                        value="stk_push"
+                        checked={editingBranch.mpesa_payment_type === 'stk_push'}
+                        onChange={() => setEditingBranch({ ...editingBranch, mpesa_payment_type: 'stk_push' })}
+                      />
+                      <span className="text-sm">STK Push</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="editPaymentType"
+                        value="both"
+                        checked={editingBranch.mpesa_payment_type === 'both'}
+                        onChange={() => setEditingBranch({ ...editingBranch, mpesa_payment_type: 'both' })}
+                      />
+                      <span className="text-sm">Both</span>
+                    </label>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch

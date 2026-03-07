@@ -11,8 +11,6 @@ import { useProductFilterStore, useProductFilters } from '@/features/products/st
 import { useCart } from '@/features/cart/hooks/use-cart';
 import { useCartMutations } from '@/features/cart/hooks/use-cart-mutations';
 import { useAuth } from '@/features/auth/hooks/use-auth';
-import { CartSummary } from '@/features/cart/components/cart-summary';
-import { FloatingCartSummary } from '@/components/cart/floating-cart-summary';
 import type { ProductDisplay, ProductVariant } from '@/features/products/types';
 
 /**
@@ -127,10 +125,7 @@ export function CatalogPage() {
         </div>
       </Container>
 
-      {/* Floating Cart Summary */}
-      <FloatingCartSummary autoShow={true} autoHideDelay={5000} />
-
-      {/* Floating Action Buttons */}
+      {/* Floating Action Buttons (includes cart button) */}
       <FloatingActions
         cartItemCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
         isLoggedIn={!!user}
@@ -140,10 +135,7 @@ export function CatalogPage() {
         onLoginClick={() => navigate('/admin/login')}
       />
 
-      {/* Cart Drawer */}
-      <CartSummary />
-
-      {/* Cart Section - Scroll target with highlight animation */}
+      {/* Cart Section - Main cart view */}
       <div 
         ref={cartSectionRef}
         id="cart-section"

@@ -11,6 +11,7 @@ interface MpesaPaymentSectionProps {
   amount: number;
   orderId: string;
   branchId?: string;
+  paymentType?: 'buy_goods' | 'stk_push' | 'both';
   onPaymentComplete?: (mpesaCode: string) => void;
 }
 
@@ -18,6 +19,7 @@ export function MpesaPaymentSection({
   amount,
   orderId,
   branchId,
+  paymentType = 'buy_goods',
   onPaymentComplete,
 }: MpesaPaymentSectionProps) {
   const [copied, setCopied] = useState(false);
@@ -36,7 +38,14 @@ export function MpesaPaymentSection({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const steps = [
+  const steps = paymentType === 'stk_push' ? [
+    { num: 1, text: 'Open M-Pesa on your phone', icon: '📱' },
+    { num: 2, text: 'Select "Lipa na M-Pesa"', icon: '💳' },
+    { num: 3, text: 'Select "Pay Bill"', icon: '📝' },
+    { num: 4, text: `Enter Business Number: ${formattedTill}`, icon: '🔢', highlight: true },
+    { num: 5, text: `Enter Amount: KES ${amount.toLocaleString()}`, icon: '💰' },
+    { num: 6, text: 'Enter your M-Pesa PIN', icon: '🔐' },
+  ] : [
     { num: 1, text: 'Open M-Pesa on your phone', icon: '📱' },
     { num: 2, text: 'Select "Lipa na M-Pesa"', icon: '💳', highlight: true },
     { num: 3, text: 'Select "Buy Goods and Services"', icon: '🛒' },
@@ -59,7 +68,7 @@ export function MpesaPaymentSection({
               </CardTitle>
             </div>
             <Badge className="bg-white text-safaricom-green font-bold">
-              Buy Goods
+              {paymentType === 'buy_goods' ? 'Buy Goods' : paymentType === 'stk_push' ? 'STK Push' : 'M-Pesa'}
             </Badge>
           </div>
         </CardHeader>
