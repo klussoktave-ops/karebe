@@ -299,7 +299,7 @@ export async function checkSupabaseStorage(): Promise<{
       };
     }
 
-    const productImagesBucket = buckets?.find(b => b.name === 'product-images');
+    const productImagesBucket = buckets?.find(b => b.name === 'product_images');
     const bucketExists = !!productImagesBucket;
     
     debugInfo.bucketExists = bucketExists;
@@ -310,7 +310,7 @@ export async function checkSupabaseStorage(): Promise<{
       debugInfo.bucketPublic = productImagesBucket?.public;
       // Get a sample public URL
       const { data } = supabase.storage
-        .from('product-images')
+        .from('product_images')
         .getPublicUrl('test');
       samplePublicUrl = data?.publicUrl || null;
       debugInfo.samplePublicUrl = samplePublicUrl;

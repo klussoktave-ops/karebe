@@ -211,7 +211,7 @@ describe('ProductManager', () => {
 
       const result = await ProductManager.uploadProductImage(file);
 
-      expect(result).toContain('product-images');
+      expect(result).toContain('product_images');
       expect(result).toContain('.jpg');
     });
   });

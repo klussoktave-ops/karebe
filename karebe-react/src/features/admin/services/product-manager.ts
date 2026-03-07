@@ -306,15 +306,15 @@ export class ProductManager {
       throw new Error(`Storage error: ${bucketError.message}`);
     }
 
-    const bucketExists = buckets?.some(b => b.name === 'product-images');
+    const bucketExists = buckets?.some(b => b.name === 'product_images');
     if (!bucketExists) {
       console.error('[ProductManager] Bucket not found! Available:', buckets?.map(b => b.name));
-      throw new Error('Storage bucket "product-images" does not exist. Create it in Supabase Dashboard > Storage.');
+      throw new Error('Storage bucket "product_images" does not exist. Create it in Supabase Dashboard > Storage.');
     }
 
     console.log('[ProductManager] Uploading to bucket...');
     const { error: uploadError } = await supabase.storage
-      .from('product-images')
+      .from('product_images')
       .upload(filePath, file);
 
     if (uploadError) {
@@ -324,7 +324,7 @@ export class ProductManager {
 
     console.log('[ProductManager] Upload successful, getting public URL...');
     const { data: { publicUrl } } = supabase.storage
-      .from('product-images')
+      .from('product_images')
       .getPublicUrl(filePath);
 
     console.log('[ProductManager] Public URL:', publicUrl);
@@ -395,7 +395,7 @@ export class ProductManager {
       console.log('[ProductManager] Checking Supabase file:', fileName);
       
       const { data, error } = await supabase.storage
-        .from('product-images')
+        .from('product_images')
         .download(fileName);
 
       if (error) {
