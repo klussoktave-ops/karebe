@@ -85,15 +85,24 @@ function OrdersPageContent() {
       if (!supabase) throw new Error('Supabase not configured');
       const { data, error } = await supabase
         .from('riders')
-        .select('*')
+        .select('id, full_name, phone, is_active')
         .eq('is_active', true)
-        .order('name');
+        .order('full_name');
       
       if (error) throw error;
-      setRiders(data || []);
-    } catch (err) {
+      
+      // Map the data to our Rider interface
+      const mappedRiders: Rider[] = (data || []).map((r: any) => ({
+        id: r.id,
+        name: r.full_name,
+        phone: r.phone || '',
+        status: 'AVAILABLE',
+        is_active: r.is_active
+      }));
+      setRiders(mappedRiders);
+    } catch (err: any) {
       console.error('Failed to load riders:', err);
-      // Fallback to demo riders
+      // Fallback to demo riders (only used in development/demo mode)
       setRiders([
         { id: 'rider-001', name: 'John Doe', phone: '+254712345678', status: 'AVAILABLE', is_active: true },
         { id: 'rider-002', name: 'Jane Smith', phone: '+254723456789', status: 'BUSY', is_active: true },
