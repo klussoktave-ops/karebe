@@ -121,7 +121,7 @@ export function getProductImage(
     debugInfo.placeholderSource = 'picsum.photos';
     
     if (debug) {
-      debugLog('Image not showing: Supabase configured but no images added', debugInfo, true);
+      debugLog('Image not showing: Supabase configured but no images added', debugInfo);
     }
     
     return { url: placeholderUrl, source: 'category-placeholder', debug: debugInfo };
@@ -140,7 +140,7 @@ export function getProductImage(
     debugInfo.placeholderSource = 'picsum.photos (fallback)';
     
     if (debug) {
-      debugLog('Image not showing: Supabase not configured', debugInfo, true);
+      debugLog('Image not showing: Supabase not configured', debugInfo);
     }
     
     return { url: placeholderUrl, source: 'category-placeholder', debug: debugInfo };
