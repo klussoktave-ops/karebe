@@ -1,5 +1,9 @@
 {
   "version": 2,
+  "buildCommand": "cd karebe-react && npx vite build",
+  "outputDirectory": "karebe-react/dist",
+  "installCommand": "cd karebe-react && npm install",
+  "framework": "vite",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
@@ -31,6 +35,10 @@
       "destination": "/api/delivery.js"
     },
     {
+      "source": "/api/riders/(.*)",
+      "destination": "/api/riders.js"
+    },
+    {
       "source": "/api/products",
       "destination": "/api/products.js"
     },
@@ -45,6 +53,34 @@
     {
       "source": "/api/payments/daraja/callback",
       "destination": "/api/payments/daraja/callback.js"
+    },
+    {
+      "source": "/admin/admins",
+      "destination": "/karebe-react/dist/index.html"
+    },
+    {
+      "source": "/admin/products",
+      "destination": "/karebe-react/dist/index.html"
+    },
+    {
+      "source": "/admin/branches",
+      "destination": "/karebe-react/dist/index.html"
+    },
+    {
+      "source": "/admin/settings",
+      "destination": "/karebe-react/dist/index.html"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/karebe-react/dist/index.html"
+    },
+    {
+      "source": "/rider/:path*",
+      "destination": "/karebe-react/dist/index.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/karebe-react/dist/index.html"
     }
   ]
 }

@@ -1,11 +1,8 @@
 # Dependencies
 node_modules/
 
-# Environment variables — NEVER commit these
-.env
-.env.local
-.env.production
-.env.*.local
+# Environment variables — configure in Vercel for production
+# .env is tracked for deployment
 
 # OS / Editor
 .DS_Store

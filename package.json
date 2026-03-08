@@ -5,9 +5,14 @@
   "scripts": {
     "test": "node --test tests/unit/stock.test.cjs tests/integration/cart.test.cjs tests/integration/checkout.test.cjs tests/integration/delivery.test.cjs tests/integration/frontend-supabase-sync.test.cjs tests/integration/auth.test.cjs tests/integration/visibility.test.cjs tests/integration/session.test.cjs tests/integration/orders.test.cjs",
     "test:unit": "node --test tests/unit/stock.test.cjs",
-    "test:integration": "node --test tests/integration/cart.test.cjs tests/integration/checkout.test.cjs tests/integration/delivery.test.cjs tests/integration/frontend-supabase-sync.test.cjs tests/integration/auth.test.cjs tests/integration/visibility.test.cjs tests/integration/session.test.cjs tests/integration/orders.test.cjs"
+    "test:integration": "node --test tests/integration/cart.test.cjs tests/integration/checkout.test.cjs tests/integration/delivery.test.cjs tests/integration/frontend-supabase-sync.test.cjs tests/integration/auth.test.cjs tests/integration/visibility.test.cjs tests/integration/session.test.cjs tests/integration/orders.test.cjs",
+    "db:reset": "supabase db reset",
+    "db:push": "supabase db push"
   },
   "dependencies": {
     "playwright": "^1.58.2"
+  },
+  "devDependencies": {
+    "supabase": "^2.76.16"
   }
 }

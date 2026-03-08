@@ -1,0 +1,47 @@
+{
+  "name": "karebe-orchestration-service",
+  "version": "1.0.0",
+  "description": "Hybrid WhatsApp-First Order Orchestration System",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "db:generate": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > src/types/database.ts",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "demo": "echo 'See DEMO_SETUP.md for instructions'"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.3.1",
+    "helmet": "^7.1.0",
+    "uuid": "^9.0.1",
+    "winston": "^3.11.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.0",
+    "@types/supertest": "^6.0.0",
+    "@types/uuid": "^9.0.7",
+    "@vitest/ui": "^1.0.0",
+    "supabase": "^1.113.0",
+    "supertest": "^6.3.3",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

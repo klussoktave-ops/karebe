@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Subtle bounce animation for floating buttons */
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+/* Slide up animation for cart summary */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* Slide down animation */
+@keyframes slide-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-in forwards;
+}
+
+/* Cart highlight animation for scroll-to-cart feature */
+@keyframes cart-highlight {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.3);
+  }
+}
+
+.animate-cart-highlight {
+  animation: cart-highlight 1s ease-in-out 2;
+}
+
+/* Pulse glow variant for cart section */
+@keyframes cart-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(20, 83, 45, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 4px rgba(20, 83, 45, 0.2);
+  }
+}
+
+.animate-cart-glow {
+  animation: cart-glow 1.5s ease-in-out 3;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 24 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 24 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 10% 10%;
+    --primary: 15 50% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 30 20% 95%;
+    --secondary-foreground: 24 10% 10%;
+    --muted: 30 10% 96%;
+    --muted-foreground: 24 5% 45%;
+    --accent: 45 90% 50%;
+    --accent-foreground: 24 10% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 10% 90%;
+    --input: 30 10% 90%;
+    --ring: 15 50% 55%;
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
