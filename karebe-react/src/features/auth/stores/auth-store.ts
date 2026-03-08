@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { demoUsers } from '@/lib/demo-data';
 
 export type UserRole = 'customer' | 'admin' | 'super-admin' | 'rider';
 
@@ -78,8 +79,38 @@ export const useAuthStore = create<AuthState>()(
         if (user) {
           // Store current role before switching
           const previousRole = user.role;
-          // Create updated user with new role
-          const updatedUser = { ...user, role };
+          
+          // When switching to rider role, use the rider's actual ID from demo users
+          // This is needed because the admin/super-admin ID differs from rider ID
+          let updatedUser = { ...user, role };
+          
+          if (role === 'rider') {
+            // Find the rider user and use their ID
+            const riderUser = demoUsers.find(u => u.role === 'rider');
+            if (riderUser) {
+              updatedUser = {
+                ...user,
+                id: riderUser.id,
+                role: 'rider' as UserRole,
+                name: riderUser.name,
+                phone: riderUser.phone,
+              };
+              console.log('[AuthStore] Switched to rider, using rider ID:', riderUser.id);
+            }
+          } else if (role === 'admin' || role === 'super-admin') {
+            // When switching to admin, use the admin's ID
+            const adminUser = demoUsers.find(u => u.role === 'super-admin');
+            if (adminUser) {
+              updatedUser = {
+                ...user,
+                id: adminUser.id,
+                role: role,
+                name: adminUser.name,
+                phone: adminUser.phone,
+              };
+            }
+          }
+          
           set({
             user: updatedUser,
             previousRole,

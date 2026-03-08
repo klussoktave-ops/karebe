@@ -40,8 +40,8 @@ export const demoUsers: DemoUser[] = [
     email: 'rider@karebe.com',
     password: 'rider123',
     role: 'rider',
-    name: 'Peter Ochieng',
-    phone: '+254711000111',
+    name: 'John Rider',
+    phone: '+254798765432',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
   },
   {

@@ -105,9 +105,9 @@ function OrdersPageContent() {
     } catch (err: any) {
       console.error('Failed to load riders:', err);
       // Fallback to demo riders (only used in development/demo mode)
+      // These should match the Supabase rider for proper testing
       setRiders([
-        { id: 'rider-001', name: 'John Doe', phone: '+254712345678', status: 'AVAILABLE', is_active: true },
-        { id: 'rider-002', name: 'Jane Smith', phone: '+254723456789', status: 'BUSY', is_active: true },
+        { id: '550e8400-e29b-41d4-a716-446655440000', name: 'John Rider', phone: '+254798765432', status: 'AVAILABLE', is_active: true },
       ]);
     } finally {
       setRidersLoading(false);

@@ -65,8 +65,8 @@ The demo system comes pre-seeded with realistic data including:
 | **Email** | `rider@karebe.com` |
 | **Password** | `rider123` |
 | **Role** | Rider |
-| **Name** | Peter Ochieng |
-| **Phone** | +254711000111 |
+| **Name** | John Rider |
+| **Phone** | +254798765432 |
 | **PIN** | `1111` (for rider app login) |
 
 **Alternative Login (Phone):**

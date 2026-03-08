@@ -209,8 +209,8 @@ const demoOrders: Order[] = [
     created_at: new Date(Date.now() - 7200000).toISOString(),
     updated_at: new Date(Date.now() - 3600000).toISOString(),
     version: 3,
-    current_rider_id: 'rider-001',
-    current_rider_name: 'Alex Rider',
+    current_rider_id: '550e8400-e29b-41d4-a716-446655440000',
+    current_rider_name: 'John Rider',
   },
   {
     id: 'demo-004',
@@ -226,8 +226,8 @@ const demoOrders: Order[] = [
     created_at: new Date(Date.now() - 86400000).toISOString(),
     updated_at: new Date(Date.now() - 7200000).toISOString(),
     version: 4,
-    current_rider_id: 'rider-001',
-    current_rider_name: 'Alex Rider',
+    current_rider_id: '550e8400-e29b-41d4-a716-446655440000',
+    current_rider_name: 'John Rider',
   },
 ];
 
