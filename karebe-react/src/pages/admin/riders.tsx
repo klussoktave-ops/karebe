@@ -79,9 +79,8 @@ export default function RidersPage() {
 
   const handleAddRider = async () => {
     try {
-      const riderId = 'rider-' + Date.now();
+      // Let Supabase auto-generate the UUID for the rider id
       const { error } = await supabase.from('riders').insert({
-        id: riderId,
         full_name: newRider.name,
         phone: newRider.phone,
         whatsapp_number: newRider.whatsapp_number,
@@ -101,7 +100,7 @@ export default function RidersPage() {
     }
   };
 
-  const handleToggleStatus = async (rider: Rider) => {
+  const handleToggleStatus = async (rider: RiderWithStatus) => {
     try {
       const { error } = await supabase
         .from('riders')

@@ -121,9 +121,9 @@ function LoginContent() {
 }
 
 export function AdminLoginPage() {
-  // Use role-based redirect - if rider goes to admin login, redirect to rider portal
+  // Use role-based redirect - if user is already logged in, go to their appropriate dashboard
   return (
-    <PublicOnlyGuard redirectTo="/rider">
+    <PublicOnlyGuard>
       <LoginContent />
     </PublicOnlyGuard>
   );
