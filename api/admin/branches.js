@@ -29,10 +29,20 @@ async function supabaseRequest(endpoint, method, body = null) {
   }
 
   const response = await fetch(`${supabaseRestUrl}${endpoint}`, options);
-  const data = await response.json();
+  
+  // Handle empty response (return=minimal returns empty body)
+  const contentLength = response.headers.get('content-length');
+  let data;
+  if (contentLength === '0' || !response.headers.get('content-type')) {
+    data = null;
+  } else {
+    const text = await response.text();
+    data = text ? JSON.parse(text) : null;
+  }
 
   if (!response.ok) {
-    throw new Error(data.message || `HTTP ${response.status}`);
+    console.error('Supabase request failed:', { status: response.status, data, endpoint, method });
+    throw new Error(data?.message || `HTTP ${response.status}`);
   }
 
   return data;

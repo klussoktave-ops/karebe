@@ -29,10 +29,27 @@ async function supabaseRequest(endpoint, method, body = null) {
   }
 
   const response = await fetch(`${supabaseRestUrl}${endpoint}`, options);
-  const data = await response.json();
+  
+  // Check content-length header to handle empty responses
+  const contentLength = response.headers.get('content-length');
+  let data;
+  
+  // Handle empty response (return=minimal returns empty body)
+  if (contentLength === '0' || !response.headers.get('content-type')) {
+    data = null;
+  } else {
+    const text = await response.text();
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError, 'Response text:', text);
+      data = null;
+    }
+  }
 
   if (!response.ok) {
-    throw new Error(data.message || `HTTP ${response.status}`);
+    console.error('Supabase request failed:', { status: response.status, data, endpoint, method });
+    throw new Error(data?.message || `HTTP ${response.status}`);
   }
 
   return data;
