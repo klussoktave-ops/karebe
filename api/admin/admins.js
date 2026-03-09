@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+const fetch = require('node-fetch');
 
 // Get service role key from environment (should be set in Vercel project settings)
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://pwcqgwpkvesoowpnomad.supabase.co';
@@ -8,15 +8,38 @@ if (!supabaseServiceKey) {
   console.error('SUPABASE_ROLE_KEY is not configured');
 }
 
-// Create admin client with service role key (bypasses RLS)
-const supabaseAdmin = supabaseServiceKey 
-  ? createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
-  : null;
+const supabaseRestUrl = `${supabaseUrl}/rest/v1`;
+
+async function supabaseRequest(endpoint, method, body = null) {
+  if (!supabaseServiceKey) {
+    throw new Error('SUPABASE_ROLE_KEY is not configured');
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'apikey': supabaseServiceKey,
+    'Authorization': `Bearer ${supabaseServiceKey}`,
+    'Prefer': method === 'POST' || method === 'PUT' ? 'return=representation' : 'return=minimal'
+  };
+
+  const options = {
+    method,
+    headers
+  };
+
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(`${supabaseRestUrl}${endpoint}`, options);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || `HTTP ${response.status}`);
+  }
+
+  return data;
+}
 
 module.exports = async function handler(req, res) {
   // Add CORS headers
@@ -33,23 +56,11 @@ module.exports = async function handler(req, res) {
   // Get all admin users
   if (method === 'GET') {
     try {
-      if (!supabaseAdmin) {
-        return res.status(500).json({ ok: false, error: 'Service not configured' });
-      }
-      
-      const { data, error } = await supabaseAdmin
-        .from('admin_users')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Don't return password_hash
+      const data = await supabaseRequest('/admin_users?select=*&order=created_at.desc', 'GET');
       const safeData = (data || []).map(admin => ({
         ...admin,
         password_hash: undefined
       }));
-
       return res.status(200).json({ ok: true, data: safeData });
     } catch (error) {
       console.error('Error fetching admins:', error);
@@ -60,46 +71,33 @@ module.exports = async function handler(req, res) {
   // Create new admin user
   if (method === 'POST') {
     try {
-      if (!supabaseAdmin) {
-        return res.status(500).json({ ok: false, error: 'Service not configured' });
-      }
-
       const { email, password, name, phone, role, branch_id, is_active } = req.body || {};
 
       if (!email || !password || !name) {
         return res.status(400).json({ ok: false, error: 'Email, password, and name are required' });
       }
 
-      const { data, error } = await supabaseAdmin
-        .from('admin_users')
-        .insert({
-          email,
-          password_hash: password, // In production, hash this server-side
-          name,
-          phone: phone || null,
-          role: role || 'admin',
-          branch_id: branch_id || null,
-          is_active: is_active !== false,
-        })
-        .select()
-        .single();
+      const data = await supabaseRequest('/admin_users', 'POST', {
+        email,
+        password_hash: password,
+        name,
+        phone: phone || null,
+        role: role || 'admin',
+        branch_id: branch_id || null,
+        is_active: is_active !== false,
+      });
 
-      if (error) {
-        if (error.code === '23505') {
-          return res.status(409).json({ ok: false, error: 'An admin with this email already exists' });
-        }
-        throw error;
-      }
-
-      // Don't return password_hash
       const safeData = {
-        ...data,
+        ...(Array.isArray(data) ? data[0] : data),
         password_hash: undefined
       };
 
       return res.status(201).json({ ok: true, data: safeData });
     } catch (error) {
       console.error('Error creating admin:', error);
+      if (error.message.includes('duplicate')) {
+        return res.status(409).json({ ok: false, error: 'An admin with this email already exists' });
+      }
       return res.status(500).json({ ok: false, error: error.message });
     }
   }
@@ -107,34 +105,18 @@ module.exports = async function handler(req, res) {
   // Update admin user
   if (method === 'PUT') {
     try {
-      if (!supabaseAdmin) {
-        return res.status(500).json({ ok: false, error: 'Service not configured' });
-      }
-
       const { id, ...updates } = req.body || {};
 
       if (!id) {
         return res.status(400).json({ ok: false, error: 'Admin ID is required' });
       }
 
-      // Remove password_hash from updates if not provided, or handle separately
+      // Remove password_hash from updates if not provided
       delete updates.password_hash;
 
-      const { data, error } = await supabaseAdmin
-        .from('admin_users')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      await supabaseRequest(`/admin_users?id=eq.${id}`, 'PATCH', updates);
 
-      if (error) throw error;
-
-      const safeData = {
-        ...data,
-        password_hash: undefined
-      };
-
-      return res.status(200).json({ ok: true, data: safeData });
+      return res.status(200).json({ ok: true });
     } catch (error) {
       console.error('Error updating admin:', error);
       return res.status(500).json({ ok: false, error: error.message });
@@ -144,22 +126,13 @@ module.exports = async function handler(req, res) {
   // Delete admin user
   if (method === 'DELETE') {
     try {
-      if (!supabaseAdmin) {
-        return res.status(500).json({ ok: false, error: 'Service not configured' });
-      }
-
       const { id } = req.body || {};
 
       if (!id) {
         return res.status(400).json({ ok: false, error: 'Admin ID is required' });
       }
 
-      const { error } = await supabaseAdmin
-        .from('admin_users')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await supabaseRequest(`/admin_users?id=eq.${id}`, 'DELETE');
 
       return res.status(200).json({ ok: true });
     } catch (error) {
