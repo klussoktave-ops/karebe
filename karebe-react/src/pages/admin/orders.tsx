@@ -419,18 +419,18 @@ function getCallUrl(phone: string): string {
                               {/* Show rider phone number */}
                               <div className="mt-2 flex items-center gap-2 text-purple-700 text-xs">
                                 <Phone className="w-3 h-3" />
-                                <span>{getRiderById(order.current_rider_id, riders)?.phone || 'Phone not available'}</span>
+                                <span>{getRiderById(order.rider_id, riders)?.phone || 'Phone not available'}</span>
                               </div>
                               <div className="flex items-center gap-2 mt-2">
                                   <a
-                                    href={getCallUrl(getRiderById(order.current_rider_id, riders)?.phone || '')}
+                                    href={getCallUrl(getRiderById(order.rider_id, riders)?.phone || '')}
                                     className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                                     title="Call Rider"
                                   >
                                     <Phone className="w-4 h-4" />
                                   </a>
                                   <a
-                                    href={getWhatsAppUrl(getRiderById(order.current_rider_id, riders)?.phone || '', order)}
+                                    href={getWhatsAppUrl(getRiderById(order.rider_id, riders)?.phone || '', order)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
@@ -439,7 +439,7 @@ function getCallUrl(phone: string): string {
                                     <MessageCircle className="w-4 h-4" />
                                   </a>
                                   <a
-                                    href={getSmsUrl(getRiderById(order.current_rider_id, riders)?.phone || '', order)}
+                                    href={getSmsUrl(getRiderById(order.rider_id, riders)?.phone || '', order)}
                                     className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                                     title="SMS Rider"
                                   >

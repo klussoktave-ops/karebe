@@ -38,6 +38,7 @@ export interface Order {
   updated_at: string;
   version: number;
   current_rider_id?: string;
+  rider_id?: string;
   current_rider_name?: string;
 }
 
