@@ -44,18 +44,24 @@ export default function BranchConfigPage() {
   const loadBranches = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('branches')
-        .select('*')
-        .order('is_main', { ascending: false })
-        .order('name');
-
-      if (error) throw error;
-      setBranches(data || []);
+      // Use server-side API to bypass RLS
+      const response = await fetch('/api/admin/branches');
+      const result = await response.json();
+      
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to load branches');
+      }
+      
+      const sortedData = (result.data || []).sort((a: any, b: any) => {
+        if (a.is_main && !b.is_main) return -1;
+        if (!a.is_main && b.is_main) return 1;
+        return a.name.localeCompare(b.name);
+      });
+      setBranches(sortedData);
     } catch (error) {
       console.error('Failed to load branches:', error);
       setBranches([
-        { id: 'main-branch', name: 'Main Branch', address: '123 Main St, Nairobi', phone: '+254712345678', is_main: true, is_active: true, mpesa_shortcode: '9137883' }
+        { id: 'main-branch', name: 'Main Branch', address: '123 Main St, Nairobi', phone: '+254712345678', is_main: true, is_active: true, mpesa_shortcode: '9137883', mpesa_payment_type: 'buy_goods' }
       ]);
     } finally {
       setIsLoading(false);
@@ -64,18 +70,25 @@ export default function BranchConfigPage() {
 
   const handleAddBranch = async () => {
     try {
-      const { error } = await supabase.from('branches').insert({
-        id: newBranch.id || `branch-${Date.now()}`,
-        name: newBranch.name,
-        address: newBranch.address,
-        phone: newBranch.phone,
-        is_main: newBranch.is_main,
-        is_active: true,
-        mpesa_shortcode: newBranch.mpesa_shortcode,
-        mpesa_payment_type: newBranch.mpesa_payment_type,
+      // Use server-side API to bypass RLS
+      const response = await fetch('/api/admin/branches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newBranch.name,
+          address: newBranch.address,
+          phone: newBranch.phone,
+          is_main: newBranch.is_main,
+          mpesa_shortcode: newBranch.mpesa_shortcode,
+          mpesa_payment_type: newBranch.mpesa_payment_type,
+        }),
       });
 
-      if (error) throw error;
+      const result = await response.json();
+      
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to add branch');
+      }
 
       setIsAddDialogOpen(false);
       setNewBranch({ id: '', name: '', address: '', phone: '', is_main: false, mpesa_shortcode: '', mpesa_payment_type: 'buy_goods' });
@@ -123,9 +136,26 @@ export default function BranchConfigPage() {
 
   const handleSetMain = async (branchId: string) => {
     try {
-      await supabase.from('branches').update({ is_main: false }).eq('is_main', true);
-      const { error } = await supabase.from('branches').update({ is_main: true }).eq('id', branchId);
-      if (error) throw error;
+      // Use server-side API to bypass RLS
+      await fetch('/api/admin/branches', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: branchId, is_main: true }),
+      });
+      // Reset other branches' is_main to false
+      const response = await fetch('/api/admin/branches');
+      const result = await response.json();
+      if (result.ok && result.data) {
+        for (const branch of result.data) {
+          if (branch.id !== branchId && branch.is_main) {
+            await fetch('/api/admin/branches', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: branch.id, is_main: false }),
+            });
+          }
+        }
+      }
       loadBranches();
     } catch (error) {
       console.error('Failed to set main branch:', error);
@@ -135,8 +165,17 @@ export default function BranchConfigPage() {
   const handleDeleteBranch = async (branchId: string) => {
     if (!confirm('Are you sure you want to delete this branch?')) return;
     try {
-      const { error } = await supabase.from('branches').delete().eq('id', branchId);
-      if (error) throw error;
+      // Use server-side API to bypass RLS
+      const response = await fetch('/api/admin/branches', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: branchId }),
+      });
+
+      const result = await response.json();
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to delete branch');
+      }
       loadBranches();
     } catch (error) {
       console.error('Failed to delete branch:', error);
@@ -145,10 +184,18 @@ export default function BranchConfigPage() {
 
   const handleToggleActive = async (branch: Branch) => {
     try {
-      const { error } = await supabase
-        .from('branches')
-        .update({ is_active: !branch.is_active })
-        .eq('id', branch.id);
+      // Use server-side API to bypass RLS
+      const response = await fetch('/api/admin/branches', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: branch.id, is_active: !branch.is_active }),
+      });
+
+      const result = await response.json();
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to toggle branch status');
+      }
+      loadBranches();
       if (error) throw error;
       loadBranches();
     } catch (error) {

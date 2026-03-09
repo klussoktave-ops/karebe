@@ -55,8 +55,13 @@ export default function RidersPage() {
 
   const loadBranches = async () => {
     try {
-      const { data } = await supabase.from('branches').select('id, name').order('name');
-      setBranches(data || []);
+      // Use server-side API to bypass RLS
+      const response = await fetch('/api/admin/branches');
+      const result = await response.json();
+      
+      if (result.ok && result.data) {
+        setBranches(result.data);
+      }
     } catch (error) {
       console.error('Failed to load branches:', error);
     }
@@ -64,13 +69,15 @@ export default function RidersPage() {
 
   const loadRiders = async () => {
     try {
-      const { data, error } = await supabase
-        .from('riders')
-        .select('*')
-        .order('full_name');
-
-      if (error) throw error;
-      setRiders(data || []);
+      // Use server-side API to bypass RLS
+      const response = await fetch('/api/admin/riders');
+      const result = await response.json();
+      
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to load riders');
+      }
+      
+      setRiders(result.data || []);
     } catch (error) {
       console.error('Failed to load riders:', error);
       // Try to load from demo data if table doesn't exist
@@ -85,25 +92,30 @@ export default function RidersPage() {
 
   const handleAddRider = async () => {
     try {
-      // Use provided PIN or generate a random 4-digit one
-      const pin = newRider.pin || generatePin();
-      
-      // Let Supabase auto-generate the UUID for the rider id
-      const { error } = await supabase.from('riders').insert({
-        full_name: newRider.name,
-        phone: newRider.phone,
-        whatsapp_number: newRider.whatsapp_number,
-        branch_id: newRider.branch_id || null,
-        pin: pin,
-        status: 'AVAILABLE',
-        is_active: true,
+      // Use server-side API to bypass RLS
+      const response = await fetch('/api/admin/riders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: newRider.name,
+          phone: newRider.phone,
+          whatsapp_number: newRider.whatsapp_number,
+          branch_id: newRider.branch_id || null,
+          pin: newRider.pin || undefined,
+        }),
       });
 
-      if (error) throw error;
+      const result = await response.json();
+      
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to add rider');
+      }
 
       setIsAddDialogOpen(false);
+      const pin = result.pin || newRider.pin || 'generated';
       setNewRider({ name: '', phone: '', whatsapp_number: '', branch_id: '', pin: '' });
       alert(`Rider added successfully! PIN: ${pin} (Share this with the rider)`);
+      loadRiders();
     } catch (error) {
       console.error('Failed to add rider:', error);
       alert('Failed to add rider. Please try again.');
@@ -112,12 +124,17 @@ export default function RidersPage() {
 
   const handleToggleStatus = async (rider: RiderWithStatus) => {
     try {
-      const { error } = await supabase
-        .from('riders')
-        .update({ is_active: !rider.is_active })
-        .eq('id', rider.id);
+      // Use server-side API to bypass RLS
+      const response = await fetch('/api/admin/riders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: rider.id, is_active: !rider.is_active }),
+      });
 
-      if (error) throw error;
+      const result = await response.json();
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to toggle rider status');
+      }
       loadRiders();
     } catch (error) {
       console.error('Failed to toggle rider status:', error);
@@ -128,8 +145,17 @@ export default function RidersPage() {
     if (!confirm('Are you sure you want to delete this rider?')) return;
 
     try {
-      const { error } = await supabase.from('riders').delete().eq('id', riderId);
-      if (error) throw error;
+      // Use server-side API to bypass RLS
+      const response = await fetch('/api/admin/riders', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: riderId }),
+      });
+
+      const result = await response.json();
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to delete rider');
+      }
       loadRiders();
     } catch (error) {
       console.error('Failed to delete rider:', error);
