@@ -6,6 +6,18 @@ import { useCart } from '../hooks/use-cart';
 import { useCartStore, useCartItemCount } from '../stores/cart-store';
 import { formatPrice } from '@/lib/utils';
 import { CallButton } from '@/features/orders/components/CallButton';
+import { useEffect, useState } from 'react';
+
+// Default values (fallback if API not available)
+const DEFAULT_VAT_RATE = 0.16;
+const DEFAULT_BASE_FEE = 300;
+const DEFAULT_FREE_THRESHOLD = 5000;
+
+interface PricingConfig {
+  vatRate: number;
+  baseDeliveryFee: number;
+  freeDeliveryThreshold: number;
+}
 
 interface CartSummaryProps {
   onCheckout?: () => void;
@@ -29,10 +41,34 @@ export function CartSummary({ onCheckout, compact = false, className = '' }: Car
   const isOpen = useCartStore((state) => state.isOpen);
   const closeCart = useCartStore((state) => state.closeCart);
 
-  // Calculate values
-  const tax = subtotal * 0.16; // 16% VAT
-  const deliveryFee = subtotal > 5000 ? 0 : 300;
-  const freeDeliveryRemaining = Math.max(0, 5000 - subtotal);
+  // Fetch pricing config
+  const [pricingConfig, setPricingConfig] = useState<PricingConfig>({
+    vatRate: DEFAULT_VAT_RATE,
+    baseDeliveryFee: DEFAULT_BASE_FEE,
+    freeDeliveryThreshold: DEFAULT_FREE_THRESHOLD
+  });
+
+  useEffect(() => {
+    fetch('/api/pricing')
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && data.data?.settings) {
+          const settings = data.data.settings;
+          setPricingConfig({
+            vatRate: settings.vat_rate?.rate ?? DEFAULT_VAT_RATE,
+            baseDeliveryFee: settings.base_delivery_fee?.amount ?? DEFAULT_BASE_FEE,
+            freeDeliveryThreshold: settings.free_delivery_threshold?.amount ?? DEFAULT_FREE_THRESHOLD
+          });
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  // Calculate values using configurable settings
+  const tax = subtotal * pricingConfig.vatRate;
+  const isFreeDelivery = subtotal >= pricingConfig.freeDeliveryThreshold;
+  const deliveryFee = isFreeDelivery ? 0 : pricingConfig.baseDeliveryFee;
+  const freeDeliveryRemaining = Math.max(0, pricingConfig.freeDeliveryThreshold - subtotal);
 
   if (compact) {
     return (

@@ -51,6 +51,16 @@ export class OrderService {
       return sum + (item.quantity * item.unit_price);
     }, 0);
 
+    // Calculate VAT
+    const vatRate = 0.16; // TODO: Fetch from settings
+    const vatAmount = request.vat_amount ?? Math.round(totalAmount * vatRate);
+
+    // Delivery fee (passed from frontend or calculated)
+    const deliveryFee = request.delivery_fee ?? 0;
+
+    // Total with delivery and tax
+    const grandTotal = totalAmount + vatAmount + deliveryFee;
+
     // Create order
     const orderData = {
       status: OrderStatus.ORDER_SUBMITTED,
@@ -59,12 +69,17 @@ export class OrderService {
       delivery_address: request.delivery_address,
       delivery_notes: request.delivery_notes || null,
       branch_id: request.branch_id,
-      total_amount: totalAmount,
+      total_amount: grandTotal,
+      delivery_fee: deliveryFee,
+      vat_amount: vatAmount,
+      delivery_zone_id: request.delivery_zone_id || null,
+      distance_km: request.distance_km || null,
       idempotency_key: idempotencyKey,
       last_actor_type: ActorType.CUSTOMER,
       metadata: {
         trigger_source: request.trigger_source,
         item_count: request.items.length,
+        subtotal: totalAmount,
       },
     };
 
@@ -102,7 +117,10 @@ export class OrderService {
     logger.info('Order created successfully', { 
       orderId: order.id, 
       customerPhone: request.customer_phone,
-      totalAmount,
+      subtotal: totalAmount,
+      vatAmount,
+      deliveryFee,
+      grandTotal,
     });
 
     return order as Order;
