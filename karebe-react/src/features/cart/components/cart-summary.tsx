@@ -8,6 +8,9 @@ import { formatPrice } from '@/lib/utils';
 import { CallButton } from '@/features/orders/components/CallButton';
 import { useEffect, useState } from 'react';
 
+// Railway API URL for pricing
+const ORCHESTRATION_API = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app';
+
 // Default values (fallback if API not available)
 const DEFAULT_VAT_RATE = 0.16;
 const DEFAULT_BASE_FEE = 300;
@@ -49,7 +52,7 @@ export function CartSummary({ onCheckout, compact = false, className = '' }: Car
   });
 
   useEffect(() => {
-    fetch('/api/pricing')
+    fetch(`${ORCHESTRATION_API}/api/pricing`)
       .then(res => res.json())
       .then(data => {
         if (data.ok && data.data?.settings) {
