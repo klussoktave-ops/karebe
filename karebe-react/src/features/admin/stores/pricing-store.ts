@@ -1,5 +1,7 @@
-// Pricing Settings Store - Updated for combined API
+// Pricing Settings Store - Updated for Railway orchestration API
 import { supabase } from '@/lib/supabase';
+
+const ORCHESTRATION_API = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app';
 
 export interface PricingSettings {
   base_delivery_fee: { amount: number; currency: string; label: string };
@@ -36,11 +38,15 @@ async function getAuthHeader() {
   return { 'Authorization': `Bearer ${session.data.session?.access_token}` };
 }
 
+function getApiUrl(path: string) {
+  return `${ORCHESTRATION_API}${path}`;
+}
+
 export const pricingStore = {
   async getSettings(forceRefresh = false): Promise<PricingSettings> {
     if (settingsCache && !forceRefresh) return settingsCache;
     try {
-      const response = await fetch('/api/admin/pricing?path=settings', { headers: await getAuthHeader() });
+      const response = await fetch(getApiUrl('/api/pricing/settings'), { headers: await getAuthHeader() });
       const result = await response.json();
       if (result.ok && result.data) { settingsCache = result.data; return result.data; }
       return DEFAULT_SETTINGS;
@@ -50,7 +56,7 @@ export const pricingStore = {
   async updateSettings(settings: Partial<PricingSettings>): Promise<boolean> {
     try {
       const updates = Object.entries(settings).map(([key, value]) => ({ key, value }));
-      const response = await fetch('/api/admin/pricing?path=settings', {
+      const response = await fetch(getApiUrl('/api/pricing/settings'), {
         method: 'PUT', headers: { 'Content-Type': 'application/json', ...await getAuthHeader() },
         body: JSON.stringify({ settings: updates })
       });
@@ -63,7 +69,7 @@ export const pricingStore = {
   async getZones(forceRefresh = false): Promise<DeliveryZone[]> {
     if (zonesCache && !forceRefresh) return zonesCache;
     try {
-      const response = await fetch('/api/admin/pricing?path=zones&active=true', { headers: await getAuthHeader() });
+      const response = await fetch(getApiUrl('/api/pricing/zones?active=true'), { headers: await getAuthHeader() });
       const result = await response.json();
       if (result.ok && result.data) { zonesCache = result.data; return result.data; }
       return [];
@@ -72,7 +78,7 @@ export const pricingStore = {
 
   async createZone(zone: DeliveryZoneInput): Promise<DeliveryZone | null> {
     try {
-      const response = await fetch('/api/admin/pricing?path=zones', {
+      const response = await fetch(getApiUrl('/api/pricing/zones'), {
         method: 'POST', headers: { 'Content-Type': 'application/json', ...await getAuthHeader() },
         body: JSON.stringify(zone)
       });
@@ -84,7 +90,7 @@ export const pricingStore = {
 
   async updateZone(id: string, updates: Partial<DeliveryZoneInput>): Promise<boolean> {
     try {
-      const response = await fetch('/api/admin/pricing?path=zones', {
+      const response = await fetch(getApiUrl('/api/pricing/zones'), {
         method: 'PUT', headers: { 'Content-Type': 'application/json', ...await getAuthHeader() },
         body: JSON.stringify({ id, ...updates })
       });
@@ -96,7 +102,7 @@ export const pricingStore = {
 
   async deleteZone(id: string): Promise<boolean> {
     try {
-      const response = await fetch('/api/admin/pricing?path=zones', {
+      const response = await fetch(getApiUrl('/api/pricing/zones'), {
         method: 'DELETE', headers: { 'Content-Type': 'application/json', ...await getAuthHeader() },
         body: JSON.stringify({ id })
       });
@@ -109,7 +115,7 @@ export const pricingStore = {
   async getDeliveryFeeForDistance(distanceKm: number, subtotal = 0): Promise<{ fee: number; isFree: boolean; zone: string; threshold: number }> {
     try {
       const params = new URLSearchParams({ distance: distanceKm.toString(), subtotal: subtotal.toString() });
-      const response = await fetch(`/api/pricing?${params}`);
+      const response = await fetch(getApiUrl(`/api/pricing/calculate?${params}`));
       const result = await response.json();
       if (result.ok && result.data) {
         return { fee: result.data.delivery_fee, isFree: result.data.is_free_delivery, zone: result.data.zone, threshold: result.data.free_delivery_threshold };

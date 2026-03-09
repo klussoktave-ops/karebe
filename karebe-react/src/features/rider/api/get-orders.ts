@@ -84,7 +84,11 @@ export async function confirmRider(orderId: string, riderId: string): Promise<{ 
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ rider_id: riderId, actor_type: 'rider' }),
+      body: JSON.stringify({ 
+        actor_id: riderId, 
+        actor_type: 'rider',
+        confirmation_method: 'DIGITAL',
+      }),
     });
     
     const data = await response.json();
