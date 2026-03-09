@@ -3,6 +3,7 @@ import { Suspense, lazy, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { DemoBanner } from './components/demo/demo-banner';
 import { AdminLayout } from './components/layout/admin-layout';
+import { PricingSettingsPanel } from './features/admin/components/pricing-settings-panel';
 
 // Lazy load pages for code splitting
 const CatalogPage = lazy(() => import('./pages/customer/catalog'));
@@ -33,7 +34,7 @@ function App() {
   useEffect(() => {
     console.log('[Router] Navigation to:', location.pathname);
     // Check if current admin route is defined
-    const knownAdminRoutes = ['/admin', '/admin/orders', '/admin/branches', '/admin/login', '/admin/settings', '/admin/riders', '/admin/products', '/admin/admins'];
+    const knownAdminRoutes = ['/admin', '/admin/orders', '/admin/branches', '/admin/login', '/admin/settings', '/admin/riders', '/admin/products', '/admin/admins', '/admin/pricing'];
     const isKnownRoute = knownAdminRoutes.some(path => 
       location.pathname === path || location.pathname.startsWith(path + '/')
     );
@@ -59,6 +60,7 @@ function App() {
           <Route path="/admin/products" element={<AdminLayout><AdminProductsPage /></AdminLayout>} />
           <Route path="/admin/branches" element={<AdminLayout><BranchConfigPage /></AdminLayout>} />
           <Route path="/admin/settings" element={<AdminLayout><SettingsPage /></AdminLayout>} />
+          <Route path="/admin/pricing" element={<AdminLayout><PricingSettingsPanel /></AdminLayout>} />
           <Route path="/admin/riders" element={<AdminLayout><RidersPage /></AdminLayout>} />
           <Route path="/admin/admins" element={<AdminLayout><AdminsPage /></AdminLayout>} />
           <Route path="/admin/*" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />

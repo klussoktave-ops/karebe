@@ -13,6 +13,7 @@ import {
   Wine,
   Building2,
   Shield,
+  DollarSign,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ const defaultNavItems: NavItem[] = [
   { label: 'Admins', href: '/admin/admins', icon: <Shield className="h-5 w-5" /> },
   { label: 'Orders', href: '/admin/orders', icon: <ShoppingCart className="h-5 w-5" /> },
   { label: 'Settings', href: '/admin/settings', icon: <Settings className="h-5 w-5" /> },
+  { label: 'Pricing', href: '/admin/pricing', icon: <DollarSign className="h-5 w-5" /> },
 ];
 
 /**

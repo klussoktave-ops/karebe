@@ -200,7 +200,7 @@ export const pricingStore = {
           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         },
         body: JSON.stringify({ id, ...updates })
-      );
+      });
       
       const result = await response.json();
       
@@ -228,7 +228,7 @@ export const pricingStore = {
           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         },
         body: JSON.stringify({ id })
-      );
+      });
       
       const result = await response.json();
       
