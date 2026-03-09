@@ -90,19 +90,28 @@ export default function BranchConfigPage() {
     if (!editingBranch) return;
     
     try {
-      const { error } = await supabase
-        .from('branches')
-        .update({
+      // Use server-side API to bypass RLS
+      const response = await fetch('/api/admin/branches', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: editingBranch.id,
           name: editingBranch.name,
           address: editingBranch.address,
           phone: editingBranch.phone,
           is_main: editingBranch.is_main,
           mpesa_shortcode: editingBranch.mpesa_shortcode,
           mpesa_payment_type: editingBranch.mpesa_payment_type,
-        })
-        .eq('id', editingBranch.id);
+        }),
+      });
 
-      if (error) throw error;
+      const result = await response.json();
+
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to update branch');
+      }
 
       setEditingBranch(null);
       loadBranches();

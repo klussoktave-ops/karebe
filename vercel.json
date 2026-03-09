@@ -51,6 +51,14 @@
       "destination": "/api/admin/admins.js"
     },
     {
+      "source": "/api/admin/branches",
+      "destination": "/api/admin/branches.js"
+    },
+    {
+      "source": "/api/admin/riders",
+      "destination": "/api/admin/riders.js"
+    },
+    {
       "source": "/api/payments/daraja/stkpush",
       "destination": "/api/payments/daraja/stkpush.js"
     },
