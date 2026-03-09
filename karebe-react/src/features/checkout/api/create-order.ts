@@ -1,6 +1,9 @@
 import { supabase } from '@/lib/supabase';
 import type { CreateOrderInput, CreateOrderResponse } from '../types';
 
+// Railway API URL
+const ORCHESTRATION_API = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app';
+
 export async function createOrder(input: CreateOrderInput): Promise<CreateOrderResponse> {
   try {
     // Call the checkout edge function
@@ -47,7 +50,7 @@ export async function initiateMpesaPayment(
   amount: number
 ): Promise<{ success: boolean; checkoutRequestId?: string; message?: string }> {
   try {
-    const response = await fetch('/api/payments/daraja/stkpush', {
+    const response = await fetch(`${ORCHESTRATION_API}/api/payments/daraja/stkpush`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

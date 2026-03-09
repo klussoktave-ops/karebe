@@ -19,6 +19,8 @@ import webhookRoutes from './routes/webhook';
 import riderRoutes from './routes/riders';
 import adminRoutes from './routes/admin';
 import whatsappParserRoutes from './routes/whatsapp-parser';
+import pricingRoutes from './routes/pricing';
+import paymentRoutes from './routes/payments';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -59,6 +61,8 @@ app.use('/api/webhook', webhookRoutes);
 app.use('/api/riders', riderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/whatsapp', whatsappParserRoutes);
+app.use('/api/pricing', pricingRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Health check
 app.get('/health', async (_req, res) => {

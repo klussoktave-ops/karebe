@@ -36,9 +36,10 @@ BEGIN
     );
   END IF;
 
-  -- Update the order with rider
+  -- Update the order with rider and status
   UPDATE orders 
   SET 
+    status = 'RIDER_CONFIRMED_DIGITAL',
     rider_id = p_rider_id,
     last_actor_type = 'admin',
     last_actor_id = p_admin_id,

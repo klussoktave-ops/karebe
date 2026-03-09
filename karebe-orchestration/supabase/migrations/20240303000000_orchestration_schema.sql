@@ -403,10 +403,10 @@ BEGIN
     );
   END IF;
   
-  -- Update order
+  -- Update order - set status to RIDER_CONFIRMED_DIGITAL when rider is assigned
   UPDATE orders 
   SET rider_id = p_rider_id, 
-      status = 'DELIVERY_REQUEST_STARTED',
+      status = 'RIDER_CONFIRMED_DIGITAL',
       last_actor_type = 'admin',
       last_actor_id = p_admin_id,
       updated_at = NOW()
@@ -423,14 +423,14 @@ BEGIN
       last_updated = NOW()
   WHERE rider_id = p_rider_id;
   
-  -- Log the assignment
+  -- Log the assignment - use RIDER_CONFIRMED_DIGITAL status
   INSERT INTO order_state_transitions (
     order_id, previous_status, new_status, 
     actor_type, actor_id, action, action_metadata
   )
   SELECT 
-    p_order_id, status, 'DELIVERY_REQUEST_STARTED',
-    'admin', p_admin_id, 'RIDER_ASSIGNED',
+    p_order_id, 'DELIVERY_REQUEST_STARTED', 'RIDER_CONFIRMED_DIGITAL',
+    'admin', p_admin_id, 'RIDER_CONFIRMED_DIGITAL',
     jsonb_build_object('rider_id', p_rider_id)
   FROM orders WHERE id = p_order_id;
   

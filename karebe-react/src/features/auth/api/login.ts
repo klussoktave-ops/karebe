@@ -2,6 +2,9 @@ import { supabase } from '@/lib/supabase';
 import { demoUsers } from '@/lib/demo-data';
 import type { AuthUser, UserRole } from '../stores/auth-store';
 
+// Railway API URL
+const ORCHESTRATION_API = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app';
+
 export interface LoginCredentials {
   username: string;
   password: string;
@@ -79,7 +82,7 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
   // Supabase is configured - try the API login
   try {
     // Call the admin login API endpoint
-    const response = await fetch('/api/admin/login', {
+    const response = await fetch(`${ORCHESTRATION_API}/api/admin/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -204,7 +207,7 @@ export interface RiderLoginResponse {
 
 export async function riderLogin(credentials: RiderLoginCredentials): Promise<RiderLoginResponse> {
   try {
-    const response = await fetch('/api/riders/login', {
+    const response = await fetch(`${ORCHESTRATION_API}/api/riders/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

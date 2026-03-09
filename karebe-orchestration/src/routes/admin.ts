@@ -9,6 +9,70 @@ import { logger } from '../lib/logger';
 const router = Router();
 
 // =============================================================================
+// Admin Login
+// =============================================================================
+
+/**
+ * POST /api/admin/login
+ * Admin user login
+ */
+router.post('/login', async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email and password are required',
+      });
+    }
+
+    // For demo purposes, check against demo accounts
+    const demoAdmins: Record<string, { password: string; name: string; role: string }> = {
+      'admin@karebe.com': { password: 'admin123', name: 'Main Admin', role: 'super_admin' },
+      'manager@karebe.com': { password: 'manager123', name: 'Store Manager', role: 'manager' },
+    };
+
+    const admin = demoAdmins[email.toLowerCase()];
+    
+    if (!admin || admin.password !== password) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials',
+      });
+    }
+
+    // Get admin user from database
+    const { data: adminUser, error: dbError } = await supabase
+      .from('admin_users')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .single();
+
+    if (dbError && dbError.code !== 'PGRST116') {
+      logger.error('Error fetching admin user', { error: dbError });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: adminUser?.id || 'demo-admin-id',
+        email: email.toLowerCase(),
+        name: admin.name,
+        role: admin.role,
+        token: 'demo-token-' + Date.now(),
+      },
+    });
+  } catch (error) {
+    logger.error('Admin login error', { error });
+    res.status(500).json({
+      success: false,
+      error: 'Login failed',
+    });
+  }
+});
+
+// =============================================================================
 // Admin Users Management
 // =============================================================================
 
