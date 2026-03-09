@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Check, Smartphone, QrCode, AlertCircle, Timer, HelpCircle } from 'lucide-react';
+import { Copy, Check, Smartphone, AlertCircle, Timer, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -177,29 +177,6 @@ export function MpesaPaymentSection({
               ))}
             </div>
           )}
-
-          {/* QR Code Option */}
-          <div className="border-t pt-4">
-            <div className="flex items-center gap-2 mb-3">
-              <QrCode className="h-4 w-4" />
-              <span className="font-medium">Scan to Pay</span>
-              <Tooltip>
-                <TooltipTrigger>
-                  <HelpCircle className="h-4 w-4 text-gray-400" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Scan with your phone camera</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <div className="flex justify-center">
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Lipa na M-Pesa Till: ${tillNumber}, Amount: KES ${amount}`}
-                alt="M-Pesa QR Code"
-                className="border rounded-lg"
-              />
-            </div>
-          </div>
 
           {/* Manual Code Entry */}
           <div className="border-t pt-4 space-y-3">
