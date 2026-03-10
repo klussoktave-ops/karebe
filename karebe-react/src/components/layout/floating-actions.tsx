@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { CallButton } from '@/features/orders/components/CallButton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useCartStore } from '@/features/cart/stores/cart-store';
-import { useSettings, getSupportPhone, getWhatsAppNumber } from '@/features/settings/hooks/use-settings';
+import { useSettings, getSupportPhone, getWhatsAppNumber, getDeliveryFee, getFreeDeliveryThreshold } from '@/features/settings/hooks/use-settings';
 
 export interface FloatingActionsProps {
   /** Number of items in cart */
@@ -62,7 +62,7 @@ export function FloatingActions({
   const whatsappNumber = _whatsappNumber || getWhatsAppNumber();
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(false);
-  const { items, getTotal } = useCartStore();
+  const { items, subtotal, deliveryFee, getTotal } = useCartStore();
   
   // Detect when user scrolls near the bottom (cart section)
   useEffect(() => {
@@ -88,7 +88,10 @@ export function FloatingActions({
       .join('\n');
     
     const total = getTotal();
-    return `Hello! I would like to order:\n${itemsList}\n\nTotal: KES ${total.toLocaleString()}\n\nPlease confirm availability and delivery details.`;
+    const delivery = deliveryFee > 0 ? `KES ${deliveryFee.toLocaleString()}` : 'Free';
+    const threshold = getFreeDeliveryThreshold();
+    
+    return `Hello! I would like to order:\n${itemsList}\n\nSubtotal: KES ${subtotal.toLocaleString()}\nDelivery: ${delivery}${subtotal > threshold ? ' (Free over KES ' + threshold + ')' : ''}\nTotal: KES ${total.toLocaleString()}\n\nPlease confirm availability and delivery details.`;
   };
 
   const handleWhatsAppShare = () => {
