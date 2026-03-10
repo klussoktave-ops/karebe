@@ -138,10 +138,27 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (!user) return false;
         
+        // Define role hierarchy - higher roles include permissions of lower roles
+        const roleHierarchy: Record<string, number> = {
+          'super-admin': 3,
+          'admin': 2,
+          'rider': 1,
+          'customer': 0,
+        };
+        
+        const userRoleLevel = roleHierarchy[user.role] ?? 0;
+        
         if (Array.isArray(role)) {
-          return role.includes(user.role);
+          // Check if user's role level meets any of the required roles
+          return role.some(requiredRole => {
+            const requiredLevel = roleHierarchy[requiredRole] ?? 0;
+            return userRoleLevel >= requiredLevel;
+          });
         }
-        return user.role === role;
+        
+        // Single role check - allow higher roles to access lower role routes
+        const requiredLevel = roleHierarchy[role] ?? 0;
+        return userRoleLevel >= requiredLevel;
       },
     }),
     {
