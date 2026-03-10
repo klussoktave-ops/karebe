@@ -66,7 +66,7 @@ export default function AdminsPage() {
       
       const result = await response.json();
       
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to load admins');
       }
       
@@ -123,7 +123,7 @@ export default function AdminsPage() {
 
       const result = await response.json();
 
-      if (!result.ok) {
+      if (!result.success) {
         if (response.status === 409) {
           alert('An admin with this email already exists');
           return;
@@ -161,7 +161,7 @@ export default function AdminsPage() {
 
       const result = await response.json();
 
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to update admin');
       }
 
@@ -189,7 +189,7 @@ export default function AdminsPage() {
 
       const result = await response.json();
 
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to toggle admin status');
       }
 
@@ -213,7 +213,7 @@ export default function AdminsPage() {
 
       const result = await response.json();
 
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to delete admin');
       }
 

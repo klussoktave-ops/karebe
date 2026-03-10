@@ -51,7 +51,7 @@ export default function BranchConfigPage() {
       const response = await fetch(`${ORCHESTRATION_API}/api/admin/branches`);
       const result = await response.json();
       
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to load branches');
       }
       
@@ -89,7 +89,7 @@ export default function BranchConfigPage() {
 
       const result = await response.json();
       
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to add branch');
       }
 
@@ -125,7 +125,7 @@ export default function BranchConfigPage() {
 
       const result = await response.json();
 
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to update branch');
       }
 
@@ -148,7 +148,7 @@ export default function BranchConfigPage() {
       // Reset other branches' is_main to false
       const response = await fetch(`${ORCHESTRATION_API}/api/admin/branches`);
       const result = await response.json();
-      if (result.ok && result.data) {
+      if (result.success && result.data) {
         for (const branch of result.data) {
           if (branch.id !== branchId && branch.is_main) {
             await fetch(`${ORCHESTRATION_API}/api/admin/branches`, {
@@ -176,7 +176,7 @@ export default function BranchConfigPage() {
       });
 
       const result = await response.json();
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to delete branch');
       }
       loadBranches();
@@ -195,7 +195,7 @@ export default function BranchConfigPage() {
       });
 
       const result = await response.json();
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to toggle branch status');
       }
       loadBranches();

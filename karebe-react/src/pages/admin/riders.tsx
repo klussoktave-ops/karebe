@@ -59,10 +59,10 @@ export default function RidersPage() {
   const loadBranches = async () => {
     try {
       // Use Railway orchestration API
-      const response = await fetch(`${ORCHESTRATION_API}/api/admin/riders`);
+      const response = await fetch(`${ORCHESTRATION_API}/api/admin/branches`);
       const result = await response.json();
       
-      if (result.ok && result.data) {
+      if (result.success && result.data) {
         setBranches(result.data);
       }
     } catch (error) {
@@ -76,7 +76,7 @@ export default function RidersPage() {
       const response = await fetch(`${ORCHESTRATION_API}/api/admin/riders`);
       const result = await response.json();
       
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to load riders');
       }
       
@@ -110,7 +110,7 @@ export default function RidersPage() {
 
       const result = await response.json();
       
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to add rider');
       }
 
@@ -135,7 +135,7 @@ export default function RidersPage() {
       });
 
       const result = await response.json();
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to toggle rider status');
       }
       loadRiders();
@@ -156,7 +156,7 @@ export default function RidersPage() {
       });
 
       const result = await response.json();
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to delete rider');
       }
       loadRiders();

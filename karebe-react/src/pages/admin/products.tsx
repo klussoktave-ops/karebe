@@ -511,7 +511,7 @@ export default function AdminProductsPage() {
       });
       
       const result = await response.json();
-      if (!result.ok) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to update product');
       }
       
