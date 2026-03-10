@@ -16,8 +16,22 @@ export function WhatsAppQuickOrderFab({
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const { items, total } = useCart();
+  const { items } = useCart();
   const whatsappNumber = getWhatsAppNumber();
+
+  // Calculate totals using configurable pricing (matching cart-summary)
+  const [pricingConfig] = useState({
+    vatRate: 0.16,
+    baseDeliveryFee: 300,
+    freeDeliveryThreshold: 5000,
+  });
+
+  // Calculate subtotal from items
+  const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  const tax = subtotal * pricingConfig.vatRate;
+  const isFreeDelivery = subtotal >= pricingConfig.freeDeliveryThreshold;
+  const deliveryFee = isFreeDelivery ? 0 : pricingConfig.baseDeliveryFee;
+  const total = subtotal + tax + deliveryFee;
 
   // Generate pre-filled WhatsApp message with cart contents
   const generateCartMessage = () => {
@@ -28,10 +42,12 @@ export function WhatsAppQuickOrderFab({
     let msg = 'Hello Karebe! I would like to order:\n\n';
     
     items.forEach((item) => {
-      msg += `• ${item.product.name} x${item.quantity} - KSh ${(item.product.price * item.quantity).toLocaleString()}\n`;
+      msg += `• ${item.product.name} x${item.quantity} - KSh ${(item.unitPrice * item.quantity).toLocaleString()}\n`;
     });
 
-    msg += `\n*Total: KSh ${total.toLocaleString()}*\n\n`;
+    msg += `\nSubtotal: KSh ${subtotal.toLocaleString()}\n`;
+    msg += `Delivery: KSh ${deliveryFee.toLocaleString()}${isFreeDelivery ? ' (FREE)' : ''}\n`;
+    msg += `*Total: KSh ${total.toLocaleString()}*\n\n`;
     msg += 'Please confirm availability and delivery details.';
 
     return msg;
