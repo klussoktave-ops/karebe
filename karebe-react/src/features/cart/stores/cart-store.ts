@@ -1,13 +1,71 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Cart, CartItem } from '../types';
-import { getDeliveryFee, getFreeDeliveryThreshold } from '@/features/settings/hooks/use-settings';
+
+// Railway API URL for pricing
+const ORCHESTRATION_API = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app';
+
+// Default values (fallback if API not available)
+const DEFAULT_VAT_RATE = 0.16;
+const DEFAULT_BASE_FEE = 300;
+const DEFAULT_FREE_THRESHOLD = 5000;
+
+// Cache for pricing config - loaded from API
+let pricingConfig: {
+  vatRate: number;
+  baseDeliveryFee: number;
+  freeDeliveryThreshold: number;
+} = {
+  vatRate: DEFAULT_VAT_RATE,
+  baseDeliveryFee: DEFAULT_BASE_FEE,
+  freeDeliveryThreshold: DEFAULT_FREE_THRESHOLD,
+};
+
+let pricingLoaded = false;
+
+// Fetch pricing from API
+async function loadPricingConfig(): Promise<void> {
+  if (pricingLoaded) return;
+  
+  try {
+    const response = await fetch(`${ORCHESTRATION_API}/api/pricing`);
+    const data = await response.json();
+    
+    if (data.ok && data.data?.settings) {
+      const settings = data.data.settings;
+      pricingConfig = {
+        vatRate: settings.vat_rate?.rate ?? DEFAULT_VAT_RATE,
+        baseDeliveryFee: settings.base_delivery_fee?.amount ?? DEFAULT_BASE_FEE,
+        freeDeliveryThreshold: settings.free_delivery_threshold?.amount ?? DEFAULT_FREE_THRESHOLD,
+      };
+      pricingLoaded = true;
+      console.log('[CartStore] Loaded pricing from API:', pricingConfig);
+    }
+  } catch (error) {
+    console.error('[CartStore] Failed to load pricing config:', error);
+  }
+}
+
+// Helper to calculate cart totals - uses pricing API for delivery fee and threshold
+function calculateTotals(items: CartItem[]) {
+  const fee = pricingConfig.baseDeliveryFee;
+  const threshold = pricingConfig.freeDeliveryThreshold;
+  
+  const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  const tax = subtotal * pricingConfig.vatRate;
+  const deliveryFeeAmount = subtotal > threshold ? 0 : fee; // Free delivery over threshold
+  const total = subtotal + tax + deliveryFeeAmount;
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  
+  return { subtotal, tax, deliveryFee: deliveryFeeAmount, total, itemCount };
+}
 
 interface CartState extends Cart {
   // UI state
   isOpen: boolean;
   isSyncing: boolean;
   lastError?: string;
+  pricingLoaded: boolean;
   
   // Actions
   addItem: (item: Omit<CartItem, 'id' | 'addedAt'>) => void;
@@ -22,6 +80,7 @@ interface CartState extends Cart {
   setSyncing: (isSyncing: boolean) => void;
   setLastSynced: (timestamp: string) => void;
   setError: (error: string | undefined) => void;
+  loadPricing: () => Promise<void>;
   
   // Computed
   getItemCount: () => number;
@@ -34,7 +93,7 @@ const initialState: Omit<CartState,
   'addItem' | 'removeItem' | 'updateQuantity' | 'clearCart' | 
   'setBranchId' | 'setCustomerId' | 'openCart' | 'closeCart' | 'toggleCart' |
   'setSyncing' | 'setLastSynced' | 'setError' | 'getItemCount' | 'getSubtotal' | 
-  'getTotal' | 'getItemByProduct'
+  'getTotal' | 'getItemByProduct' | 'loadPricing'
 > = {
   items: [],
   subtotal: 0,
@@ -46,25 +105,12 @@ const initialState: Omit<CartState,
   updatedAt: new Date().toISOString(),
   isOpen: false,
   isSyncing: false,
+  pricingLoaded: false,
 };
 
 // Helper to generate unique cart item ID
 function generateItemId(productId: string, variantId?: string): string {
   return variantId ? `${productId}:${variantId}` : productId;
-}
-
-// Helper to calculate cart totals - uses settings for delivery fee and threshold
-function calculateTotals(items: CartItem[], deliveryFee?: number, freeThreshold?: number) {
-  const fee = deliveryFee ?? getDeliveryFee();
-  const threshold = freeThreshold ?? getFreeDeliveryThreshold();
-  
-  const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-  const tax = subtotal * 0.16; // 16% VAT (Kenya)
-  const deliveryFeeAmount = subtotal > threshold ? 0 : fee; // Free delivery over threshold
-  const total = subtotal + tax + deliveryFeeAmount;
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  
-  return { subtotal, tax, deliveryFee: deliveryFeeAmount, total, itemCount };
 }
 
 export const useCartStore = create<CartState>()(
@@ -163,6 +209,14 @@ export const useCartStore = create<CartState>()(
       setLastSynced: (lastSyncedAt) => set({ lastSyncedAt }),
       
       setError: (lastError) => set({ lastError }),
+      
+      loadPricing: async () => {
+        await loadPricingConfig();
+        // Recalculate totals with new pricing
+        const { items } = get();
+        const totals = calculateTotals(items);
+        set({ ...totals, pricingLoaded: true });
+      },
       
       getItemCount: () => get().itemCount,
       

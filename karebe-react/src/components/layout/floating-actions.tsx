@@ -17,7 +17,14 @@ import { Button } from '@/components/ui/button';
 import { CallButton } from '@/features/orders/components/CallButton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useCartStore } from '@/features/cart/stores/cart-store';
-import { useSettings, getSupportPhone, getWhatsAppNumber, getDeliveryFee, getFreeDeliveryThreshold } from '@/features/settings/hooks/use-settings';
+import { useSettings, getSupportPhone, getWhatsAppNumber } from '@/features/settings/hooks/use-settings';
+
+// Railway API URL for pricing
+const ORCHESTRATION_API = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app';
+
+// Default values
+const DEFAULT_BASE_FEE = 300;
+const DEFAULT_FREE_THRESHOLD = 5000;
 
 export interface FloatingActionsProps {
   /** Number of items in cart */
@@ -64,6 +71,21 @@ export function FloatingActions({
   const [isNearBottom, setIsNearBottom] = useState(false);
   const { items, subtotal, deliveryFee, getTotal } = useCartStore();
   
+  // Fetch pricing config for threshold
+  const [freeThreshold, setFreeThreshold] = useState(DEFAULT_FREE_THRESHOLD);
+  
+  useEffect(() => {
+    fetch(`${ORCHESTRATION_API}/api/pricing`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && data.data?.settings) {
+          const settings = data.data.settings;
+          setFreeThreshold(settings.free_delivery_threshold?.amount ?? DEFAULT_FREE_THRESHOLD);
+        }
+      })
+      .catch(console.error);
+  }, []);
+  
   // Detect when user scrolls near the bottom (cart section)
   useEffect(() => {
     const handleScroll = () => {
@@ -89,9 +111,8 @@ export function FloatingActions({
     
     const total = getTotal();
     const delivery = deliveryFee > 0 ? `KES ${deliveryFee.toLocaleString()}` : 'Free';
-    const threshold = getFreeDeliveryThreshold();
     
-    return `Hello! I would like to order:\n${itemsList}\n\nSubtotal: KES ${subtotal.toLocaleString()}\nDelivery: ${delivery}${subtotal > threshold ? ' (Free over KES ' + threshold + ')' : ''}\nTotal: KES ${total.toLocaleString()}\n\nPlease confirm availability and delivery details.`;
+    return `Hello! I would like to order:\n${itemsList}\n\nSubtotal: KES ${subtotal.toLocaleString()}\nDelivery: ${delivery}${subtotal > freeThreshold ? ' (Free over KES ' + freeThreshold + ')' : ''}\nTotal: KES ${total.toLocaleString()}\n\nPlease confirm availability and delivery details.`;
   };
 
   const handleWhatsAppShare = () => {

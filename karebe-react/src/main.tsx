@@ -20,6 +20,10 @@ if (seedResult.success) {
   }
 }
 
+// Pre-load pricing config on app startup
+import { useCartStore } from '@/features/cart/stores/cart-store';
+useCartStore.getState().loadPricing();
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
