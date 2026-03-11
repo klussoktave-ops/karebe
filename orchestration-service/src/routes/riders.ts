@@ -13,6 +13,67 @@ import {
 const router = Router();
 
 // =============================================================================
+// Rider Login
+// =============================================================================
+
+/**
+ * POST /api/riders/login
+ * Rider login with phone and PIN
+ */
+router.post('/login', async (req: Request, res: Response) => {
+  try {
+    const { phone, pin } = req.body;
+
+    if (!phone || !pin) {
+      return res.status(400).json({
+        success: false,
+        error: 'Phone and PIN are required',
+      });
+    }
+
+    // Get rider from database
+    const { data: rider, error } = await supabase
+      .from('riders')
+      .select('*')
+      .eq('phone', phone)
+      .single();
+
+    if (error || !rider) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials',
+      });
+    }
+
+    // Verify PIN
+    if (rider.pin !== pin) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid PIN',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: rider.id,
+        name: rider.name,
+        phone: rider.phone,
+        email: rider.email,
+        is_active: rider.is_active,
+        token: 'rider-token-' + rider.id,
+      },
+    });
+  } catch (error) {
+    logger.error('Rider login error', { error });
+    res.status(500).json({
+      success: false,
+      error: 'Login failed',
+    });
+  }
+});
+
+// =============================================================================
 // Validation Schemas
 // =============================================================================
 

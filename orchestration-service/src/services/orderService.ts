@@ -16,6 +16,7 @@ import {
   UpdateOrderStatusRequest,
   AssignRiderRequest,
   ConfirmDeliveryRequest,
+  UpdateOrderDetailsRequest,
   StateTransition,
   StateTransitionError,
   RaceConditionError,
@@ -51,6 +52,16 @@ export class OrderService {
       return sum + (item.quantity * item.unit_price);
     }, 0);
 
+    // Calculate VAT
+    const vatRate = 0.16; // TODO: Fetch from settings
+    const vatAmount = request.vat_amount ?? Math.round(totalAmount * vatRate);
+
+    // Delivery fee (passed from frontend or calculated)
+    const deliveryFee = request.delivery_fee ?? 0;
+
+    // Total with delivery and tax
+    const grandTotal = totalAmount + vatAmount + deliveryFee;
+
     // Create order
     const orderData = {
       status: OrderStatus.ORDER_SUBMITTED,
@@ -59,12 +70,17 @@ export class OrderService {
       delivery_address: request.delivery_address,
       delivery_notes: request.delivery_notes || null,
       branch_id: request.branch_id,
-      total_amount: totalAmount,
+      total_amount: grandTotal,
+      delivery_fee: deliveryFee,
+      vat_amount: vatAmount,
+      delivery_zone_id: request.delivery_zone_id || null,
+      distance_km: request.distance_km || null,
       idempotency_key: idempotencyKey,
       last_actor_type: ActorType.CUSTOMER,
       metadata: {
         trigger_source: request.trigger_source,
         item_count: request.items.length,
+        subtotal: totalAmount,
       },
     };
 
@@ -102,7 +118,10 @@ export class OrderService {
     logger.info('Order created successfully', { 
       orderId: order.id, 
       customerPhone: request.customer_phone,
-      totalAmount,
+      subtotal: totalAmount,
+      vatAmount,
+      deliveryFee,
+      grandTotal,
     });
 
     return order as Order;
@@ -144,6 +163,13 @@ export class OrderService {
     if (!order) {
       throw new Error(`Order not found: ${orderId}`);
     }
+
+    logger.info('Updating order status', { 
+      orderId, 
+      currentStatus: order.status, 
+      newStatus: request.status,
+      actorType: request.actor_type 
+    });
 
     // Validate state transition
     stateMachine.assertValidTransition(
@@ -214,6 +240,15 @@ export class OrderService {
    * Assign rider to order
    */
   async assignRider(orderId: string, request: AssignRiderRequest): Promise<Order> {
+    // Get current order first for logging
+    const currentOrder = await this.getOrder(orderId);
+    logger.info('assignRider: Starting', { 
+      orderId, 
+      riderId: request.rider_id,
+      adminId: request.admin_id,
+      currentStatus: currentOrder?.status,
+    });
+    
     // Call the database function for atomic rider assignment
     const { data, error } = await supabase.rpc('assign_rider_to_order', {
       p_order_id: orderId,
@@ -221,14 +256,29 @@ export class OrderService {
       p_admin_id: request.admin_id,
     });
 
+    logger.info('assign_rider_to_order RPC result', { 
+      orderId, 
+      data, 
+      error,
+      rawError: error ? JSON.stringify(error) : null,
+    });
+
     if (error) {
-      logger.error('Failed to assign rider', { error, orderId, request });
-      throw error;
+      logger.error('Failed to assign rider - RPC error', { error, orderId, request });
+      // Return a more descriptive error
+      throw new Error(error.message || 'Database error assigning rider');
     }
 
     const result = data as { success: boolean; error?: string; current_status?: string; current_order?: string };
     
+    logger.info('assign_rider_to_order result parsing', { 
+      orderId, 
+      result,
+      resultString: JSON.stringify(result),
+    });
+    
     if (!result.success) {
+      logger.warn('assign_rider_to_order returned failure', { orderId, result });
       if (result.error === 'Rider not available') {
         throw new RiderUnavailableError(
           `Rider ${request.rider_id} is not available`,
@@ -394,6 +444,54 @@ export class OrderService {
         cancelled_at: new Date().toISOString(),
       },
     });
+  }
+
+  /**
+   * Update order details (customer name, address, notes)
+   * Returns null if order not found
+   */
+  async updateOrderDetails(
+    orderId: string,
+    request: UpdateOrderDetailsRequest
+  ): Promise<Order | null> {
+    const order = await this.getOrder(orderId);
+    
+    if (!order) {
+      return null; // Order not found
+    }
+
+    // Build update object
+    const updateData: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+      last_actor_type: request.actor_type,
+      last_actor_id: request.actor_id,
+    };
+
+    if (request.customer_name !== undefined) {
+      updateData.customer_name = request.customer_name || null;
+    }
+
+    if (request.delivery_address !== undefined) {
+      updateData.delivery_address = request.delivery_address;
+    }
+
+    if (request.delivery_notes !== undefined) {
+      updateData.delivery_notes = request.delivery_notes || null;
+    }
+
+    const { data, error } = await supabase
+      .from('orders')
+      .update(updateData)
+      .eq('id', orderId)
+      .select()
+      .single();
+
+    if (error) {
+      logger.error('Failed to update order details', { error, orderId, request });
+      throw new Error(`Failed to update order: ${error.message}`);
+    }
+
+    return data as Order;
   }
 
   /**

@@ -24,6 +24,13 @@ const createOrderSchema = z.object({
   delivery_address: z.string().min(5),
   delivery_notes: z.string().optional(),
   branch_id: z.string().uuid(),
+  // Delivery and pricing
+  delivery_fee: z.number().optional().default(0),
+  delivery_zone_id: z.string().uuid().optional(),
+  distance_km: z.number().optional(),
+  tax: z.number().optional().default(0),
+  total: z.number().optional().default(0),
+  // Items
   items: z.array(z.object({
     product_id: z.string().uuid(),
     product_name: z.string(),
@@ -38,15 +45,15 @@ const createOrderSchema = z.object({
 const updateStatusSchema = z.object({
   status: z.nativeEnum(OrderStatus),
   actor_type: z.nativeEnum(ActorType),
-  actor_id: z.string().uuid(),
+  actor_id: z.string().min(1),  // Accept any non-empty string (UUID or user ID)
   confirmation_method: z.nativeEnum(ConfirmationMethod).optional(),
   expected_version: z.number().int().optional(),
   metadata: z.record(z.unknown()).optional(),
 });
 
 const assignRiderSchema = z.object({
-  rider_id: z.string().uuid(),
-  admin_id: z.string().uuid(),
+  rider_id: z.string().min(1),  // Accept any string for demo data
+  admin_id: z.string().min(1),  // Accept any string for demo data
   notes: z.string().optional(),
 });
 
@@ -55,6 +62,14 @@ const confirmRiderSchema = z.object({
   actor_type: z.nativeEnum(ActorType),
   actor_id: z.string().uuid(),
   notes: z.string().optional(),
+});
+
+const updateOrderDetailsSchema = z.object({
+  customer_name: z.string().min(1).optional(),
+  delivery_address: z.string().min(1).optional(),
+  delivery_notes: z.string().optional(),
+  actor_type: z.nativeEnum(ActorType),
+  actor_id: z.string().min(1),
 });
 
 // =============================================================================
@@ -210,13 +225,13 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
 });
 
 /**
- * POST /api/orders/:id/assign-rider
- * Assign rider to order
+ * PATCH /api/orders/:id
+ * Update order details (customer name, address, notes)
  */
-router.post('/:id/assign-rider', async (req: Request, res: Response) => {
+router.patch('/:id', async (req: Request, res: Response) => {
   try {
     const orderId = req.params.id;
-    const validation = assignRiderSchema.safeParse(req.body);
+    const validation = updateOrderDetailsSchema.safeParse(req.body);
     
     if (!validation.success) {
       return res.status(400).json({
@@ -226,7 +241,65 @@ router.post('/:id/assign-rider', async (req: Request, res: Response) => {
       });
     }
 
+    const order = await orderService.updateOrderDetails(orderId, validation.data);
+    
+    // Handle order not found (null return)
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        error: 'Order not found',
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: order,
+      message: 'Order details updated',
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error updating order details', { error, orderId: req.params.id, body: req.body });
+    
+    // Return 400 for status-related errors, 500 for others
+    if (errorMessage.includes('Cannot update order details in status')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid order status',
+        message: errorMessage,
+      });
+    }
+    
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to update order details',
+      message: errorMessage,
+    });
+  }
+});
+
+/**
+ * POST /api/orders/:id/assign-rider
+ * Assign rider to order
+ */
+router.post('/:id/assign-rider', async (req: Request, res: Response) => {
+  try {
+    const orderId = req.params.id;
+    logger.info('assign-rider endpoint called', { orderId, body: req.body });
+    
+    const validation = assignRiderSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      logger.warn('assign-rider validation failed', { orderId, errors: validation.error.errors });
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: validation.error.errors,
+      });
+    }
+
+    logger.info('assign-rider calling orderService', { orderId, request: validation.data });
     const order = await orderService.assignRider(orderId, validation.data);
+    logger.info('assign-rider success', { orderId, orderStatus: order.status });
     
     res.json({
       success: true,
@@ -234,21 +307,13 @@ router.post('/:id/assign-rider', async (req: Request, res: Response) => {
       message: 'Rider assigned successfully',
     });
   } catch (error) {
-    logger.error('Error assigning rider', { error, orderId: req.params.id, body: req.body });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error assigning rider', { error, orderId: req.params.id, body: req.body, errorMessage });
     
-    if (error instanceof Error) {
-      if (error.name === 'RiderUnavailableError') {
-        return res.status(400).json({
-          success: false,
-          error: 'Rider unavailable',
-          message: error.message,
-        });
-      }
-    }
-    
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to assign rider',
+      message: errorMessage,
     });
   }
 });

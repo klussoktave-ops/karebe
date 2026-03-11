@@ -57,6 +57,10 @@ export interface Order {
   branch_id: string;
   rider_id?: string;
   total_amount: number;
+  delivery_fee: number;
+  vat_amount: number;
+  delivery_zone_id?: string;
+  distance_km?: number;
   confirmation_method?: ConfirmationMethod;
   confirmation_by?: string;
   confirmation_at?: string;
@@ -127,6 +131,11 @@ export interface CreateOrderRequest {
   }>;
   trigger_source: 'call_button' | 'cart_checkout' | 'whatsapp';
   idempotency_key?: string;
+  // Delivery pricing (calculated by frontend/API)
+  delivery_fee?: number;
+  vat_amount?: number;
+  delivery_zone_id?: string;
+  distance_km?: number;
 }
 
 export interface UpdateOrderStatusRequest {
@@ -149,6 +158,14 @@ export interface ConfirmDeliveryRequest {
   actor_type: ActorType;
   actor_id: string;
   notes?: string;
+}
+
+export interface UpdateOrderDetailsRequest {
+  customer_name?: string;
+  delivery_address?: string;
+  delivery_notes?: string;
+  actor_type: ActorType;
+  actor_id: string;
 }
 
 // =============================================================================
