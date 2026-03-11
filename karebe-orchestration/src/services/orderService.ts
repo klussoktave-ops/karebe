@@ -16,6 +16,7 @@ import {
   UpdateOrderStatusRequest,
   AssignRiderRequest,
   ConfirmDeliveryRequest,
+  UpdateOrderDetailsRequest,
   StateTransition,
   StateTransitionError,
   RaceConditionError,
@@ -443,6 +444,79 @@ export class OrderService {
         cancelled_at: new Date().toISOString(),
       },
     });
+  }
+
+  /**
+   * Update order details (customer name, address, notes)
+   * Returns null if order not found or status not allowed
+   */
+  async updateOrderDetails(
+    orderId: string,
+    request: UpdateOrderDetailsRequest
+  ): Promise<Order | null> {
+    const order = await this.getOrder(orderId);
+    
+    if (!order) {
+      return null; // Order not found
+    }
+
+    // Only allow updating certain statuses
+    const allowedStatuses: OrderStatus[] = [
+      OrderStatus.ORDER_SUBMITTED,
+      OrderStatus.CONFIRMED_BY_MANAGER,
+      OrderStatus.DELIVERY_REQUEST_STARTED,
+      OrderStatus.RIDER_CONFIRMED_DIGITAL,
+      OrderStatus.RIDER_CONFIRMED_MANUAL,
+      OrderStatus.OUT_FOR_DELIVERY,
+    ];
+
+    if (!allowedStatuses.includes(order.status)) {
+      throw new Error(`Cannot update order details in status: ${order.status}`);
+    }
+
+    // Build update object
+    const updateData: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+      last_actor_type: request.actor_type,
+      last_actor_id: request.actor_id,
+    };
+
+    if (request.customer_name !== undefined) {
+      updateData.customer_name = request.customer_name || null;
+    }
+
+    if (request.delivery_address !== undefined) {
+      updateData.delivery_address = request.delivery_address;
+    }
+
+    if (request.delivery_notes !== undefined) {
+      updateData.delivery_notes = request.delivery_notes || null;
+    }
+
+    // Atomic update - only succeeds if status is in allowed list
+    const { data, error } = await supabase
+      .from('orders')
+      .update(updateData)
+      .eq('id', orderId)
+      .in('status', allowedStatuses)
+      .select()
+      .single();
+
+    if (error) {
+      // Check if it's a status-related error (no rows updated)
+      if (error.code === 'PGRST116') {
+        // Either order not found or status not allowed - check which
+        const currentOrder = await this.getOrder(orderId);
+        if (!currentOrder) {
+          return null;
+        }
+        throw new Error(`Cannot update order details in status: ${currentOrder.status}`);
+      }
+      logger.error('Failed to update order details', { error, orderId, request });
+      throw new Error(`Failed to update order: ${error.message}`);
+    }
+
+    return data as Order;
   }
 
   /**

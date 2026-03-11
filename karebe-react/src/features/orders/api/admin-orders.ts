@@ -142,6 +142,14 @@ export interface AssignRiderRequest {
   notes?: string;
 }
 
+export interface UpdateOrderDetailsRequest {
+  customer_name?: string;
+  delivery_address?: string;
+  delivery_notes?: string;
+  actor_type: 'admin' | 'rider' | 'system' | 'customer' | 'webhook';
+  actor_id: string;
+}
+
 export async function assignRider(orderId: string, request: AssignRiderRequest): Promise<Order> {
   const response = await fetch(`${ORCHESTRATION_API_URL}/orders/${orderId}/assign-rider`, {
     method: 'POST',
@@ -158,6 +166,30 @@ export async function assignRider(orderId: string, request: AssignRiderRequest):
   
   if (!result.success) {
     throw new Error('Failed to assign rider');
+  }
+
+  return result.data;
+}
+
+export async function updateOrderDetails(
+  orderId: string,
+  request: UpdateOrderDetailsRequest
+): Promise<Order> {
+  const response = await fetch(`${ORCHESTRATION_API_URL}/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || error.error || `Failed to update order: ${response.statusText}`);
+  }
+
+  const result: OrderResponse = await response.json();
+  
+  if (!result.success) {
+    throw new Error('Failed to update order');
   }
 
   return result.data;

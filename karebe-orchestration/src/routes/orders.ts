@@ -64,6 +64,14 @@ const confirmRiderSchema = z.object({
   notes: z.string().optional(),
 });
 
+const updateOrderDetailsSchema = z.object({
+  customer_name: z.string().min(1).optional(),
+  delivery_address: z.string().min(1).optional(),
+  delivery_notes: z.string().optional(),
+  actor_type: z.nativeEnum(ActorType),
+  actor_id: z.string().min(1),
+});
+
 // =============================================================================
 // Routes
 // =============================================================================
@@ -212,6 +220,59 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: 'Failed to update order status',
+    });
+  }
+});
+
+/**
+ * PATCH /api/orders/:id
+ * Update order details (customer name, address, notes)
+ */
+router.patch('/:id', async (req: Request, res: Response) => {
+  try {
+    const orderId = req.params.id;
+    const validation = updateOrderDetailsSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: validation.error.errors,
+      });
+    }
+
+    const order = await orderService.updateOrderDetails(orderId, validation.data);
+    
+    // Handle order not found (null return)
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        error: 'Order not found',
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: order,
+      message: 'Order details updated',
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error updating order details', { error, orderId: req.params.id, body: req.body });
+    
+    // Return 400 for status-related errors, 500 for others
+    if (errorMessage.includes('Cannot update order details in status')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid order status',
+        message: errorMessage,
+      });
+    }
+    
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to update order details',
+      message: errorMessage,
     });
   }
 });

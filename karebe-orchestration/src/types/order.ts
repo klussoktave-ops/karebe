@@ -160,6 +160,14 @@ export interface ConfirmDeliveryRequest {
   notes?: string;
 }
 
+export interface UpdateOrderDetailsRequest {
+  customer_name?: string;
+  delivery_address?: string;
+  delivery_notes?: string;
+  actor_type: ActorType;
+  actor_id: string;
+}
+
 // =============================================================================
 // Rider Types
 // =============================================================================
