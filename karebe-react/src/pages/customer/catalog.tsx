@@ -56,11 +56,13 @@ export function CatalogPage() {
       <Container>
         {/* Banner Image */}
         <div className="-mx-4 md:-mx-8 -mt-4 md:-mt-8 mb-8">
-          <img 
-            src="/assets/images/karebe_banner.png" 
-            alt="Karebe Wines & Spirits" 
-            className="w-full h-48 md:h-64 object-cover rounded-b-2xl shadow-lg"
-          />
+          <div className="aspect-[3/1] max-h-64 overflow-hidden rounded-b-2xl shadow-lg">
+            <img 
+              src="/assets/images/karebe_banner.png" 
+              alt="Karebe Wines & Spirits" 
+              className="w-full h-full object-cover"
+            />
+          </div>
         </div>
 
         {/* Contact Info Bar */}

@@ -186,11 +186,13 @@ export function BannerManager() {
                   }`}
                   onClick={() => setSelectedBanner(banner)}
                 >
-                  <img
-                    src={banner.url}
-                    alt={banner.alt}
-                    className="w-full h-24 object-cover"
-                  />
+                  <div className="aspect-[3/1] overflow-hidden">
+                    <img
+                      src={banner.url}
+                      alt={banner.alt}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   {banner.isActive && (
                     <div className="absolute top-1 right-1 bg-green-500 text-white p-1 rounded">
                       <Check className="h-3 w-3" />

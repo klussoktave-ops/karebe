@@ -600,12 +600,13 @@ export default function AdminProductsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {products.map((product) => (
                 <Card key={product.id} className="overflow-hidden">
-                  <div className="h-40 bg-gray-100 relative">
+                  <div className="aspect-square bg-gray-100 relative overflow-hidden">
                     {product.image_url ? (
                       <img 
                         src={product.image_url} 
                         alt={product.name} 
                         className="w-full h-full object-cover"
+                        loading="lazy"
                         onError={(e) => {
                           console.error('[Admin Products] Image load error:', {
                             productId: product.id,
