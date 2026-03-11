@@ -53,23 +53,26 @@ interface OrderCardProps {
 }
 
 // Status configuration with improved color coding for dispatch
+// Visual hierarchy: Order ID > Status > Price > Actions
 const statusConfig: Record<OrderStatus, { 
   label: string; 
   color: string; 
   bgColor: string;
   borderColor: string;
+  dotColor: string; // Colored dot for status badge
+  stripColor: string; // Left border color strip for quick scanning
   icon: typeof Package;
   priority: number; // 1 = highest priority for dispatch
 }> = {
-  CART_DRAFT: { label: 'Draft', color: 'text-gray-700', bgColor: 'bg-gray-50', borderColor: 'border-gray-200', icon: ShoppingCart, priority: 6 },
-  ORDER_SUBMITTED: { label: 'New Order', color: 'text-blue-700', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', icon: AlertCircle, priority: 1 },
-  CONFIRMED_BY_MANAGER: { label: 'Confirmed', color: 'text-green-700', bgColor: 'bg-green-50', borderColor: 'border-green-200', icon: CheckCircle, priority: 2 },
-  DELIVERY_REQUEST_STARTED: { label: 'Finding Rider', color: 'text-yellow-700', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-200', icon: Truck, priority: 3 },
-  RIDER_CONFIRMED_DIGITAL: { label: 'Rider Assigned', color: 'text-purple-700', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', icon: User, priority: 4 },
-  RIDER_CONFIRMED_MANUAL: { label: 'Rider Assigned', color: 'text-purple-700', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', icon: User, priority: 4 },
-  OUT_FOR_DELIVERY: { label: 'Out for Delivery', color: 'text-orange-700', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', icon: Truck, priority: 5 },
-  DELIVERED: { label: 'Delivered', color: 'text-emerald-700', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200', icon: CheckCircle, priority: 7 },
-  CANCELLED: { label: 'Cancelled', color: 'text-red-700', bgColor: 'bg-red-50', borderColor: 'border-red-200', icon: AlertCircle, priority: 8 },
+  CART_DRAFT: { label: 'Draft', color: 'text-gray-700', bgColor: 'bg-gray-50', borderColor: 'border-gray-200', dotColor: 'bg-gray-500', stripColor: 'border-l-gray-400', icon: ShoppingCart, priority: 6 },
+  ORDER_SUBMITTED: { label: 'New Order', color: 'text-blue-700', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', dotColor: 'bg-blue-500', stripColor: 'border-l-blue-500', icon: AlertCircle, priority: 1 },
+  CONFIRMED_BY_MANAGER: { label: 'Confirmed', color: 'text-green-700', bgColor: 'bg-green-50', borderColor: 'border-green-200', dotColor: 'bg-green-500', stripColor: 'border-l-green-500', icon: CheckCircle, priority: 2 },
+  DELIVERY_REQUEST_STARTED: { label: 'Pending Call', color: 'text-orange-700', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', dotColor: 'bg-orange-500', stripColor: 'border-l-orange-500', icon: Truck, priority: 3 },
+  RIDER_CONFIRMED_DIGITAL: { label: 'Rider Assigned', color: 'text-purple-700', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', dotColor: 'bg-purple-500', stripColor: 'border-l-purple-500', icon: User, priority: 4 },
+  RIDER_CONFIRMED_MANUAL: { label: 'Rider Assigned', color: 'text-purple-700', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', dotColor: 'bg-purple-500', stripColor: 'border-l-purple-500', icon: User, priority: 4 },
+  OUT_FOR_DELIVERY: { label: 'Out for Delivery', color: 'text-orange-700', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', dotColor: 'bg-orange-500', stripColor: 'border-l-orange-500', icon: Truck, priority: 5 },
+  DELIVERED: { label: 'Delivered', color: 'text-emerald-700', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200', dotColor: 'bg-emerald-500', stripColor: 'border-l-emerald-500', icon: CheckCircle, priority: 7 },
+  CANCELLED: { label: 'Cancelled', color: 'text-red-700', bgColor: 'bg-red-50', borderColor: 'border-red-200', dotColor: 'bg-red-500', stripColor: 'border-l-red-500', icon: AlertCircle, priority: 8 },
 };
 
 function formatTime(dateString: string): string {
@@ -202,31 +205,40 @@ export function OrderCard({
   return (
     <Card className={`
       ${isExpanded ? 'ring-2 ring-brand-200' : ''} 
-      ${status.bgColor} 
+      bg-white 
+      rounded-xl 
+      shadow-sm 
       border-l-4 
-      ${status.borderColor}
-      overflow-hidden transition-all hover:shadow-md
+      ${status.stripColor}
+      overflow-hidden 
+      transition-all 
+      hover:shadow-lg 
+      hover:scale-[1.01]
     `}>
       <CardContent className="p-0">
         {/* Main Card Content - Horizontal Layout */}
         <div className="flex flex-col sm:flex-row">
           
           {/* LEFT ZONE: Order Identity (Priority 1-2) */}
-          <div className="flex items-start gap-3 p-4 sm:w-48 sm:flex-shrink-0 border-b sm:border-b-0 sm:border-r border-brand-100">
-            {/* Status Indicator */}
-            <div className={`p-2 rounded-lg ${status.bgColor} ${status.borderColor} border`}>
+          <div className="flex items-start gap-3 p-4 sm:w-48 sm:flex-shrink-0 border-b sm:border-b-0 sm:border-r border-gray-100">
+            {/* Avatar with Status Color */}
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${status.bgColor} ${status.borderColor} border`}>
               <StatusIcon className={`w-5 h-5 ${status.color}`} />
             </div>
             
             {/* Order ID & Status - VERTICALLY STACKED */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-brand-900 text-lg tracking-tight">
+                <h3 className="font-bold text-gray-800 text-lg tracking-tight">
                   #{order.id.slice(-6)}
                 </h3>
                 {getPriorityIndicator()}
               </div>
-              <Badge className={`${status.bgColor} ${status.color} border ${status.borderColor} text-xs mt-1 font-medium`}>
+              <Badge 
+                variant="outline" 
+                className={`${status.bgColor} ${status.color} border ${status.borderColor} text-xs mt-1 font-medium flex items-center gap-1 w-fit`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${status.dotColor}`} />
                 {status.label}
               </Badge>
             </div>
@@ -285,18 +297,18 @@ export function OrderCard({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                 {/* Customer Row */}
                 <div className="flex items-center gap-2 min-w-0">
-                  <User className="w-4 h-4 text-brand-400 flex-shrink-0" />
-                  <span className="font-semibold text-brand-900 truncate">
+                  <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <span className="font-semibold text-gray-800 truncate">
                     {order.customer_name || 'Unknown'}
                   </span>
                 </div>
                 
                 {/* Phone Row */}
                 <div className="flex items-center gap-2 min-w-0">
-                  <Phone className="w-4 h-4 text-brand-400 flex-shrink-0" />
+                  <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   <a 
                     href={`tel:${order.customer_phone}`} 
-                    className="text-brand-700 hover:text-brand-900 hover:underline truncate"
+                    className="text-gray-700 hover:text-gray-900 hover:underline truncate"
                   >
                     {order.customer_phone}
                   </a>
@@ -304,16 +316,16 @@ export function OrderCard({
                 
                 {/* Address Row - Full width on mobile */}
                 <div className="flex items-start gap-2 sm:col-span-2 min-w-0">
-                  <MapPin className="w-4 h-4 text-brand-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-brand-600 text-sm truncate">
+                  <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-gray-600 text-sm truncate">
                     {order.delivery_address}
                   </span>
                 </div>
                 
                 {/* Timestamp - Secondary info */}
                 <div className="flex items-center gap-2 sm:col-start-2 sm:justify-end">
-                  <Clock className="w-3.5 h-3.5 text-brand-400" />
-                  <span className="text-brand-500 text-xs">
+                  <Clock className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-gray-500 text-xs">
                     {formatRelativeTime(order.created_at)}
                   </span>
                 </div>
@@ -322,7 +334,7 @@ export function OrderCard({
             
             {/* Rider Section - CONDITIONAL, INLINE */}
             {rider && (order.status === 'RIDER_CONFIRMED_DIGITAL' || order.status === 'RIDER_CONFIRMED_MANUAL' || order.status === 'OUT_FOR_DELIVERY') && (
-              <div className="mt-3 pt-3 border-t border-brand-200 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <div className="mt-3 pt-3 border-t border-gray-200 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <div className="flex items-center gap-2">
                   <Truck className="w-4 h-4 text-purple-600" />
                   <span className="font-medium text-purple-900 text-sm">
@@ -342,7 +354,7 @@ export function OrderCard({
                 <div className="flex items-center gap-1 ml-auto">
                   <a
                     href={getCallUrl(rider.phone)}
-                    className="p-1.5 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
+                    className="p-1.5 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors"
                     title="Call Rider"
                   >
                     <Phone className="w-3.5 h-3.5" />
@@ -351,14 +363,14 @@ export function OrderCard({
                     href={getWhatsAppUrl(rider.phone, order)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                    className="p-1.5 bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
                     title="WhatsApp"
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
                   </a>
                   <a
                     href={getSmsUrl(rider.phone, order)}
-                    className="p-1.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                    className="p-1.5 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
                     title="SMS"
                   >
                     <Send className="w-3.5 h-3.5" />
@@ -369,13 +381,14 @@ export function OrderCard({
           </div>
 
           {/* RIGHT ZONE: Price, Items, Actions */}
-          <div className="flex sm:flex-col items-center justify-between sm:justify-start gap-3 p-4 sm:p-4 bg-white/50 sm:border-l border-brand-100 sm:w-44 flex-shrink-0">
-            {/* Price Summary */}
+          <div className="flex sm:flex-col items-center justify-between sm:justify-start gap-3 p-4 sm:p-4 bg-gray-50 sm:border-l border-gray-100 sm:w-44 flex-shrink-0">
+            {/* Price Summary - Now with "Total" context */}
             <div className="text-right">
-              <p className="font-bold text-brand-900 text-lg leading-tight">
+              <p className="text-xs text-gray-400">Total</p>
+              <p className="font-bold text-gray-800 text-lg leading-tight">
                 KES {order.total_amount.toLocaleString()}
               </p>
-              <p className="text-brand-500 text-xs">
+              <p className="text-gray-400 text-xs">
                 {order.items?.length || 0} {order.items?.length === 1 ? 'item' : 'items'}
               </p>
             </div>
@@ -384,12 +397,12 @@ export function OrderCard({
             <div className="flex items-center gap-2 sm:flex-col sm:gap-2 sm:w-full">
               {getPrimaryAction()}
               
-              {/* Secondary Actions Row */}
+              {/* Secondary Actions Row - Circular buttons */}
               <div className="flex items-center gap-1">
                 {!isEditing && (
                   <button
                     onClick={onStartEdit}
-                    className="p-1.5 text-brand-500 hover:text-brand-700 hover:bg-brand-100 rounded transition-colors"
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
                     title="Edit order"
                   >
                     <Edit2 className="w-4 h-4" />
@@ -397,7 +410,7 @@ export function OrderCard({
                 )}
                 <button
                   onClick={onToggleExpand}
-                  className="p-1.5 text-brand-500 hover:text-brand-700 hover:bg-brand-100 rounded transition-colors"
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
                   title={isExpanded ? 'Collapse' : 'Expand'}
                 >
                   {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -409,74 +422,74 @@ export function OrderCard({
 
         {/* Expanded Details Section */}
         {isExpanded && (
-          <div className="p-4 bg-white border-t border-brand-100">
+          <div className="p-4 bg-gray-50 border-t border-gray-100">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Order Items */}
               <div>
-                <h4 className="font-semibold text-brand-900 mb-3 text-sm uppercase tracking-wide">
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">
                   Order Items
                 </h4>
                 <ul className="space-y-2">
                   {order.items?.map((item, idx) => (
                     <li key={idx} className="flex justify-between items-start text-sm">
-                      <span className="text-brand-700">
+                      <span className="text-gray-700">
                         <span className="font-medium">{item.quantity}x</span> {item.product_name}
-                        {item.variant && <span className="text-brand-500 ml-1">({item.variant})</span>}
+                        {item.variant && <span className="text-gray-500 ml-1">({item.variant})</span>}
                       </span>
-                      <span className="text-brand-900 font-medium ml-4 whitespace-nowrap">
+                      <span className="text-gray-900 font-medium ml-4 whitespace-nowrap">
                         KES {(item.quantity * item.unit_price).toLocaleString()}
                       </span>
                     </li>
                   ))}
                 </ul>
-                <div className="mt-3 pt-3 border-t border-brand-100 flex justify-between font-semibold">
-                  <span className="text-brand-700">Total</span>
-                  <span className="text-brand-900">KES {order.total_amount.toLocaleString()}</span>
+                <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between font-semibold">
+                  <span className="text-gray-700">Total</span>
+                  <span className="text-gray-900">KES {order.total_amount.toLocaleString()}</span>
                 </div>
               </div>
               
               {/* Delivery Details */}
               <div>
-                <h4 className="font-semibold text-brand-900 mb-3 text-sm uppercase tracking-wide">
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">
                   Delivery Details
                 </h4>
                 <div className="space-y-3 text-sm">
                   <div className="flex items-start gap-2">
-                    <Phone className="w-4 h-4 mt-0.5 text-brand-400 flex-shrink-0" />
+                    <Phone className="w-4 h-4 mt-0.5 text-gray-400 flex-shrink-0" />
                     <div>
-                      <p className="text-brand-500 text-xs">Customer Phone</p>
-                      <a href={`tel:${order.customer_phone}`} className="text-brand-700 hover:underline">
+                      <p className="text-gray-500 text-xs">Customer Phone</p>
+                      <a href={`tel:${order.customer_phone}`} className="text-gray-700 hover:underline">
                         {order.customer_phone}
                       </a>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 mt-0.5 text-brand-400 flex-shrink-0" />
+                    <MapPin className="w-4 h-4 mt-0.5 text-gray-400 flex-shrink-0" />
                     <div>
-                      <p className="text-brand-500 text-xs">Delivery Address</p>
-                      <p className="text-brand-700">{order.delivery_address}</p>
+                      <p className="text-gray-500 text-xs">Delivery Address</p>
+                      <p className="text-gray-700">{order.delivery_address}</p>
                     </div>
                   </div>
                   {order.delivery_notes && (
-                    <div className="p-2 bg-brand-50 rounded text-xs">
-                      <span className="text-brand-500 font-medium">Note: </span>
-                      <span className="text-brand-700">{order.delivery_notes}</span>
+                    <div className="p-2 bg-gray-100 rounded text-xs">
+                      <span className="text-gray-500 font-medium">Note: </span>
+                      <span className="text-gray-700">{order.delivery_notes}</span>
                     </div>
                   )}
                   {order.current_rider_name && (
                     <div className="flex items-start gap-2">
                       <Truck className="w-4 h-4 mt-0.5 text-purple-400 flex-shrink-0" />
                       <div>
-                        <p className="text-brand-500 text-xs">Assigned Rider</p>
+                        <p className="text-gray-500 text-xs">Assigned Rider</p>
                         <p className="text-purple-700 font-medium">{order.current_rider_name}</p>
                       </div>
                     </div>
                   )}
                   <div className="flex items-start gap-2">
-                    <Clock className="w-4 h-4 mt-0.5 text-brand-400 flex-shrink-0" />
+                    <Clock className="w-4 h-4 mt-0.5 text-gray-400 flex-shrink-0" />
                     <div>
-                      <p className="text-brand-500 text-xs">Order Time</p>
-                      <p className="text-brand-700">{formatTime(order.created_at)}</p>
+                      <p className="text-gray-500 text-xs">Order Time</p>
+                      <p className="text-gray-700">{formatTime(order.created_at)}</p>
                     </div>
                   </div>
                 </div>
