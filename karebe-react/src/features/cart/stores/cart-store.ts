@@ -27,8 +27,33 @@ let pricingLoaded = false;
 async function loadPricingConfig(): Promise<void> {
   if (pricingLoaded) return;
   
+  const apiUrl = `${ORCHESTRATION_API}/api/pricing`;
+  console.log('[CartStore] Attempting to load pricing from:', apiUrl);
+  console.log('[CartStore] Current origin:', window.location.origin);
+  
   try {
-    const response = await fetch(`${ORCHESTRATION_API}/api/pricing`);
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      mode: 'cors', // Explicitly set CORS mode
+    });
+    
+    console.log('[CartStore] Response status:', response.status);
+    console.log('[CartStore] Response ok:', response.ok);
+    console.log('[CartStore] Response headers:', [...response.headers.entries()]);
+    
+    // Check for CORS headers
+    const corsHeaders = {
+      'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
+    };
+    console.log('[CartStore] CORS headers:', corsHeaders);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
     
     if (data.ok && data.data?.settings) {
@@ -39,10 +64,25 @@ async function loadPricingConfig(): Promise<void> {
         freeDeliveryThreshold: settings.free_delivery_threshold?.amount ?? DEFAULT_FREE_THRESHOLD,
       };
       pricingLoaded = true;
-      console.log('[CartStore] Loaded pricing from API:', pricingConfig);
+      console.log('[CartStore] ✅ Pricing loaded successfully from API:', pricingConfig);
     }
   } catch (error) {
-    console.error('[CartStore] Failed to load pricing config:', error);
+    // Detailed error logging for CORS and network issues
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('[CartStore] ❌ Failed to load pricing config:', errorMessage);
+    
+    // Check if it's a CORS error
+    if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+      console.error('[CartStore] 🔴 Possible CORS or network error detected!');
+      console.error('[CartStore] 🔴 API URL:', apiUrl);
+      console.error('[CartStore] 🔴 Frontend Origin:', window.location.origin);
+      console.error('[CartStore] 🔴 Please ensure Railway backend has CORS middleware configured');
+    }
+    
+    // Log stack trace for debugging
+    if (error instanceof Error && error.stack) {
+      console.error('[CartStore] Stack trace:', error.stack);
+    }
   }
 }
 
