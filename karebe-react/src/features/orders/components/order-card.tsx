@@ -54,7 +54,8 @@ interface OrderCardProps {
 
 // Status configuration with improved color coding for dispatch
 // Visual hierarchy: Order ID > Status > Price > Actions
-const statusConfig: Record<OrderStatus, { 
+// Export for use in other components
+export const statusConfig: Record<OrderStatus, { 
   label: string; 
   color: string; 
   bgColor: string;
@@ -62,17 +63,18 @@ const statusConfig: Record<OrderStatus, {
   dotColor: string; // Colored dot for status badge
   stripColor: string; // Left border color strip for quick scanning
   icon: typeof Package;
+  emoji: string; // Emoji indicator
   priority: number; // 1 = highest priority for dispatch
 }> = {
-  CART_DRAFT: { label: 'Draft', color: 'text-gray-700', bgColor: 'bg-gray-50', borderColor: 'border-gray-200', dotColor: 'bg-gray-500', stripColor: 'border-l-gray-400', icon: ShoppingCart, priority: 6 },
-  ORDER_SUBMITTED: { label: 'New Order', color: 'text-blue-700', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', dotColor: 'bg-blue-500', stripColor: 'border-l-blue-500', icon: AlertCircle, priority: 1 },
-  CONFIRMED_BY_MANAGER: { label: 'Confirmed', color: 'text-green-700', bgColor: 'bg-green-50', borderColor: 'border-green-200', dotColor: 'bg-green-500', stripColor: 'border-l-green-500', icon: CheckCircle, priority: 2 },
-  DELIVERY_REQUEST_STARTED: { label: 'Pending Call', color: 'text-orange-700', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', dotColor: 'bg-orange-500', stripColor: 'border-l-orange-500', icon: Truck, priority: 3 },
-  RIDER_CONFIRMED_DIGITAL: { label: 'Rider Assigned', color: 'text-purple-700', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', dotColor: 'bg-purple-500', stripColor: 'border-l-purple-500', icon: User, priority: 4 },
-  RIDER_CONFIRMED_MANUAL: { label: 'Rider Assigned', color: 'text-purple-700', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', dotColor: 'bg-purple-500', stripColor: 'border-l-purple-500', icon: User, priority: 4 },
-  OUT_FOR_DELIVERY: { label: 'Out for Delivery', color: 'text-orange-700', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', dotColor: 'bg-orange-500', stripColor: 'border-l-orange-500', icon: Truck, priority: 5 },
-  DELIVERED: { label: 'Delivered', color: 'text-emerald-700', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200', dotColor: 'bg-emerald-500', stripColor: 'border-l-emerald-500', icon: CheckCircle, priority: 7 },
-  CANCELLED: { label: 'Cancelled', color: 'text-red-700', bgColor: 'bg-red-50', borderColor: 'border-red-200', dotColor: 'bg-red-500', stripColor: 'border-l-red-500', icon: AlertCircle, priority: 8 },
+  CART_DRAFT: { label: 'Draft', color: 'text-gray-700', bgColor: 'bg-gray-50', borderColor: 'border-gray-200', dotColor: 'bg-gray-500', stripColor: 'border-l-gray-400', icon: ShoppingCart, emoji: '⚪', priority: 6 },
+  ORDER_SUBMITTED: { label: 'New Order', color: 'text-blue-700', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', dotColor: 'bg-blue-500', stripColor: 'border-l-blue-500', icon: AlertCircle, emoji: '🔵', priority: 1 },
+  CONFIRMED_BY_MANAGER: { label: 'Confirmed', color: 'text-green-700', bgColor: 'bg-green-50', borderColor: 'border-green-200', dotColor: 'bg-green-500', stripColor: 'border-l-green-500', icon: CheckCircle, emoji: '🟢', priority: 2 },
+  DELIVERY_REQUEST_STARTED: { label: 'Pending Call', color: 'text-orange-700', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', dotColor: 'bg-orange-500', stripColor: 'border-l-orange-500', icon: Truck, emoji: '🟠', priority: 3 },
+  RIDER_CONFIRMED_DIGITAL: { label: 'Rider Assigned', color: 'text-purple-700', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', dotColor: 'bg-purple-500', stripColor: 'border-l-purple-500', icon: User, emoji: '🟣', priority: 4 },
+  RIDER_CONFIRMED_MANUAL: { label: 'Rider Assigned', color: 'text-purple-700', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', dotColor: 'bg-purple-500', stripColor: 'border-l-purple-500', icon: User, emoji: '🟣', priority: 4 },
+  OUT_FOR_DELIVERY: { label: 'Out for Delivery', color: 'text-orange-700', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', dotColor: 'bg-orange-500', stripColor: 'border-l-orange-500', icon: Truck, emoji: '🟠', priority: 5 },
+  DELIVERED: { label: 'Delivered', color: 'text-emerald-700', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200', dotColor: 'bg-emerald-500', stripColor: 'border-l-emerald-500', icon: CheckCircle, emoji: '✅', priority: 7 },
+  CANCELLED: { label: 'Cancelled', color: 'text-red-700', bgColor: 'bg-red-50', borderColor: 'border-red-200', dotColor: 'bg-red-500', stripColor: 'border-l-red-500', icon: AlertCircle, emoji: '🔴', priority: 8 },
 };
 
 function formatTime(dateString: string): string {
@@ -239,6 +241,7 @@ export function OrderCard({
                 className={`${status.bgColor} ${status.color} border ${status.borderColor} text-xs mt-1 font-medium flex items-center gap-1 w-fit`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${status.dotColor}`} />
+                <span>{status.emoji}</span>
                 {status.label}
               </Badge>
             </div>

@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { AuthGuard } from '@/features/auth/components/auth-guard';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { getDashboardStats, getOrdersByStatus, Order, OrderStatus } from '@/features/orders/api/admin-orders';
-import { statusConfig } from '@/features/orders/components/order-card';
+import { statusConfig } from '@/features/orders/components';
 
 function DashboardContent() {
   const navigate = useNavigate();
@@ -219,7 +219,8 @@ function DashboardContent() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge className={`${status.bgColor} ${status.color}`}>
+                      <Badge className={`${status.bgColor} ${status.color} flex items-center gap-1`}>
+                        <span>{status.emoji}</span>
                         {status.label}
                       </Badge>
                       <Button size="sm" onClick={(e) => {

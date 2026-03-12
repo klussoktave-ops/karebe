@@ -46,16 +46,16 @@ interface Rider {
   is_active: boolean;
 }
 
-const statusConfig: Record<OrderStatus, { label: string; color: string; icon: typeof Package; stripColor: string }> = {
-  CART_DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-700', icon: ShoppingCart, stripColor: 'border-l-gray-400' },
-  ORDER_SUBMITTED: { label: 'New Order', color: 'bg-blue-100 text-blue-700', icon: AlertCircle, stripColor: 'border-l-blue-500' },
-  CONFIRMED_BY_MANAGER: { label: 'Confirmed', color: 'bg-green-100 text-green-700', icon: CheckCircle, stripColor: 'border-l-green-500' },
-  DELIVERY_REQUEST_STARTED: { label: 'Pending Call', color: 'bg-orange-100 text-orange-700', icon: Truck, stripColor: 'border-l-orange-500' },
-  RIDER_CONFIRMED_DIGITAL: { label: 'Rider Assigned', color: 'bg-purple-100 text-purple-700', icon: User, stripColor: 'border-l-purple-500' },
-  RIDER_CONFIRMED_MANUAL: { label: 'Rider Assigned', color: 'bg-purple-100 text-purple-700', icon: User, stripColor: 'border-l-purple-500' },
-  OUT_FOR_DELIVERY: { label: 'Out for Delivery', color: 'bg-orange-100 text-orange-700', icon: Truck, stripColor: 'border-l-orange-500' },
-  DELIVERED: { label: 'Delivered', color: 'bg-success-100 text-success-700', icon: CheckCircle, stripColor: 'border-l-green-500' },
-  CANCELLED: { label: 'Cancelled', color: 'bg-danger-100 text-danger-700', icon: AlertCircle, stripColor: 'border-l-red-500' },
+const statusConfig: Record<OrderStatus, { label: string; color: string; icon: typeof Package; stripColor: string; emoji: string }> = {
+  CART_DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-700', icon: ShoppingCart, stripColor: 'border-l-gray-400', emoji: '⚪' },
+  ORDER_SUBMITTED: { label: 'New Order', color: 'bg-blue-100 text-blue-700', icon: AlertCircle, stripColor: 'border-l-blue-500', emoji: '🔵' },
+  CONFIRMED_BY_MANAGER: { label: 'Confirmed', color: 'bg-green-100 text-green-700', icon: CheckCircle, stripColor: 'border-l-green-500', emoji: '🟢' },
+  DELIVERY_REQUEST_STARTED: { label: 'Pending Call', color: 'bg-orange-100 text-orange-700', icon: Truck, stripColor: 'border-l-orange-500', emoji: '🟠' },
+  RIDER_CONFIRMED_DIGITAL: { label: 'Rider Assigned', color: 'bg-purple-100 text-purple-700', icon: User, stripColor: 'border-l-purple-500', emoji: '🟣' },
+  RIDER_CONFIRMED_MANUAL: { label: 'Rider Assigned', color: 'bg-purple-100 text-purple-700', icon: User, stripColor: 'border-l-purple-500', emoji: '🟣' },
+  OUT_FOR_DELIVERY: { label: 'Out for Delivery', color: 'bg-orange-100 text-orange-700', icon: Truck, stripColor: 'border-l-orange-500', emoji: '🟠' },
+  DELIVERED: { label: 'Delivered', color: 'bg-success-100 text-success-700', icon: CheckCircle, stripColor: 'border-l-green-500', emoji: '✅' },
+  CANCELLED: { label: 'Cancelled', color: 'bg-danger-100 text-danger-700', icon: AlertCircle, stripColor: 'border-l-red-500', emoji: '🔴' },
 };
 
 function OrdersPageContent() {
@@ -443,7 +443,8 @@ function getCallUrl(phone: string): string {
                             <h3 className="font-semibold text-brand-900 text-sm sm:text-base">
                               #{order.id.slice(-6)}
                             </h3>
-                            <Badge className={`${status.color} text-xs`}>
+                            <Badge className={`${status.color} text-xs flex items-center gap-1`}>
+                              <span>{status.emoji}</span>
                               {status.label}
                             </Badge>
                             {/* Edit button - only show for editable orders */}
