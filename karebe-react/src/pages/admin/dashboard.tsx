@@ -17,8 +17,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AuthGuard } from '@/features/auth/components/auth-guard';
 import { useAuth } from '@/features/auth/hooks/use-auth';
-import { getDashboardStats, getOrdersByStatus, Order, OrderStatus } from '@/features/orders/api/admin-orders';
-import { statusConfig } from '@/features/orders/components';
+import { getDashboardStats, getOrdersByStatus, Order } from '@/features/orders/api/admin-orders';
 
 function DashboardContent() {
   const navigate = useNavigate();
@@ -196,42 +195,38 @@ function DashboardContent() {
               </p>
             ) : (
               <div className="space-y-3">
-                {newOrders.map((order) => {
-                  const status = statusConfig[order.status];
-                  const StatusIcon = status.icon;
-                  return (
+                {newOrders.map((order) => (
                   <div 
                     key={order.id} 
-                    className={`flex items-center justify-between p-3 bg-white rounded-lg border-l-4 ${status.stripColor} hover:shadow-md cursor-pointer transition-all`}
+                    className="flex items-center justify-between p-3 bg-brand-50 rounded-lg hover:bg-brand-100 cursor-pointer transition-colors"
                     onClick={() => navigate('/admin/orders')}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${status.bgColor}`}>
-                        <StatusIcon className={`w-4 h-4 ${status.color}`} />
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <ShoppingCart className="w-4 h-4 text-blue-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-brand-900">
                           Order #{order.id.slice(-6)}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-brand-600">
                           {order.customer_name || order.customer_phone} • KES {order.total_amount.toLocaleString()}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge className={`${status.bgColor} ${status.color} flex items-center gap-1`}>
-                        <span>{status.emoji}</span>
-                        {status.label}
+                      <Badge className="bg-blue-100 text-blue-700">
+                        New
                       </Badge>
                       <Button size="sm" onClick={(e) => {
                         e.stopPropagation();
                         navigate('/admin/orders');
                       }}>
-                        View
+                        Confirm
                       </Button>
                     </div>
                   </div>
-                );})}
+                ))}
               </div>
             )}
           </CardContent>

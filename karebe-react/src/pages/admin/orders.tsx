@@ -15,23 +15,18 @@ import {
   ChevronUp,
   AlertCircle,
   MessageCircle,
-  Send,
-  Edit2,
-  Save,
-  X
+  Send
 } from 'lucide-react';
 import { Container } from '@/components/layout/container';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { AuthGuard } from '@/features/auth/components/auth-guard';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { 
   getAllOrders, 
   updateOrderStatus, 
   assignRider,
-  updateOrderDetails,
   Order,
   OrderStatus 
 } from '@/features/orders/api/admin-orders';
@@ -46,16 +41,16 @@ interface Rider {
   is_active: boolean;
 }
 
-const statusConfig: Record<OrderStatus, { label: string; color: string; icon: typeof Package; stripColor: string; emoji: string }> = {
-  CART_DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-700', icon: ShoppingCart, stripColor: 'border-l-gray-400', emoji: '⚪' },
-  ORDER_SUBMITTED: { label: 'New Order', color: 'bg-blue-100 text-blue-700', icon: AlertCircle, stripColor: 'border-l-blue-500', emoji: '🔵' },
-  CONFIRMED_BY_MANAGER: { label: 'Confirmed', color: 'bg-green-100 text-green-700', icon: CheckCircle, stripColor: 'border-l-green-500', emoji: '🟢' },
-  DELIVERY_REQUEST_STARTED: { label: 'Pending Call', color: 'bg-orange-100 text-orange-700', icon: Truck, stripColor: 'border-l-orange-500', emoji: '🟠' },
-  RIDER_CONFIRMED_DIGITAL: { label: 'Rider Assigned', color: 'bg-purple-100 text-purple-700', icon: User, stripColor: 'border-l-purple-500', emoji: '🟣' },
-  RIDER_CONFIRMED_MANUAL: { label: 'Rider Assigned', color: 'bg-purple-100 text-purple-700', icon: User, stripColor: 'border-l-purple-500', emoji: '🟣' },
-  OUT_FOR_DELIVERY: { label: 'Out for Delivery', color: 'bg-orange-100 text-orange-700', icon: Truck, stripColor: 'border-l-orange-500', emoji: '🟠' },
-  DELIVERED: { label: 'Delivered', color: 'bg-success-100 text-success-700', icon: CheckCircle, stripColor: 'border-l-green-500', emoji: '✅' },
-  CANCELLED: { label: 'Cancelled', color: 'bg-danger-100 text-danger-700', icon: AlertCircle, stripColor: 'border-l-red-500', emoji: '🔴' },
+const statusConfig: Record<OrderStatus, { label: string; color: string; icon: typeof Package }> = {
+  CART_DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-700', icon: ShoppingCart },
+  ORDER_SUBMITTED: { label: 'New Order', color: 'bg-blue-100 text-blue-700', icon: AlertCircle },
+  CONFIRMED_BY_MANAGER: { label: 'Confirmed', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+  DELIVERY_REQUEST_STARTED: { label: 'Finding Rider', color: 'bg-yellow-100 text-yellow-700', icon: Truck },
+  RIDER_CONFIRMED_DIGITAL: { label: 'Rider Assigned', color: 'bg-purple-100 text-purple-700', icon: User },
+  RIDER_CONFIRMED_MANUAL: { label: 'Rider Assigned', color: 'bg-purple-100 text-purple-700', icon: User },
+  OUT_FOR_DELIVERY: { label: 'Out for Delivery', color: 'bg-orange-100 text-orange-700', icon: Truck },
+  DELIVERED: { label: 'Delivered', color: 'bg-success-100 text-success-700', icon: CheckCircle },
+  CANCELLED: { label: 'Cancelled', color: 'bg-danger-100 text-danger-700', icon: AlertCircle },
 };
 
 function OrdersPageContent() {
@@ -71,14 +66,6 @@ function OrdersPageContent() {
   const [ridersLoading, setRidersLoading] = useState(false);
   const [showRiderDialog, setShowRiderDialog] = useState(false);
   const [selectedRiderId, setSelectedRiderId] = useState<string>('');
-  
-  // Edit mode state
-  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<{ customer_name: string; delivery_address: string; delivery_notes: string }>({
-    customer_name: '',
-    delivery_address: '',
-    delivery_notes: ''
-  });
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -173,42 +160,6 @@ function getSmsUrl(phone: string, order: Order): string {
 function getCallUrl(phone: string): string {
   return `tel:${phone}`;
 }
-
-  // Start editing an order's details
-  const handleStartEdit = (order: Order) => {
-    setEditingOrderId(order.id);
-    setEditForm({
-      customer_name: order.customer_name || '',
-      delivery_address: order.delivery_address || '',
-      delivery_notes: order.delivery_notes || ''
-    });
-  };
-
-  // Cancel editing
-  const handleCancelEdit = () => {
-    setEditingOrderId(null);
-    setEditForm({ customer_name: '', delivery_address: '', delivery_notes: '' });
-  };
-
-  // Save the edited order details
-  const handleSaveEdit = async (order: Order) => {
-    setActionLoading(order.id);
-    try {
-      await updateOrderDetails(order.id, {
-        customer_name: editForm.customer_name,
-        delivery_address: editForm.delivery_address,
-        delivery_notes: editForm.delivery_notes || undefined,
-        actor_type: 'admin',
-        actor_id: getActorId(user?.id),
-      });
-      await fetchOrders();
-      setEditingOrderId(null);
-    } catch (err) {
-      alert('Failed to update order: ' + (err as Error).message);
-    } finally {
-      setActionLoading(null);
-    }
-  };
 
   const handleConfirmOrder = async (order: Order) => {
     setActionLoading(order.id);
@@ -419,17 +370,7 @@ function getCallUrl(phone: string): string {
               const isExpanded = expandedOrder === order.id;
               
               return (
-                <Card key={order.id} className={`
-                  ${isExpanded ? 'ring-2 ring-brand-200' : ''} 
-                  bg-white 
-                  rounded-xl 
-                  shadow-sm 
-                  border-l-4 
-                  ${status.stripColor}
-                  overflow-hidden 
-                  transition-all 
-                  hover:shadow-lg
-                `}>
+                <Card key={order.id} className={`${isExpanded ? 'ring-2 ring-brand-200' : ''} overflow-hidden`}>
                   <CardContent className="p-3 sm:p-4">
                     {/* Order Header - Mobile stacked layout */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -443,109 +384,26 @@ function getCallUrl(phone: string): string {
                             <h3 className="font-semibold text-brand-900 text-sm sm:text-base">
                               #{order.id.slice(-6)}
                             </h3>
-                            <Badge className={`${status.color} text-xs flex items-center gap-1`}>
-                              <span>{status.emoji}</span>
+                            <Badge className={`${status.color} text-xs`}>
                               {status.label}
                             </Badge>
-                            {/* Edit button - only show for editable orders */}
-                            {editingOrderId !== order.id && (
-                              <button
-                                onClick={() => handleStartEdit(order)}
-                                className="p-1 text-brand-500 hover:text-brand-700 transition-colors"
-                                title="Edit order details"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                            )}
                           </div>
-                          
-                          {/* Customer Name - Editable or Display */}
-                          {editingOrderId === order.id ? (
-                            <div className="mt-2 space-y-2">
-                              <Input
-                                value={editForm.customer_name}
-                                onChange={(e) => setEditForm(prev => ({ ...prev, customer_name: e.target.value }))}
-                                placeholder="Customer name"
-                                className="h-8 text-sm"
-                              />
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-brand-500 flex-shrink-0" />
-                                <Input
-                                  value={editForm.delivery_address}
-                                  onChange={(e) => setEditForm(prev => ({ ...prev, delivery_address: e.target.value }))}
-                                  placeholder="Delivery address"
-                                  className="h-8 text-sm"
-                                />
-                              </div>
-                              <textarea
-                                value={editForm.delivery_notes}
-                                onChange={(e) => setEditForm(prev => ({ ...prev, delivery_notes: e.target.value }))}
-                                placeholder="Delivery notes (optional)"
-                                className="w-full h-16 px-2 py-1 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-brand-500"
-                              />
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleSaveEdit(order)}
-                                  disabled={actionLoading === order.id}
-                                  className="bg-green-600 hover:bg-green-700 h-7"
-                                >
-                                  <Save className="w-3 h-3 mr-1" />
-                                  Save
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={handleCancelEdit}
-                                  disabled={actionLoading === order.id}
-                                  className="h-7"
-                                >
-                                  <X className="w-3 h-3 mr-1" />
-                                  Cancel
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="text-sm text-brand-600 mt-1 truncate">
-                              {order.customer_name || 'Unknown'}
-                            </p>
-                          )}
-                          
+                          <p className="text-sm text-brand-600 mt-1 truncate">
+                            {order.customer_name || 'Unknown'}
+                          </p>
                           <p className="text-sm text-brand-500 truncate">
                             {order.customer_phone}
                           </p>
-                          
-                          {/* Delivery Address - Editable or Display */}
-                          {editingOrderId === order.id ? (
-                            <div className="mt-2 space-y-2">
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-brand-500 flex-shrink-0" />
-                                <Input
-                                  value={editForm.delivery_address}
-                                  onChange={(e) => setEditForm(prev => ({ ...prev, delivery_address: e.target.value }))}
-                                  placeholder="Delivery address"
-                                  className="h-8 text-sm"
-                                />
-                              </div>
-                              <div className="flex items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-brand-500">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                                  {formatTime(order.created_at)}
-                                </span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs sm:text-sm text-brand-500">
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                                {formatTime(order.created_at)}
-                              </span>
-                              <span className="flex items-center gap-1 truncate max-w-[150px] sm:max-w-none">
-                                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                                <span className="truncate">{order.delivery_address}</span>
-                              </span>
-                            </div>
-                          )}
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs sm:text-sm text-brand-500">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                              {formatTime(order.created_at)}
+                            </span>
+                            <span className="flex items-center gap-1 truncate max-w-[150px] sm:max-w-none">
+                              <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                              <span className="truncate">{order.delivery_address}</span>
+                            </span>
+                          </div>
 
                           {/* Rider Info - Show when rider is assigned */}
                           {(order.rider_id || order.status === 'RIDER_CONFIRMED_DIGITAL' || order.status === 'RIDER_CONFIRMED_MANUAL' || order.status === 'OUT_FOR_DELIVERY') && (
@@ -594,13 +452,12 @@ function getCallUrl(phone: string): string {
                       </div>
 
                       {/* Right side: Price, actions, expand */}
-                      <div className="flex sm:flex-col items-center justify-between sm:items-end gap-2 sm:gap-2 ml-auto sm:ml-0 bg-gray-50 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none">
+                      <div className="flex sm:flex-col items-center justify-between sm:items-end gap-2 sm:gap-2 ml-auto sm:ml-0">
                         <div className="text-right">
-                          <p className="text-xs text-gray-400">Total</p>
-                          <p className="font-bold text-gray-800 text-sm sm:text-base">
+                          <p className="font-bold text-brand-900 text-sm sm:text-base">
                             KES {order.total_amount.toLocaleString()}
                           </p>
-                          <p className="text-gray-400 text-xs">
+                          <p className="text-xs sm:text-sm text-brand-500">
                             {order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? 's' : ''}
                           </p>
                         </div>

@@ -10,7 +10,6 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 
 import { logger } from './lib/logger';
 import { testConnection } from './lib/supabase';
@@ -34,19 +33,15 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 // Security headers
 app.use(helmet());
 
-// CORS
+// CORS - allow multiple origins for development and production
+const defaultOrigins = ['http://localhost:5173', 'http://localhost:3000', 'https://karebe-lemon.vercel.app'];
+const envOrigin = process.env.FRONTEND_URL;
+const allowedOrigins: string[] = envOrigin ? [...defaultOrigins, envOrigin] : defaultOrigins;
+
 app.use(cors({
-  origin: FRONTEND_URL,
+  origin: allowedOrigins,
   credentials: true,
 }));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'),
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
-  message: 'Too many requests from this IP, please try again later.',
-});
-app.use(limiter);
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));

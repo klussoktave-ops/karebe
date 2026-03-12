@@ -8,12 +8,8 @@ import './index.css';
 // Import and initialize demo data
 import { initializeDemoData } from '@/lib/seed';
 
-// Import SEO components and error handler
+// Import SEO components
 import { ErrorBoundary, AgeVerificationProvider } from '@/components/seo';
-import { setupGlobalErrorHandler } from '@/lib/error-handler';
-
-// Setup global error handlers
-setupGlobalErrorHandler();
 
 // Initialize demo data on app startup
 const seedResult = initializeDemoData();
@@ -32,12 +28,8 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-      refetchOnWindowFocus: false,
-    },
-    mutations: {
       retry: 2,
+      refetchOnWindowFocus: false,
     },
   },
 });
