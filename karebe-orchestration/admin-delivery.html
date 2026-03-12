@@ -1,0 +1,155 @@
+﻿<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delivery | Karebe Admin</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+
+<body data-page="admin-delivery">
+  <main class="container admin-layout">
+    <aside class="card admin-nav">
+      <div class="admin-nav-brand">
+        <h1>Karebe Admin</h1>
+        <p>Operations command center</p>
+      </div>
+      <nav class="admin-nav-links">
+        <a href="admin.html"><span class="nav-icon">&#8962;</span><span>Dashboard</span></a>
+        <a href="admin-catalog.html"><span class="nav-icon">&#128214;</span><span>Catalog</span></a>
+        <a href="admin-product-new.html"><span class="nav-icon">&#10010;</span><span>Add Product</span></a>
+        <a href="admin-orders.html"><span class="nav-icon">&#128221;</span><span>Orders</span></a>
+        <a href="admin-delivery.html"><span class="nav-icon">&#128666;</span><span>Delivery</span></a>
+        <a href="admin-system.html"><span class="nav-icon">&#9881;</span><span>System</span></a>
+      </nav>
+      <nav class="admin-nav-links secondary-links">
+        <a href="index.html"><span class="nav-icon">&#128722;</span><span>Customer View</span></a>
+        <a href="rider.html"><span class="nav-icon">&#128690;</span><span>Rider Portal</span></a>
+      </nav>
+    </aside>
+
+    <section class="admin-main">
+      <header class="card page-header">
+        <div>
+          <h2>Delivery Control</h2>
+          <p>Manage riders, assign orders, and track delivery status in one place.</p>
+        </div>
+        <a class="button-link" data-icon="&#10010;" href="admin-orders.html">Create Order</a>
+      </header>
+
+      <section id="adminLogin" class="card login-card hidden">
+        <div class="card-body">
+          <h3 class="section-title">Secure Login</h3>
+          <form id="adminLoginForm" class="grid">
+            <label class="small" for="adminUser">Username</label>
+            <input id="adminUser" placeholder="Enter username" autocomplete="username" aria-label="Admin username"
+              required />
+            <label class="small" for="adminPass">Password</label>
+            <input id="adminPass" placeholder="Enter password" type="password" autocomplete="current-password"
+              aria-label="Admin password" required />
+            <p class="small">Test login: karebe / karebe1234</p>
+            <button type="submit">Login</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="adminApp" class="hidden admin-stack">
+        <section class="card admin-panel">
+          <div class="card-body">
+            <div class="actions admin-toolbar">
+              <span id="adminIdentity" class="badge gold"></span>
+              <span id="adminSyncStatus" class="small admin-sync-status">Sync idle</span>
+              <button id="adminLogout" class="secondary">Logout</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card admin-panel">
+          <div class="card-body">
+            <h3 class="section-title">Rider Management</h3>
+            <form id="riderForm" class="controls">
+              <div>
+                <label class="small" for="riderName">Rider Name</label>
+                <input id="riderName" placeholder="e.g. James Kariuki" aria-label="Rider full name" required />
+                <p class="small">Use legal name for easy assignment tracking.</p>
+              </div>
+              <div>
+                <label class="small" for="riderPhone">Rider Phone</label>
+                <input id="riderPhone" placeholder="+254..." aria-label="Rider phone number" required />
+                <p class="small">This phone is used for rider login and delivery contact.</p>
+              </div>
+              <div>
+                <label class="small" for="riderPin">Rider PIN</label>
+                <input id="riderPin" type="password" placeholder="4-digit PIN" aria-label="Rider PIN" required />
+                <p class="small">Keep PIN simple and share privately with the rider.</p>
+              </div>
+              <button type="submit">Add Rider</button>
+            </form>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="ridersTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="card admin-panel">
+          <div class="card-body">
+            <h3 class="section-title">Assign Delivery</h3>
+            <form id="assignForm" class="controls">
+              <div>
+                <label class="small" for="assignOrder">Order</label>
+                <select id="assignOrder" aria-label="Order to assign"></select>
+                <p class="small">Only unassigned orders appear here.</p>
+              </div>
+              <div>
+                <label class="small" for="assignRider">Rider</label>
+                <select id="assignRider" aria-label="Rider to assign"></select>
+                <p class="small">Choose an active rider before assigning.</p>
+              </div>
+              <button type="submit">Assign Rider</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="card admin-panel">
+          <div class="card-body">
+            <h3 class="section-title">Delivery Log</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Delivery</th>
+                    <th>Rider</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Status</th>
+                    <th>Last Update</th>
+                    <th>Update</th>
+                  </tr>
+                </thead>
+                <tbody id="deliveriesTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script src="data/seed.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase.js"></script>
+  <script src="assets/realtime.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+
+</html>

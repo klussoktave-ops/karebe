@@ -1,0 +1,123 @@
+﻿<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orders | Karebe Admin</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+
+<body data-page="admin-orders">
+  <main class="container admin-layout">
+    <aside class="card admin-nav">
+      <div class="admin-nav-brand">
+        <h1>Karebe Admin</h1>
+        <p>Operations command center</p>
+      </div>
+      <nav class="admin-nav-links">
+        <a href="admin.html"><span class="nav-icon">&#8962;</span><span>Dashboard</span></a>
+        <a href="admin-catalog.html"><span class="nav-icon">&#128214;</span><span>Catalog</span></a>
+        <a href="admin-product-new.html"><span class="nav-icon">&#10010;</span><span>Add Product</span></a>
+        <a href="admin-orders.html"><span class="nav-icon">&#128221;</span><span>Orders</span></a>
+        <a href="admin-delivery.html"><span class="nav-icon">&#128666;</span><span>Delivery</span></a>
+        <a href="admin-system.html"><span class="nav-icon">&#9881;</span><span>System</span></a>
+      </nav>
+      <nav class="admin-nav-links secondary-links">
+        <a href="index.html"><span class="nav-icon">&#128722;</span><span>Customer View</span></a>
+        <a href="rider.html"><span class="nav-icon">&#128690;</span><span>Rider Portal</span></a>
+      </nav>
+    </aside>
+
+    <section class="admin-main">
+      <header class="card page-header">
+        <div>
+          <h2>Order Operations</h2>
+          <p>Create call orders and monitor all incoming order activity.</p>
+        </div>
+        <a class="button-link" data-icon="&#8594;" href="admin-delivery.html">Go to Delivery</a>
+      </header>
+
+      <section id="adminLogin" class="card login-card hidden">
+        <div class="card-body">
+          <h3 class="section-title">Secure Login</h3>
+          <form id="adminLoginForm" class="grid">
+            <label class="small" for="adminUser">Username</label>
+            <input id="adminUser" placeholder="Enter username" autocomplete="username" aria-label="Admin username"
+              required />
+            <label class="small" for="adminPass">Password</label>
+            <input id="adminPass" placeholder="Enter password" type="password" autocomplete="current-password"
+              aria-label="Admin password" required />
+            <p class="small">Test login: karebe / karebe1234</p>
+            <button type="submit">Login</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="adminApp" class="hidden admin-stack">
+        <section class="card admin-panel">
+          <div class="card-body">
+            <div class="actions admin-toolbar">
+              <span id="adminIdentity" class="badge gold"></span>
+              <span id="adminSyncStatus" class="small admin-sync-status">Sync idle</span>
+              <button id="adminLogout" class="secondary">Logout</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card admin-panel">
+          <div class="card-body">
+            <h3 class="section-title">Create Call Order</h3>
+            <form id="orderForm" class="controls">
+              <label class="small" for="orderVariant">Product</label>
+              <select id="orderVariant" aria-label="Order product variant"></select>
+
+              <label class="small" for="orderQty">Quantity</label>
+              <input id="orderQty" type="number" min="1" value="1" aria-label="Order quantity" required />
+
+              <label class="small" for="orderCustomer">Customer phone</label>
+              <input id="orderCustomer" placeholder="+254..." aria-label="Customer phone number" required />
+
+              <label class="small" for="orderPayment">Payment status</label>
+              <select id="orderPayment" aria-label="Order payment status">
+                <option value="PENDING">Payment Pending</option>
+                <option value="PAID">Paid</option>
+              </select>
+
+              <button type="submit">Create Order</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="card admin-panel">
+          <div class="card-body">
+            <h3 class="section-title">Order Log</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="ordersTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script src="data/seed.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase.js"></script>
+  <script src="assets/realtime.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+
+</html>

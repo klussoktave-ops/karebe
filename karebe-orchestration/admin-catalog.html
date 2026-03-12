@@ -1,0 +1,112 @@
+﻿<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Catalog | Karebe</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+
+<body data-page="admin-catalog">
+  <main class="container admin-layout">
+    <aside class="card admin-nav">
+      <div class="admin-nav-brand">
+        <h1>Karebe Admin</h1>
+        <p>Operations command center</p>
+      </div>
+      <nav class="admin-nav-links">
+        <a href="admin.html"><span class="nav-icon">&#8962;</span><span>Dashboard</span></a>
+        <a href="admin-catalog.html"><span class="nav-icon">&#128214;</span><span>Catalog</span></a>
+        <a href="admin-product-new.html"><span class="nav-icon">&#10010;</span><span>Add Product</span></a>
+        <a href="admin-orders.html"><span class="nav-icon">&#128221;</span><span>Orders</span></a>
+        <a href="admin-delivery.html"><span class="nav-icon">&#128666;</span><span>Delivery</span></a>
+        <a href="admin-system.html"><span class="nav-icon">&#9881;</span><span>System</span></a>
+      </nav>
+      <nav class="admin-nav-links secondary-links">
+        <a href="index.html"><span class="nav-icon">&#128722;</span><span>Customer View</span></a>
+        <a href="rider.html"><span class="nav-icon">&#128690;</span><span>Rider Portal</span></a>
+      </nav>
+    </aside>
+
+    <section class="admin-main">
+      <header class="card page-header">
+        <div>
+          <h2>Catalog Management</h2>
+          <p>Search products, update stock, and maintain clean inventory listings.</p>
+        </div>
+        <a class="button-link" data-icon="&#10010;" href="admin-product-new.html">Add Product</a>
+      </header>
+
+      <section id="adminLogin" class="card login-card hidden">
+        <div class="card-body">
+          <h3 class="section-title">Secure Login</h3>
+          <form id="adminLoginForm" class="grid">
+            <label class="small" for="adminUser">Username</label>
+            <input id="adminUser" placeholder="Enter username" autocomplete="username" aria-label="Admin username"
+              required />
+            <label class="small" for="adminPass">Password</label>
+            <input id="adminPass" placeholder="Enter password" type="password" autocomplete="current-password"
+              aria-label="Admin password" required />
+            <p class="small">Test login: karebe / karebe1234</p>
+            <button type="submit">Login</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="adminApp" class="hidden admin-stack">
+        <section class="card admin-panel">
+          <div class="card-body">
+            <div class="actions admin-toolbar">
+              <span id="adminIdentity" class="badge gold"></span>
+              <span id="adminSyncStatus" class="small admin-sync-status">Sync idle</span>
+              <button id="adminLogout" class="secondary">Logout</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card admin-panel">
+          <div class="card-body">
+            <h3 class="section-title">Product List</h3>
+            <div class="controls">
+              <div>
+                <label class="small" for="catalogSearch">Search Catalog</label>
+                <input id="catalogSearch" placeholder="Search by name or category" aria-label="Search products" />
+                <p class="small">Type at least 2 letters to quickly narrow the table.</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Icon</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Volume</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Stock</th>
+                    <th>Delete</th>
+                  </tr>
+                </thead>
+                <tbody id="productsTableBody"></tbody>
+              </table>
+            </div>
+            <div id="catalogSelectionCard" class="kpi hidden" style="margin-top: 12px;">
+              <h4>Selected Product</h4>
+              <p id="catalogSelectedState" class="small">Click a row to preview product details.</p>
+            </div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script src="data/seed.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase.js"></script>
+  <script src="assets/realtime.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+
+</html>

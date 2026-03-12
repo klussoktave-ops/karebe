@@ -1,0 +1,211 @@
+﻿<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System | Karebe Admin</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+
+<body data-page="admin-system">
+  <main class="container admin-layout">
+    <aside class="card admin-nav">
+      <div class="admin-nav-brand">
+        <h1>Karebe Admin</h1>
+        <p>Operations command center</p>
+      </div>
+      <nav class="admin-nav-links">
+        <a href="admin.html"><span class="nav-icon">&#8962;</span><span>Dashboard</span></a>
+        <a href="admin-catalog.html"><span class="nav-icon">&#128214;</span><span>Catalog</span></a>
+        <a href="admin-product-new.html"><span class="nav-icon">&#10010;</span><span>Add Product</span></a>
+        <a href="admin-orders.html"><span class="nav-icon">&#128221;</span><span>Orders</span></a>
+        <a href="admin-delivery.html"><span class="nav-icon">&#128666;</span><span>Delivery</span></a>
+        <a href="admin-system.html"><span class="nav-icon">&#9881;</span><span>System</span></a>
+      </nav>
+      <nav class="admin-nav-links secondary-links">
+        <a href="index.html"><span class="nav-icon">&#128722;</span><span>Customer View</span></a>
+        <a href="rider.html"><span class="nav-icon">&#128690;</span><span>Rider Portal</span></a>
+      </nav>
+    </aside>
+
+    <section class="admin-main">
+      <header class="card page-header">
+        <div>
+          <h2>System Configuration</h2>
+          <p>Manage shifts, branch setup, team access, and payment tills.</p>
+        </div>
+      </header>
+
+      <section id="adminLogin" class="card login-card hidden">
+        <div class="card-body">
+          <h3 class="section-title">Secure Login</h3>
+          <form id="adminLoginForm" class="grid">
+            <label class="small" for="adminUser">Username</label>
+            <input id="adminUser" placeholder="Enter username" autocomplete="username" aria-label="Admin username"
+              required />
+            <label class="small" for="adminPass">Password</label>
+            <input id="adminPass" placeholder="Enter password" type="password" autocomplete="current-password"
+              aria-label="Admin password" required />
+            <p class="small">Test login: karebe / karebe1234</p>
+            <button type="submit">Login</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="adminApp" class="hidden admin-stack">
+        <section class="card admin-panel">
+          <div class="card-body">
+            <div class="actions admin-toolbar">
+              <span id="adminIdentity" class="badge gold"></span>
+              <span id="adminSyncStatus" class="small admin-sync-status">Sync idle</span>
+              <button id="adminLogout" class="secondary">Logout</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card admin-panel">
+          <div class="card-body">
+            <h3 class="section-title">Branch Shift Routing</h3>
+            <form id="shiftForm" class="controls">
+              <div>
+                <label class="small" for="shiftBranch">Branch</label>
+                <select id="shiftBranch"></select>
+                <p class="small">Choose the branch where shift routing should change.</p>
+              </div>
+              <div>
+                <label class="small" for="shiftUser">On-Shift User</label>
+                <select id="shiftUser"></select>
+                <p class="small">The selected user receives customer contact requests.</p>
+              </div>
+              <button type="submit">Update On-Shift Contact</button>
+            </form>
+            <p id="shiftCurrent" class="small"></p>
+          </div>
+        </section>
+
+        <section class="card admin-panel super-only">
+          <div class="card-body">
+            <h3 class="section-title">Branch Map Management</h3>
+            <p class="small admin-help">Click the map to place a branch pin before saving.</p>
+            <div id="adminBranchMap" class="admin-map"></div>
+            <form id="newBranchForm" class="controls">
+              <div>
+                <label class="small" for="newBranchName">Branch Name</label>
+                <input id="newBranchName" placeholder="e.g. Westlands" aria-label="Branch name" required />
+              </div>
+              <div>
+                <label class="small" for="newBranchPhone">Branch Phone</label>
+                <input id="newBranchPhone" placeholder="+254..." aria-label="Branch phone" required />
+              </div>
+              <div>
+                <label class="small" for="newBranchLat">Latitude</label>
+                <input id="newBranchLat" placeholder="Auto-filled from map click" aria-label="Branch latitude" readonly
+                  required />
+              </div>
+              <div>
+                <label class="small" for="newBranchLng">Longitude</label>
+                <input id="newBranchLng" placeholder="Auto-filled from map click" aria-label="Branch longitude" readonly
+                  required />
+              </div>
+              <button type="submit">Create Branch</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="card admin-panel super-only">
+          <div class="card-body">
+            <h3 class="section-title">Branch Managers</h3>
+            <form id="managerForm" class="controls">
+              <div>
+                <label class="small" for="managerName">Manager Name</label>
+                <input id="managerName" placeholder="Full name" aria-label="Manager full name" required />
+              </div>
+              <div>
+                <label class="small" for="managerUsername">Username</label>
+                <input id="managerUsername" placeholder="Unique username" aria-label="Manager username" required />
+              </div>
+              <div>
+                <label class="small" for="managerPassword">Password</label>
+                <input id="managerPassword" type="password" placeholder="Temporary password"
+                  aria-label="Manager password" required />
+              </div>
+              <div>
+                <label class="small" for="managerPhone">Phone</label>
+                <input id="managerPhone" placeholder="+254..." aria-label="Manager phone number" required />
+              </div>
+              <div>
+                <label class="small" for="managerBranch">Branch</label>
+                <select id="managerBranch" aria-label="Manager branch"></select>
+              </div>
+              <button type="submit">Add Branch Admin</button>
+            </form>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Branch</th>
+                  </tr>
+                </thead>
+                <tbody id="managerTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="card admin-panel super-only">
+          <div class="card-body">
+            <h3 class="section-title">Till Infrastructure</h3>
+            <form id="tillForm" class="controls">
+              <div>
+                <label class="small" for="tillBranch">Branch</label>
+                <select id="tillBranch" aria-label="Till branch"></select>
+              </div>
+              <div>
+                <label class="small" for="tillNumber">Till Number</label>
+                <input id="tillNumber" placeholder="e.g. 5176432" aria-label="Till number" required />
+              </div>
+              <div>
+                <label class="small" for="tillShortCode">Business ShortCode</label>
+                <input id="tillShortCode" placeholder="e.g. 600981" aria-label="Business shortcode" required />
+              </div>
+              <div>
+                <label class="small" for="tillAccountRef">Account Reference</label>
+                <input id="tillAccountRef" placeholder="e.g. KAREBE-WEST" aria-label="Account reference" required />
+              </div>
+              <button type="submit">Save Till</button>
+            </form>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Branch</th>
+                    <th>Till</th>
+                    <th>ShortCode</th>
+                    <th>Reference</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="tillsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places,geometry&callback=initMap"
+    async defer></script>
+  <script src="data/seed.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase.js"></script>
+  <script src="assets/realtime.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+
+</html>
