@@ -59,24 +59,50 @@ export async function getOrdersByStatus(status: OrderStatus, branchId?: string):
     url.searchParams.append('status', status);
     if (branchId) url.searchParams.append('branch_id', branchId);
 
-    const response = await fetch(url.toString());
+    console.log('[AdminOrders] Fetching orders from:', url.toString());
+    console.log('[AdminOrders] Current origin:', window.location.origin);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      mode: 'cors',
+    });
+    
+    console.log('[AdminOrders] Response status:', response.status);
+    console.log('[AdminOrders] Response ok:', response.ok);
+    
+    // Check for CORS headers
+    const corsHeader = response.headers.get('access-control-allow-origin');
+    console.log('[AdminOrders] CORS header:', corsHeader);
     
     if (!response.ok) {
       // If the status is not valid (e.g., DELIVERED not in enum), fall back to demo
-      console.warn(`Failed to fetch orders with status ${status}: ${response.statusText}`);
+      console.warn(`[AdminOrders] Failed to fetch orders with status ${status}: ${response.statusText}`);
       return getDemoOrders(status);
     }
 
     const result: OrdersResponse = await response.json();
     
     if (!result.success) {
-      console.warn('Failed to fetch orders, using demo data');
+      console.warn('[AdminOrders] Failed to fetch orders, using demo data');
       return getDemoOrders(status);
     }
 
+    console.log('[AdminOrders] ✅ Orders loaded successfully:', result.data.length);
     return result.data;
   } catch (error) {
-    console.warn('Orchestration service unavailable, using demo orders');
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('[AdminOrders] ❌ Orchestration service unavailable:', errorMessage);
+    
+    // Check if it's a CORS error
+    if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+      console.error('[AdminOrders] 🔴 Possible CORS error detected!');
+      console.error('[AdminOrders] 🔴 API URL:', ORCHESTRATION_API_URL);
+      console.error('[AdminOrders] 🔴 Frontend Origin:', window.location.origin);
+    }
+    
     return getDemoOrders(status);
   }
 }

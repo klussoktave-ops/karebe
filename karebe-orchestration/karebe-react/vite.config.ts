@@ -37,12 +37,8 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['lucide-react', 'class-variance-authority', 'clsx', 'tailwind-merge'],
-          forms: ['react-hook-form', 'zod', '@hookform/resolvers'],
-          data: ['@tanstack/react-query', '@supabase/supabase-js', 'zustand'],
-        },
+        // Disable code splitting - inline all code to avoid 404 errors
+        manualChunks: undefined,
       },
     },
   },

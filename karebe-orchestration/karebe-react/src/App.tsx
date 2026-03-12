@@ -1,32 +1,22 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Suspense, lazy, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
 import { DemoBanner } from './components/demo/demo-banner';
 import { AdminLayout } from './components/layout/admin-layout';
 import { PricingSettingsPanel } from './features/admin/components/pricing-settings-panel';
 
-// Lazy load pages for code splitting
-const CatalogPage = lazy(() => import('./pages/customer/catalog'));
-const CartPage = lazy(() => import('./pages/customer/cart'));
-const CheckoutPage = lazy(() => import('./pages/customer/checkout'));
-const AdminDashboardPage = lazy(() => import('./pages/admin/dashboard'));
-const AdminLoginPage = lazy(() => import('./pages/admin/login'));
-const AdminOrdersPage = lazy(() => import('./pages/admin/orders'));
-const AdminProductsPage = lazy(() => import('./pages/admin/products'));
-const BranchConfigPage = lazy(() => import('./pages/admin/branch-config'));
-const SettingsPage = lazy(() => import('./pages/admin/settings'));
-const RidersPage = lazy(() => import('./pages/admin/riders'));
-const AdminsPage = lazy(() => import('./pages/admin/admins'));
-const RiderPortalPage = lazy(() => import('./pages/rider/portal'));
-
-// Loading fallback
-function PageLoader() {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
-    </div>
-  );
-}
+// Direct imports - no lazy loading to avoid 404 errors on Vercel
+import CatalogPage from './pages/customer/catalog';
+import CartPage from './pages/customer/cart';
+import CheckoutPage from './pages/customer/checkout';
+import AdminDashboardPage from './pages/admin/dashboard';
+import AdminLoginPage from './pages/admin/login';
+import AdminOrdersPage from './pages/admin/orders';
+import AdminProductsPage from './pages/admin/products';
+import BranchConfigPage from './pages/admin/branch-config';
+import SettingsPage from './pages/admin/settings';
+import RidersPage from './pages/admin/riders';
+import AdminsPage from './pages/admin/admins';
+import RiderPortalPage from './pages/rider/portal';
 
 function App() {
   const location = useLocation();
@@ -46,7 +36,6 @@ function App() {
   return (
     <div className="min-h-screen bg-brand-50">
       {!location.pathname.startsWith('/admin') && <DemoBanner />}
-      <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Customer Routes */}
           <Route path="/" element={<CatalogPage />} />
@@ -72,7 +61,6 @@ function App() {
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Suspense>
     </div>
   );
 }

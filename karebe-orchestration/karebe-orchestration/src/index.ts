@@ -33,13 +33,9 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 // Security headers
 app.use(helmet());
 
-// CORS - allow multiple origins for development and production
-const defaultOrigins = ['http://localhost:5173', 'http://localhost:3000', 'https://karebe-lemon.vercel.app'];
-const envOrigin = process.env.FRONTEND_URL;
-const allowedOrigins: string[] = envOrigin ? [...defaultOrigins, envOrigin] : defaultOrigins;
-
+// CORS - allow all origins for now to fix production issues
 app.use(cors({
-  origin: allowedOrigins,
+  origin: true,
   credentials: true,
 }));
 
