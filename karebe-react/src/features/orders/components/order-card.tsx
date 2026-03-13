@@ -178,7 +178,7 @@ export function OrderCard({
             <Button
               size="sm"
               variant="outline"
-              className="border-green-500 text-green-700 hover:bg-green-50"
+              className="border-green-500 text-green-700 hover:bg-green-50 w-full sm:w-auto"
               onClick={() => window.location.href = `tel:${order.customer_phone}`}
             >
               <PhoneCall className="w-4 h-4 mr-1.5" />
@@ -187,7 +187,7 @@ export function OrderCard({
             <Button
               size="sm"
               onClick={() => onAction('confirm')}
-              className="bg-green-600 hover:bg-green-700 font-medium"
+              className="bg-green-600 hover:bg-green-700 font-medium w-full sm:w-auto"
             >
               <CheckCircle className="w-4 h-4 mr-1.5" />
               Confirm
@@ -199,7 +199,7 @@ export function OrderCard({
           <Button
             size="sm"
             onClick={() => onAction('startDelivery')}
-            className="bg-blue-600 hover:bg-blue-700 font-medium lg:w-full justify-center"
+            className="bg-blue-600 hover:bg-blue-700 font-medium w-full sm:w-auto justify-center"
           >
             <Truck className="w-4 h-4 mr-1.5" />
             Start Delivery
@@ -210,7 +210,7 @@ export function OrderCard({
           <Button
             size="sm"
             onClick={() => onAction('assignRider')}
-            className="bg-purple-600 hover:bg-purple-700 font-medium lg:w-full justify-center"
+            className="bg-purple-600 hover:bg-purple-700 font-medium w-full sm:w-auto justify-center"
           >
             <User className="w-4 h-4 mr-1.5" />
             Assign Rider
@@ -222,7 +222,7 @@ export function OrderCard({
           <Button
             size="sm"
             onClick={() => onAction('sendOut')}
-            className="bg-cyan-600 hover:bg-cyan-700 font-medium lg:w-full justify-center"
+            className="bg-cyan-600 hover:bg-cyan-700 font-medium w-full sm:w-auto justify-center"
           >
             <Truck className="w-4 h-4 mr-1.5" />
             Send Out
@@ -233,7 +233,7 @@ export function OrderCard({
           <Button
             size="sm"
             onClick={() => onAction('confirmDelivery')}
-            className="bg-emerald-600 hover:bg-emerald-700 font-medium lg:w-full justify-center"
+            className="bg-emerald-600 hover:bg-emerald-700 font-medium w-full sm:w-auto justify-center"
           >
             <CheckCircle className="w-4 h-4 mr-1.5" />
             Confirm Delivered
@@ -285,54 +285,62 @@ export function OrderCard({
   return (
       <Card className={`
       ${isExpanded ? 'ring-2 ring-brand-200' : ''} 
-      relative
-      bg-gradient-to-br from-white to-slate-50/70 
-      rounded-2xl 
-      shadow-sm 
-      ring-1 ring-slate-200/70
+      bg-white
+      rounded-xl
+      shadow-sm
+      border
+      border-slate-200/70
       border-l-4 
       ${status.stripColor}
       overflow-hidden 
       transition-all 
-      hover:shadow-xl 
-      hover:-translate-y-0.5
+      hover:shadow-md
     `}>
       <CardContent className="p-0">
-        <div className="h-1 w-full bg-gradient-to-r from-slate-900/10 via-slate-900/0 to-transparent" />
-        {/* Main Card Content - Responsive Layout */}
-        <div className="flex flex-col lg:flex-row">
-          
-          {/* LEFT ZONE: Order Identity (Priority 1-2) */}
-          <div className="flex items-start gap-3 p-4 lg:p-5 lg:w-52 lg:flex-shrink-0 border-b lg:border-b-0 lg:border-r border-slate-100">
-            {/* Status Icon */}
-            <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${status.bgColor} ${status.borderColor} border shadow-sm`}>
-              <StatusIcon className={`w-5.5 h-5.5 ${status.color}`} />
-            </div>
-            
-            {/* Order ID & Status - VERTICALLY STACKED */}
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] uppercase tracking-widest text-slate-400">Order</p>
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-slate-900 text-lg tracking-tight">
-                  {formatOrderDisplay(order.id, order.order_reference)}
-                </h3>
-                {getPriorityIndicator()}
+        {/* Main Card Content - Mobile First */}
+        <div className="flex flex-col">
+
+          {/* HEADER */}
+          <div className="flex items-start justify-between gap-3 p-4 border-b border-slate-100">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${status.bgColor} ${status.borderColor} border`}>
+                <StatusIcon className={`w-5.5 h-5.5 ${status.color}`} />
               </div>
-              <Badge 
-                variant="outline" 
-                className={`${status.bgColor} ${status.color} border ${status.borderColor} text-[11px] mt-2 font-semibold flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full uppercase tracking-wide`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${status.dotColor}`} />
-                <span>{status.emoji}</span>
-                {status.label}
-              </Badge>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-slate-900 text-lg tracking-tight">
+                    {formatOrderDisplay(order.id, order.order_reference)}
+                  </h3>
+                  {getPriorityIndicator()}
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>{formatRelativeTime(order.created_at)}</span>
+                </div>
+                <Badge 
+                  variant="outline" 
+                  className={`${status.bgColor} ${status.color} border ${status.borderColor} text-[11px] mt-2 font-semibold flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full uppercase tracking-wide`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${status.dotColor}`} />
+                  <span>{status.emoji}</span>
+                  {status.label}
+                </Badge>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[11px] uppercase tracking-wide text-slate-400">Total</p>
+              <p className="font-bold text-slate-900 text-xl leading-tight tracking-tight">
+                KES {order.total_amount.toLocaleString()}
+              </p>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 text-xs ring-1 ring-slate-200 mt-1">
+                {order.items?.length || 0} {order.items?.length === 1 ? 'item' : 'items'}
+              </span>
             </div>
           </div>
 
-          {/* CENTER ZONE: Customer & Order Info */}
-          <div className="flex-1 p-4 lg:p-5 min-w-0">
+          {/* BODY */}
+          <div className="p-4 space-y-4">
             {isEditing ? (
-              // Edit Mode
               <div className="space-y-3">
                 <Input
                   value={editForm.customer_name}
@@ -387,23 +395,16 @@ export function OrderCard({
                 </div>
               </div>
             ) : (
-              // Display Mode - GRID LAYOUT FOR SCANABILITY
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-                {/* Customer Row */}
-                <div className="min-w-0 space-y-1">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-400">Customer</p>
+              <>
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-wide text-slate-400">Customer</p>
                   <div className="flex items-center gap-2 min-w-0">
                     <User className="w-4 h-4 text-slate-400 flex-shrink-0" />
                     <span className="font-semibold text-slate-800 truncate">
                       {getCustomerDisplayName(order)}
                     </span>
                   </div>
-                </div>
-                
-                {/* Phone Row - Show Call Order indicator or phone number */}
-                <div className="min-w-0 space-y-1">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-400">Phone</p>
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
                     {order.customer_phone === 'PENDING_CALL' ? (
                       <>
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
@@ -421,7 +422,7 @@ export function OrderCard({
                     ) : (
                       <a 
                         href={`tel:${order.customer_phone}`} 
-                        className="text-slate-700 hover:text-slate-900 hover:underline truncate"
+                        className="text-slate-700 hover:text-slate-900 hover:underline"
                       >
                         <Phone className="w-4 h-4 text-slate-400 inline mr-1" />
                         {order.customer_phone}
@@ -429,10 +430,9 @@ export function OrderCard({
                     )}
                   </div>
                 </div>
-                
-                {/* Address Row - Full width on mobile */}
-                <div className="md:col-span-2 min-w-0 space-y-1">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-400">Delivery</p>
+
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-wide text-slate-400">Delivery</p>
                   <div className="flex items-start gap-2 min-w-0">
                     <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
                     <span className="text-slate-600 text-sm truncate">
@@ -440,107 +440,76 @@ export function OrderCard({
                     </span>
                   </div>
                 </div>
-                
-                {/* Timestamp - Secondary info */}
-                <div className="flex items-center gap-2 md:col-start-2 md:justify-end">
-                  <Clock className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-slate-500 text-xs">
-                    {formatRelativeTime(order.created_at)}
-                  </span>
-                </div>
-              </div>
-            )}
-            
-            {/* Rider Section - CONDITIONAL, INLINE */}
-            {rider && (order.status === 'RIDER_CONFIRMED_DIGITAL' || order.status === 'RIDER_CONFIRMED_MANUAL' || order.status === 'OUT_FOR_DELIVERY') && (
-              <div className="mt-4 pt-3 border-t border-slate-200 flex flex-wrap items-center gap-x-4 gap-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center">
-                    <Truck className="w-4 h-4 text-slate-600" />
+
+                {rider && (order.status === 'RIDER_CONFIRMED_DIGITAL' || order.status === 'RIDER_CONFIRMED_MANUAL' || order.status === 'OUT_FOR_DELIVERY') && (
+                  <div className="space-y-2">
+                    <p className="text-xs uppercase tracking-wide text-slate-400">Rider</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center">
+                        <Truck className="w-4 h-4 text-slate-600" />
+                      </div>
+                      <span className="font-semibold text-slate-800 text-sm">
+                        {rider.name}
+                      </span>
+                      <a 
+                        href={`tel:${rider.phone}`}
+                        className="text-slate-600 text-sm hover:underline ml-auto"
+                      >
+                        {rider.phone}
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={getCallUrl(rider.phone)}
+                        className="px-2.5 py-1.5 bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200 text-xs font-semibold"
+                        title="Call Rider"
+                      >
+                        Call
+                      </a>
+                      <a
+                        href={getWhatsAppUrl(rider.phone, order)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1.5 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 text-xs font-semibold"
+                        title="WhatsApp"
+                      >
+                        WhatsApp
+                      </a>
+                      <a
+                        href={getSmsUrl(rider.phone, order)}
+                        className="px-2.5 py-1.5 bg-sky-100 text-sky-700 rounded-full hover:bg-sky-200 text-xs font-semibold"
+                        title="SMS"
+                      >
+                        SMS
+                      </a>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wide text-slate-400">Rider</p>
-                    <span className="font-semibold text-slate-800 text-sm">
-                      {rider.name}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5 text-slate-500" />
-                  <a 
-                    href={`tel:${rider.phone}`}
-                    className="text-slate-700 text-sm hover:underline"
-                  >
-                    {rider.phone}
-                  </a>
-                </div>
-                {/* Quick Actions - Rider Contact */}
-                <div className="flex items-center gap-1 ml-auto">
-                  <a
-                    href={getCallUrl(rider.phone)}
-                    className="p-1.5 bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200 transition-colors"
-                    title="Call Rider"
-                  >
-                    <Phone className="w-3.5 h-3.5" />
-                  </a>
-                  <a
-                    href={getWhatsAppUrl(rider.phone, order)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 transition-colors"
-                    title="WhatsApp"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5" />
-                  </a>
-                  <a
-                    href={getSmsUrl(rider.phone, order)}
-                    className="p-1.5 bg-sky-100 text-sky-700 rounded-full hover:bg-sky-200 transition-colors"
-                    title="SMS"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              </div>
+                )}
+              </>
             )}
           </div>
 
-          {/* RIGHT ZONE: Price, Items, Actions */}
-          <div className="flex flex-col gap-4 p-4 lg:p-5 bg-slate-50/80 lg:border-l border-slate-100 lg:w-52 flex-shrink-0">
-            {/* Price Summary - Now with "Total" context */}
-            <div className="flex items-center justify-between lg:block text-right">
-              <p className="text-[11px] uppercase tracking-wide text-slate-400">Total</p>
-              <p className="font-extrabold text-slate-900 text-2xl leading-tight tracking-tight">
-                KES {order.total_amount.toLocaleString()}
-              </p>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white text-slate-600 text-xs ring-1 ring-slate-200">
-                {order.items?.length || 0} {order.items?.length === 1 ? 'item' : 'items'}
-              </span>
-            </div>
-            
-            {/* Actions - VERTICALLY STACKED on desktop */}
-            <div className="flex flex-wrap items-center gap-2 lg:flex-col lg:gap-2 lg:w-full">
-              {getPrimaryAction()}
-              {getSecondaryActions()}
-              
-              {/* Secondary Actions Row - Circular buttons */}
-              <div className="flex items-center gap-1 lg:ml-0 ml-auto">
-                {!isEditing && (
-                  <button
-                    onClick={onStartEdit}
-                    className="p-2 text-slate-500 hover:text-slate-700 hover:bg-white/80 rounded-full transition-colors"
-                    title="Edit order"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                )}
+          {/* ACTIONS */}
+          <div className="p-4 pt-0 flex items-center gap-2 flex-wrap">
+            {getPrimaryAction()}
+            {getSecondaryActions()}
+            <div className="flex items-center gap-1 ml-auto">
+              {!isEditing && (
                 <button
-                  onClick={onToggleExpand}
-                  className="p-2 text-slate-500 hover:text-slate-700 hover:bg-white/80 rounded-full transition-colors"
-                  title={isExpanded ? 'Collapse' : 'Expand'}
+                  onClick={onStartEdit}
+                  className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
+                  title="Edit order"
                 >
-                  {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  <Edit2 className="w-4 h-4" />
                 </button>
-              </div>
+              )}
+              <button
+                onClick={onToggleExpand}
+                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
+                title={isExpanded ? 'Collapse' : 'Expand'}
+              >
+                {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
             </div>
           </div>
         </div>
