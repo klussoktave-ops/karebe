@@ -160,6 +160,8 @@ export function OrderCard({
   const isNameMissing = !order.customer_name || order.customer_name.trim().length === 0;
   const isPhoneMissing = !order.customer_phone || order.customer_phone === 'PENDING_CALL';
   const isAddressMissing = !order.delivery_address || order.delivery_address === 'PENDING_CALL';
+  const needsDetails = isNameMissing || isPhoneMissing || isAddressMissing;
+  const attentionLabel = needsDetails ? 'Complete order details' : status.label;
   
   // Determine primary action for this order status
   const getPrimaryAction = () => {
@@ -398,29 +400,27 @@ export function OrderCard({
               </div>
             ) : (
               <>
+                <div className="flex items-center gap-2 text-amber-700 text-sm font-semibold">
+                  <AlertTriangle className="w-4 h-4" />
+                  {attentionLabel}
+                </div>
+
                 <div className="space-y-2">
-                  <p className="text-xs uppercase tracking-wide text-slate-400">Customer</p>
                   <div className="flex items-center gap-2 min-w-0">
                     <User className="w-4 h-4 text-slate-400 flex-shrink-0" />
                     <span className="font-semibold text-slate-800 truncate">
                       {getCustomerDisplayName(order)}
                     </span>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-3 text-sm">
                     {isPhoneMissing ? (
-                      <>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
-                          <PhoneCall className="w-3.5 h-3.5" />
-                          Awaiting Call
-                        </span>
-                        <button 
-                          type="button"
-                          onClick={onStartEdit}
-                          className="text-xs text-slate-600 hover:text-slate-900 underline decoration-dotted"
-                        >
-                          Add phone details
-                        </button>
-                      </>
+                      <button
+                        type="button"
+                        onClick={onStartEdit}
+                        className="text-slate-600 hover:text-slate-900 underline decoration-dotted"
+                      >
+                        Add phone
+                      </button>
                     ) : (
                       <a 
                         href={`tel:${order.customer_phone}`} 
@@ -430,117 +430,40 @@ export function OrderCard({
                         {order.customer_phone}
                       </a>
                     )}
-                  </div>
-                </div>
-
-                {(isNameMissing || isPhoneMissing || isAddressMissing) && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-amber-700 text-xs font-semibold">
-                      <AlertTriangle className="w-4 h-4" />
-                      Missing information
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {isPhoneMissing && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs border-amber-200 text-amber-700 hover:bg-amber-50"
-                          onClick={onStartEdit}
-                        >
-                          Add phone
-                        </Button>
-                      )}
-                      {isNameMissing && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs border-amber-200 text-amber-700 hover:bg-amber-50"
-                          onClick={onStartEdit}
-                        >
-                          Add name
-                        </Button>
-                      )}
-                      {isAddressMissing && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs border-amber-200 text-amber-700 hover:bg-amber-50"
-                          onClick={onStartEdit}
-                        >
-                          Add location
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <p className="text-xs uppercase tracking-wide text-slate-400">Delivery</p>
-                  <div className="flex items-start gap-2 min-w-0">
-                    <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                    {isAddressMissing ? (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
-                          Awaiting address
-                        </span>
-                        <button
-                          type="button"
-                          onClick={onStartEdit}
-                          className="text-xs text-slate-600 hover:text-slate-900 underline decoration-dotted"
-                        >
-                          Add delivery location
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-slate-600 text-sm truncate">
-                        {order.delivery_address}
-                      </span>
+                    {isNameMissing && (
+                      <button
+                        type="button"
+                        onClick={onStartEdit}
+                        className="text-slate-600 hover:text-slate-900 underline decoration-dotted"
+                      >
+                        Add name
+                      </button>
+                    )}
+                    {isAddressMissing && (
+                      <button
+                        type="button"
+                        onClick={onStartEdit}
+                        className="text-slate-600 hover:text-slate-900 underline decoration-dotted"
+                      >
+                        Add location
+                      </button>
                     )}
                   </div>
                 </div>
 
                 {rider && (order.status === 'RIDER_CONFIRMED_DIGITAL' || order.status === 'RIDER_CONFIRMED_MANUAL' || order.status === 'OUT_FOR_DELIVERY') && (
-                  <div className="space-y-2">
-                    <p className="text-xs uppercase tracking-wide text-slate-400">Rider</p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center">
-                        <Truck className="w-4 h-4 text-slate-600" />
-                      </div>
-                      <span className="font-semibold text-slate-800 text-sm">
-                        {rider.name}
-                      </span>
-                      <a 
-                        href={`tel:${rider.phone}`}
-                        className="text-slate-600 text-sm hover:underline ml-auto"
-                      >
-                        {rider.phone}
-                      </a>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={getCallUrl(rider.phone)}
-                        className="px-2.5 py-1.5 bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200 text-xs font-semibold"
-                        title="Call Rider"
-                      >
-                        Call
-                      </a>
-                      <a
-                        href={getWhatsAppUrl(rider.phone, order)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-2.5 py-1.5 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 text-xs font-semibold"
-                        title="WhatsApp"
-                      >
-                        WhatsApp
-                      </a>
-                      <a
-                        href={getSmsUrl(rider.phone, order)}
-                        className="px-2.5 py-1.5 bg-sky-100 text-sky-700 rounded-full hover:bg-sky-200 text-xs font-semibold"
-                        title="SMS"
-                      >
-                        SMS
-                      </a>
-                    </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Truck className="w-4 h-4 text-slate-400" />
+                    <span className="font-semibold text-slate-800">
+                      {rider.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={onToggleExpand}
+                      className="text-slate-600 hover:text-slate-900 underline decoration-dotted ml-auto"
+                    >
+                      Details
+                    </button>
                   </div>
                 )}
               </>
