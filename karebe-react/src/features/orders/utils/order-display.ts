@@ -25,13 +25,19 @@ export function formatOrderDisplay(
   orderReference?: string | null,
   config: OrderDisplayConfig = DEFAULT_DISPLAY_CONFIG
 ): string {
-  // Use human-friendly reference if available
+  // Prefer numeric sequence from order reference (e.g., KRB-042 -> #0042)
   if (orderReference && orderReference.trim().length > 0) {
-    return `#${orderReference}`;
+    const digits = orderReference.match(/\d+/g)?.join('') || '';
+    if (digits.length > 0) {
+      const seq = digits.slice(-4).padStart(4, '0');
+      return `#${seq}`;
+    }
   }
-  
-  // Fallback to UUID suffix (backward compatibility)
-  return `#${orderId.slice(-6).toUpperCase()}`;
+
+  // Fallback: derive a stable numeric suffix from UUID
+  const hexSuffix = orderId.replace(/-/g, '').slice(-6);
+  const numeric = parseInt(hexSuffix || '0', 16).toString().slice(-4).padStart(4, '0');
+  return `#${numeric}`;
 }
 
 /**

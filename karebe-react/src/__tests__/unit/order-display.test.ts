@@ -20,29 +20,29 @@ describe('Order Display Utilities', () => {
 
     it('formats with order reference when available', () => {
       const result = formatOrderDisplay(orderId, 'KRB-042');
-      expect(result).toBe('#KRB-042');
+      expect(result).toBe('#0042');
     });
 
     it('falls back to UUID suffix when no reference', () => {
       const result = formatOrderDisplay(orderId, null);
-      expect(result).toBe('#440000');
+      expect(result).toBe('#6448');
     });
 
     it('handles undefined gracefully', () => {
       const result = formatOrderDisplay(orderId);
-      expect(result).toBe('#440000');
+      expect(result).toBe('#6448');
     });
 
     it('uses custom config when provided', () => {
       const result = formatOrderDisplay(orderId, null, { prefix: 'ORD', defaultBranchCode: 'A' });
-      expect(result).toBe('#440000'); // Still uses UUID suffix as fallback
+      expect(result).toBe('#6448'); // Still uses numeric suffix as fallback
     });
   });
 
   describe('getOrderRef', () => {
     it('returns reference without hash', () => {
       const result = getOrderRef('550e8400-e29b-41d4-a716-446655440000', 'KRB-042');
-      expect(result).toBe('KRB-042');
+      expect(result).toBe('0042');
     });
   });
 
