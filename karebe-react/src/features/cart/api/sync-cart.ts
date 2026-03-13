@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { demoProducts } from '@/lib/demo-data';
 import type { CartSyncResponse, Cart, CartValidationError } from '../types';
-import { getDeliveryFee, getFreeDeliveryThreshold } from '@/features/settings/hooks/use-settings';
+import { getDeliveryFee, getFreeDeliveryThreshold, getVatRate } from '@/features/settings/hooks/use-settings';
 
 // Check if Supabase is configured with real credentials
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -126,7 +126,7 @@ async function syncDemoCart(input: SyncCartApiInput): Promise<CartSyncResponse> 
     (sum, item) => sum + item.validatedPrice * item.quantity,
     0
   );
-  const tax = subtotal * 0.16;
+  const tax = subtotal * getVatRate();
   const deliveryFee = subtotal > getFreeDeliveryThreshold() ? 0 : getDeliveryFee();
   const total = subtotal + tax + deliveryFee;
 
@@ -268,7 +268,7 @@ export async function syncCart(input: SyncCartApiInput): Promise<CartSyncRespons
       (sum, item) => sum + item.validatedPrice * item.quantity,
       0
     );
-    const tax = subtotal * 0.16;
+    const tax = subtotal * getVatRate();
     const deliveryFee = subtotal > getFreeDeliveryThreshold() ? 0 : getDeliveryFee();
     const total = subtotal + tax + deliveryFee;
 
@@ -436,7 +436,7 @@ export async function fetchCart(customerId: string): Promise<Cart | null> {
     });
 
     const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-    const tax = subtotal * 0.16;
+    const tax = subtotal * getVatRate();
     const deliveryFee = subtotal > getFreeDeliveryThreshold() ? 0 : getDeliveryFee();
     const total = subtotal + tax + deliveryFee;
 

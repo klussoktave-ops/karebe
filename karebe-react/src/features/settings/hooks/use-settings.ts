@@ -8,6 +8,7 @@ export interface StoreSettings {
   delivery_fee: string;
   free_delivery_threshold: string;
   show_prices: string; // 'true' or 'false' - global price visibility
+  vat_rate: string; // VAT rate as string (e.g., '0.16' for 16%)
 }
 
 const defaultSettings: StoreSettings = {
@@ -17,6 +18,7 @@ const defaultSettings: StoreSettings = {
   delivery_fee: '300',
   free_delivery_threshold: '5000',
   show_prices: 'true',
+  vat_rate: '0.16',
 };
 
 let cachedSettings: StoreSettings = { ...defaultSettings };
@@ -83,6 +85,7 @@ export async function loadSettings(): Promise<StoreSettings> {
       delivery_fee: settingsMap.delivery_fee || defaultSettings.delivery_fee,
       free_delivery_threshold: settingsMap.free_delivery_threshold || defaultSettings.free_delivery_threshold,
       show_prices: settingsMap.show_prices || defaultSettings.show_prices,
+      vat_rate: settingsMap.vat_rate || defaultSettings.vat_rate,
     };
 
     // Notify all listeners
@@ -139,4 +142,12 @@ export function getDeliveryFee(): number {
 export function getFreeDeliveryThreshold(): number {
   const threshold = parseInt(cachedSettings.free_delivery_threshold || '5000', 10);
   return isNaN(threshold) ? 5000 : threshold;
+}
+
+/**
+ * Get VAT rate from settings
+ */
+export function getVatRate(): number {
+  const rate = parseFloat(cachedSettings.vat_rate || '0.16');
+  return isNaN(rate) ? 0.16 : rate;
 }

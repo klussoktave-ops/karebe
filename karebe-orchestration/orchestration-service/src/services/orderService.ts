@@ -24,6 +24,56 @@ import {
   RiderStatus,
 } from '../types/order';
 
+// Default fallback values
+const DEFAULT_VAT_RATE = 0.16;
+const DEFAULT_BASE_FEE = 300;
+const DEFAULT_FREE_THRESHOLD = 5000;
+
+// Cache for pricing config
+let pricingConfig: {
+  vatRate: number;
+  baseDeliveryFee: number;
+  freeDeliveryThreshold: number;
+} | null = null;
+
+/**
+ * Fetch pricing settings from database
+ */
+async function getPricingConfig(): Promise<typeof pricingConfig> {
+  if (pricingConfig) return pricingConfig;
+  
+  try {
+    const { data, error } = await supabase
+      .from('pricing_settings')
+      .select('key, value')
+      .in('key', ['vat_rate', 'base_delivery_fee', 'free_delivery_threshold']);
+    
+    if (error) throw error;
+    
+    const settings: Record<string, { rate?: number; amount?: number }> = {};
+    for (const item of data || []) {
+      const value = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+      settings[item.key] = value;
+    }
+    
+    pricingConfig = {
+      vatRate: settings.vat_rate?.rate ?? DEFAULT_VAT_RATE,
+      baseDeliveryFee: settings.base_delivery_fee?.amount ?? DEFAULT_BASE_FEE,
+      freeDeliveryThreshold: settings.free_delivery_threshold?.amount ?? DEFAULT_FREE_THRESHOLD,
+    };
+    
+    logger.info('Pricing config loaded', pricingConfig);
+    return pricingConfig;
+  } catch (error) {
+    logger.error('Failed to load pricing config, using defaults', { error });
+    return {
+      vatRate: DEFAULT_VAT_RATE,
+      baseDeliveryFee: DEFAULT_BASE_FEE,
+      freeDeliveryThreshold: DEFAULT_FREE_THRESHOLD,
+    };
+  }
+}
+
 // =============================================================================
 // Order Service Class
 // =============================================================================
@@ -52,8 +102,9 @@ export class OrderService {
       return sum + (item.quantity * item.unit_price);
     }, 0);
 
-    // Calculate VAT
-    const vatRate = 0.16; // TODO: Fetch from settings
+    // Fetch dynamic VAT rate from pricing settings
+    const pricing = await getPricingConfig();
+    const vatRate = pricing?.vatRate ?? DEFAULT_VAT_RATE;
     const vatAmount = request.vat_amount ?? Math.round(totalAmount * vatRate);
 
     // Delivery fee (passed from frontend or calculated)
