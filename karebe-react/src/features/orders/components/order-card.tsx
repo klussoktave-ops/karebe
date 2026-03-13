@@ -137,8 +137,7 @@ function getCustomerDisplayName(order: Order): string {
   if (order.customer_name && order.customer_name.trim().length > 0) {
     return order.customer_name;
   }
-  const suffix = order.id ? order.id.slice(-3) : '';
-  return suffix ? `Customer #${suffix}` : 'Customer';
+  return 'Guest Customer';
 }
 
 export function OrderCard({
@@ -158,6 +157,9 @@ export function OrderCard({
   const status = statusConfig[order.status];
   const StatusIcon = status.icon;
   const rider = order.rider_id ? getRiderById(order.rider_id, riders) : null;
+  const isNameMissing = !order.customer_name || order.customer_name.trim().length === 0;
+  const isPhoneMissing = !order.customer_phone || order.customer_phone === 'PENDING_CALL';
+  const isAddressMissing = !order.delivery_address || order.delivery_address === 'PENDING_CALL';
   
   // Determine primary action for this order status
   const getPrimaryAction = () => {
@@ -405,7 +407,7 @@ export function OrderCard({
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    {order.customer_phone === 'PENDING_CALL' ? (
+                    {isPhoneMissing ? (
                       <>
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
                           <PhoneCall className="w-3.5 h-3.5" />
@@ -431,11 +433,52 @@ export function OrderCard({
                   </div>
                 </div>
 
+                {(isNameMissing || isPhoneMissing || isAddressMissing) && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-amber-700 text-xs font-semibold">
+                      <AlertTriangle className="w-4 h-4" />
+                      Missing information
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {isPhoneMissing && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-amber-200 text-amber-700 hover:bg-amber-50"
+                          onClick={onStartEdit}
+                        >
+                          Add phone
+                        </Button>
+                      )}
+                      {isNameMissing && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-amber-200 text-amber-700 hover:bg-amber-50"
+                          onClick={onStartEdit}
+                        >
+                          Add name
+                        </Button>
+                      )}
+                      {isAddressMissing && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-amber-200 text-amber-700 hover:bg-amber-50"
+                          onClick={onStartEdit}
+                        >
+                          Add location
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <p className="text-xs uppercase tracking-wide text-slate-400">Delivery</p>
                   <div className="flex items-start gap-2 min-w-0">
                     <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                    {order.delivery_address === 'PENDING_CALL' || !order.delivery_address ? (
+                    {isAddressMissing ? (
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
                           Awaiting address
