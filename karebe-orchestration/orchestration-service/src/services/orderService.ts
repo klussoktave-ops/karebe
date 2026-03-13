@@ -24,10 +24,10 @@ import {
   RiderStatus,
 } from '../types/order';
 
-// Default fallback values
-const DEFAULT_VAT_RATE = 0.16;
-const DEFAULT_BASE_FEE = 300;
-const DEFAULT_FREE_THRESHOLD = 5000;
+// Default fallback values - must be configured in settings (no hardcoded prices)
+const DEFAULT_VAT_RATE = 0;
+const DEFAULT_BASE_FEE = 0;
+const DEFAULT_FREE_THRESHOLD = 0;
 
 // Cache for pricing config
 let pricingConfig: {

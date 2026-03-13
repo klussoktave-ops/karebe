@@ -12,10 +12,10 @@ import { useShowPrices } from '@/features/settings/hooks/use-settings';
 // Railway API URL for pricing
 const ORCHESTRATION_API = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app';
 
-// Default values (fallback if API not available)
-const DEFAULT_VAT_RATE = 0.16;
-const DEFAULT_BASE_FEE = 300;
-const DEFAULT_FREE_THRESHOLD = 5000;
+// Default values - must be configured in settings (no hardcoded prices)
+const DEFAULT_VAT_RATE = 0;
+const DEFAULT_BASE_FEE = 0;
+const DEFAULT_FREE_THRESHOLD = 0;
 
 interface PricingConfig {
   vatRate: number;
@@ -137,7 +137,7 @@ export function CartSummary({ onCheckout, compact = false, className = '' }: Car
                 <span className="font-medium text-brand-900">{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-brand-600">Tax (16%)</span>
+                <span className="text-brand-600">Tax ({pricingConfig.vatRate * 100}%)</span>
                 <span className="font-medium text-brand-900">{formatPrice(tax)}</span>
               </div>
               <div className="flex justify-between text-sm">

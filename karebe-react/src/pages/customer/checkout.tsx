@@ -64,30 +64,38 @@ export default function CheckoutPage() {
     fetchPaymentConfig();
   }, []);
 
-  // Fetch pricing config for delivery fee calculation
+  // Fetch pricing config for delivery fee and tax calculation
   const [pricingConfig, setPricingConfig] = useState({
-    baseDeliveryFee: 300,
-    freeDeliveryThreshold: 5000,
+    baseDeliveryFee: 0,
+    freeDeliveryThreshold: 0,
+    vatRate: 0, // Default to 0 - must be configured in settings
   });
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app'}/api/pricing`)
       .then(res => res.json())
       .then(data => {
+        console.log('[Checkout] Pricing config response:', data);
         if (data.ok && data.data?.settings) {
           const settings = data.data.settings;
           setPricingConfig({
-            baseDeliveryFee: settings.base_delivery_fee?.amount ?? 300,
-            freeDeliveryThreshold: settings.free_delivery_threshold?.amount ?? 5000,
+            baseDeliveryFee: settings.base_delivery_fee?.amount ?? 0,
+            freeDeliveryThreshold: settings.free_delivery_threshold?.amount ?? 0,
+            vatRate: settings.vat_rate?.rate ?? 0,
+          });
+          console.log('[Checkout] Loaded pricing config:', {
+            baseDeliveryFee: settings.base_delivery_fee?.amount,
+            freeDeliveryThreshold: settings.free_delivery_threshold?.amount,
+            vatRate: settings.vat_rate?.rate,
           });
         }
       })
       .catch(console.error);
   }, []);
 
-  // Calculate totals using configurable pricing
+  // Calculate totals using configurable pricing (all values from settings)
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-  const tax = subtotal * 0.16; // 16% VAT
+  const tax = subtotal * pricingConfig.vatRate; // Use configurable VAT rate
   const isFreeDelivery = subtotal >= pricingConfig.freeDeliveryThreshold;
   const deliveryFee = isFreeDelivery ? 0 : pricingConfig.baseDeliveryFee;
   const total = subtotal + tax + deliveryFee;

@@ -5,10 +5,10 @@ import type { Cart, CartItem } from '../types';
 // Railway API URL for pricing
 const ORCHESTRATION_API = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app';
 
-// Default values (fallback if API not available)
-const DEFAULT_VAT_RATE = 0.16;
-const DEFAULT_BASE_FEE = 300;
-const DEFAULT_FREE_THRESHOLD = 5000;
+// Default values - must be configured in settings (no hardcoded prices)
+const DEFAULT_VAT_RATE = 0;
+const DEFAULT_BASE_FEE = 0;
+const DEFAULT_FREE_THRESHOLD = 0;
 
 // Cache for pricing config - loaded from API
 let pricingConfig: {

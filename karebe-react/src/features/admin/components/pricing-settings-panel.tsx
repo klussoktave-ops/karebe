@@ -16,8 +16,8 @@ import { pricingStore, type PricingSettings, type DeliveryZone, type DeliveryZon
 
 const DEFAULT_SETTINGS: PricingSettings = {
   base_delivery_fee: { amount: 300, currency: 'KES', label: 'Base Delivery Fee' },
-  free_delivery_threshold: { amount: 5000, currency: 'KES', label: 'Free Delivery Threshold' },
-  vat_rate: { rate: 0.16, name: 'VAT', label: 'VAT Rate' },
+  free_delivery_threshold: { amount: 0, currency: 'KES', label: 'Free Delivery Threshold' },
+  vat_rate: { rate: 0, name: 'VAT', label: 'VAT Rate' },
   min_order_amount: { amount: 0, currency: 'KES', label: 'Minimum Order Amount' },
   max_delivery_distance: { distance: 15, unit: 'km', label: 'Max Delivery Distance' }
 };

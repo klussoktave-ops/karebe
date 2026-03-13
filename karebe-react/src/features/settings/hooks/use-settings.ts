@@ -18,7 +18,7 @@ const defaultSettings: StoreSettings = {
   delivery_fee: '300',
   free_delivery_threshold: '5000',
   show_prices: 'true',
-  vat_rate: '0.16',
+  vat_rate: '0',
 };
 
 let cachedSettings: StoreSettings = { ...defaultSettings };
@@ -148,6 +148,6 @@ export function getFreeDeliveryThreshold(): number {
  * Get VAT rate from settings
  */
 export function getVatRate(): number {
-  const rate = parseFloat(cachedSettings.vat_rate || '0.16');
-  return isNaN(rate) ? 0.16 : rate;
+  const rate = parseFloat(cachedSettings.vat_rate || '0');
+  return isNaN(rate) ? 0 : rate;
 }

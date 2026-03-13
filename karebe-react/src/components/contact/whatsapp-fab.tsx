@@ -20,12 +20,31 @@ export function WhatsAppQuickOrderFab({
   const { items } = useCart();
   const whatsappNumber = getWhatsAppNumber();
 
-  // Calculate totals using configurable pricing (matching cart-summary)
-  const [pricingConfig] = useState({
-    vatRate: 0.16,
-    baseDeliveryFee: 300,
-    freeDeliveryThreshold: 5000,
+  // Railway API URL for pricing
+  const ORCHESTRATION_API = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app';
+
+  // Pricing config - fetch from API
+  const [pricingConfig, setPricingConfig] = useState({
+    vatRate: 0,
+    baseDeliveryFee: 0,
+    freeDeliveryThreshold: 0,
   });
+
+  useEffect(() => {
+    fetch(`${ORCHESTRATION_API}/api/pricing`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && data.data?.settings) {
+          const settings = data.data.settings;
+          setPricingConfig({
+            vatRate: settings.vat_rate?.rate ?? 0,
+            baseDeliveryFee: settings.base_delivery_fee?.amount ?? 0,
+            freeDeliveryThreshold: settings.free_delivery_threshold?.amount ?? 0,
+          });
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   // Calculate subtotal from items
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);

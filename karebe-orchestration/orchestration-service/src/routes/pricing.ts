@@ -9,22 +9,22 @@ import { logger } from '../lib/logger';
 
 const router = Router();
 
-// Default settings
+// Default settings - must be configured in admin (no hardcoded prices)
 const DEFAULT_SETTINGS = {
-  base_delivery_fee: { amount: 300, currency: 'KES', label: 'Base Delivery Fee' },
-  free_delivery_threshold: { amount: 5000, currency: 'KES', label: 'Free Delivery Threshold' },
-  vat_rate: { rate: 0.16, name: 'VAT', label: 'VAT Rate' },
+  base_delivery_fee: { amount: 0, currency: 'KES', label: 'Base Delivery Fee' },
+  free_delivery_threshold: { amount: 0, currency: 'KES', label: 'Free Delivery Threshold' },
+  vat_rate: { rate: 0, name: 'VAT', label: 'VAT Rate' },
   min_order_amount: { amount: 0, currency: 'KES', label: 'Minimum Order Amount' },
-  max_delivery_distance: { distance: 15, unit: 'km', label: 'Max Delivery Distance' }
+  max_delivery_distance: { distance: 0, unit: 'km', label: 'Max Delivery Distance' }
 };
 
 // Public defaults
 const PUBLIC_DEFAULT_SETTINGS = {
-  base_delivery_fee: { amount: 300, currency: 'KES' },
-  free_delivery_threshold: { amount: 5000, currency: 'KES' },
-  vat_rate: { rate: 0.16 },
+  base_delivery_fee: { amount: 0, currency: 'KES' },
+  free_delivery_threshold: { amount: 0, currency: 'KES' },
+  vat_rate: { rate: 0 },
   min_order_amount: { amount: 0, currency: 'KES' },
-  max_delivery_distance: { distance: 15, unit: 'km' }
+  max_delivery_distance: { distance: 0, unit: 'km' }
 };
 
 const DEFAULT_ZONES = [
@@ -352,7 +352,7 @@ router.get('/calculate', async (req: Request, res: Response) => {
     // Calculate VAT if subtotal provided
     let vatAmount = 0;
     if (subtotalNum > 0) {
-      const vatRate = settings.vat_rate?.rate || 0.16;
+      const vatRate = settings.vat_rate?.rate || 0;
       vatAmount = Math.round(subtotalNum * vatRate);
     }
 
@@ -426,9 +426,9 @@ router.get('/', async (_req: Request, res: Response) => {
         zones,
         currency: 'KES',
         // Frontend-friendly format
-        vatRate: settings.vat_rate?.rate || 0.16,
-        freeDeliveryThreshold: settings.free_delivery_threshold?.amount || 5000,
-        baseDeliveryFee: settings.base_delivery_fee?.amount || 300,
+        vatRate: settings.vat_rate?.rate || 0,
+        freeDeliveryThreshold: settings.free_delivery_threshold?.amount || 0,
+        baseDeliveryFee: settings.base_delivery_fee?.amount || 0,
         minOrderAmount: settings.min_order_amount?.amount || 0,
         maxDeliveryDistance: settings.max_delivery_distance?.distance || 15
       }

@@ -25,8 +25,8 @@ export interface DeliveryZoneInput {
 
 const DEFAULT_SETTINGS: PricingSettings = {
   base_delivery_fee: { amount: 300, currency: 'KES', label: 'Base Delivery Fee' },
-  free_delivery_threshold: { amount: 5000, currency: 'KES', label: 'Free Delivery Threshold' },
-  vat_rate: { rate: 0.16, name: 'VAT', label: 'VAT Rate' },
+  free_delivery_threshold: { amount: 0, currency: 'KES', label: 'Free Delivery Threshold' },
+  vat_rate: { rate: 0, name: 'VAT', label: 'VAT Rate' },
   min_order_amount: { amount: 0, currency: 'KES', label: 'Minimum Order Amount' },
   max_delivery_distance: { distance: 15, unit: 'km', label: 'Max Delivery Distance' }
 };
@@ -121,8 +121,8 @@ export const pricingStore = {
       if (result.ok && result.data) {
         return { fee: result.data.delivery_fee, isFree: result.data.is_free_delivery, zone: result.data.zone, threshold: result.data.free_delivery_threshold };
       }
-      return { fee: 300, isFree: subtotal >= 5000, zone: 'Standard', threshold: 5000 };
-    } catch { return { fee: 300, isFree: subtotal >= 5000, zone: 'Standard', threshold: 5000 }; }
+      return { fee: 0, isFree: subtotal >= 0, zone: 'Standard', threshold: 0 };
+    } catch { return { fee: 0, isFree: subtotal >= 0, zone: 'Standard', threshold: 0 }; }
   },
 
   clearCache() { settingsCache = null; zonesCache = null; }
