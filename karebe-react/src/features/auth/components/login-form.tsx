@@ -200,9 +200,12 @@ export function CustomerLoginForm({
             disabled={isLoading}
           />
 
-          <p className="text-xs text-brand-500 text-center">
-            We'll create an account for you if you don't have one
-          </p>
+           <p className="text-xs text-brand-500 text-center">
+             We'll create an account for you if you don't have one
+           </p>
+           <p className="text-xs text-brand-500">
+             Accepted formats: 07XXXXXXXX, 7XXXXXXXX, +254XXXXXXXXXX, 254XXXXXXXXXX
+           </p>
         </CardContent>
 
         <CardFooter>

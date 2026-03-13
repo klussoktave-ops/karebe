@@ -34,3 +34,23 @@ export function truncateText(text: string, maxLength: number): string {
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
 }
+
+/**
+ * Convert canonical E.164 format (+254XXXXXXXXX) to local Kenyan format (07XXXXXXXX)
+ * 
+ * @param phone - Canonical E.164 format (+254XXXXXXXXX)
+ * @returns Local Kenyan format (07XXXXXXXX) or original if invalid
+ */
+export function toLocalKenyanFormat(phone: string): string {
+  // Remove + prefix if present
+  const cleaned = phone.replace(/^\+/, '');
+  
+  // Check if it's in the expected format (254 followed by 9 digits)
+  if (cleaned.length === 12 && cleaned.startsWith('254')) {
+    // Convert 254XXXXXXXXX to 07XXXXXXXX
+    return `0${cleaned.slice(3)}`;
+  }
+  
+  // Return original if format doesn't match expectations
+  return phone;
+}

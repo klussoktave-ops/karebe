@@ -44,6 +44,17 @@ export const demoUsers: DemoUser[] = [
     phone: '+254798765432',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
   },
+  // Additional rider for testing - matches the phone number in error logs
+  {
+    id: 'rider-test-001',
+    email: 'rider2@karebe.com',
+    password: '1234',
+    role: 'rider',
+    name: 'Test Rider',
+    phone: '+254716854639',
+    branchId: 'branch-wangige',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+  },
   {
     id: 'user-customer-001',
     email: 'customer@karebe.com',

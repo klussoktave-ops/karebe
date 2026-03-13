@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MapPin, Store, Truck, User, Phone, Mail, FileText } from 'lucide-react';
+import { MapPin, Store, Truck, User, Phone, Mail } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -89,12 +89,15 @@ export function CheckoutForm({ onSubmit, isProcessing = false }: CheckoutFormPro
             {...register('email')}
             error={errors.email?.message}
           />
-          <Input
-            label="Phone"
-            icon={<Phone className="w-4 h-4" />}
-            {...register('phone')}
-            error={errors.phone?.message}
-          />
+           <Input
+             label="Phone"
+             icon={<Phone className="w-4 h-4" />}
+             {...register('phone')}
+             error={errors.phone?.message}
+           />
+           <p className="text-xs text-brand-500">
+             Accepted formats: 07XXXXXXXX, 7XXXXXXXX, +254XXXXXXXXXX, 254XXXXXXXXXX
+           </p>
         </CardContent>
       </Card>
 
@@ -204,13 +207,13 @@ export function CheckoutForm({ onSubmit, isProcessing = false }: CheckoutFormPro
       {/* Notes */}
       <Card>
         <CardContent className="pt-6">
-          <Input
-            label="Order Notes (Optional)"
-            as="textarea"
-            rows={3}
-            {...register('notes')}
-            placeholder="Any special instructions..."
-          />
+           <textarea
+             label="Order Notes (Optional)"
+             {...register('notes')}
+             placeholder="Any special instructions..."
+             rows={3}
+             className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+           />
         </CardContent>
       </Card>
 

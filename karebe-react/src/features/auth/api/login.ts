@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { demoUsers } from '@/lib/demo-data';
 import type { AuthUser, UserRole } from '../stores/auth-store';
+import { normalizePhone, safeParsePhone } from '@/lib/phone';
 
 // Railway API URL
 const ORCHESTRATION_API = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app';
@@ -30,15 +31,43 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 async function demoLogin(credentials: LoginCredentials): Promise<LoginResponse> {
   await delay(300);
 
-  const user = demoUsers.find(
+  // DEBUG: Log what we're trying to match
+  console.log('[DemoLogin] Attempting login with:', { 
+    username: credentials.username, 
+    // Don't log actual password for security
+    passwordProvided: !!credentials.password 
+  });
+
+  // First try email match (existing behavior)
+  let user = demoUsers.find(
     u => u.email === credentials.username && u.password === credentials.password
   );
+
+  // DEBUG: Log demo users available for comparison
+  console.log('[DemoLogin] Available demo users:', demoUsers.map(u => ({
+    email: u.email,
+    phone: u.phone,
+    role: u.role,
+    name: u.name
+  })));
+
+  // If no email match, try phone match
+  if (!user) {
+    console.log('[DemoLogin] No email match, trying phone match...');
+    user = demoUsers.find(
+      u => u.phone === credentials.username && u.password === credentials.password
+    );
+    
+    if (user) {
+      console.log('[DemoLogin] Phone match found for:', user.phone);
+    }
+  }
 
   if (!user) {
     console.warn('[DemoLogin] User not found for:', credentials.username);
     return {
       success: false,
-      message: 'Invalid email or password. Try: owner@karebe.com / owner123',
+      message: 'Invalid credentials. Available demo logins:\n• super-admin: owner@karebe.com / owner123\n• admin: admin@karebe.com / admin123\n• rider: rider@karebe.com / rider123\n• or use phone +254716854639 with PIN 1234',
     };
   }
 
@@ -131,8 +160,15 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
  */
 export async function customerLogin(phone: string): Promise<LoginResponse> {
   try {
-    // Format phone number
-    const formattedPhone = phone.startsWith('+') ? phone : `+254${phone.replace(/^0/, '')}`;
+    // Use centralized phone utility for consistent normalization
+    const normalized = normalizePhone(phone);
+    if (!normalized.success) {
+      return {
+        success: false,
+        message: 'Invalid phone number format. Please enter a valid Kenyan mobile number.',
+      };
+    }
+    const formattedPhone = normalized.data;
 
     // Check if customer profile exists
     const { data: existingProfile, error: profileError } = await supabase

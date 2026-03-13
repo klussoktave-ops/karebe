@@ -3,6 +3,8 @@
  * Handles automated WhatsApp messages for order notifications
  */
 
+import { toWhatsappFormat, normalizePhone } from '@/lib/phone';
+
 const WHATSAPP_API_URL = import.meta.env.VITE_WHATSAPP_API_URL || 'https://graph.facebook.com/v18.0';
 const WHATSAPP_PHONE_NUMBER_ID = import.meta.env.VITE_WHATSAPP_PHONE_NUMBER_ID;
 const WHATSAPP_ACCESS_TOKEN = import.meta.env.VITE_WHATSAPP_ACCESS_TOKEN;
@@ -210,28 +212,25 @@ export class WhatsAppBot {
 
   /**
    * Format phone number for WhatsApp API
-   * Converts 07xx or +254 to 2547xx format
+   * Converts to WhatsApp format (254XXXXXXXXX without +)
+   * Uses centralized phone utility for consistent handling
    */
   private static formatPhoneNumber(phone: string): string {
-    // Remove any non-digit characters
-    let cleaned = phone.replace(/\D/g, '');
-
-    // If starts with 0, replace with 254
-    if (cleaned.startsWith('0')) {
-      cleaned = '254' + cleaned.slice(1);
+    // First normalize to canonical E.164 format
+    const normalized = normalizePhone(phone);
+    if (!normalized.success) {
+      // Fallback to legacy format if normalization fails
+      return phone.replace(/\D/g, '');
     }
-
-    // If starts with +, remove it
-    if (cleaned.startsWith('+')) {
-      cleaned = cleaned.slice(1);
+    
+    // Convert to WhatsApp format
+    const whatsappResult = toWhatsappFormat(normalized.data);
+    if (whatsappResult.success) {
+      return whatsappResult.data;
     }
-
-    // Ensure it starts with 254
-    if (!cleaned.startsWith('254')) {
-      cleaned = '254' + cleaned;
-    }
-
-    return cleaned;
+    
+    // Fallback
+    return phone.replace(/\D/g, '');
   }
 }
 
