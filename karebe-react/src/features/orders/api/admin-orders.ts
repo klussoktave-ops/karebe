@@ -153,8 +153,22 @@ export async function updateOrderStatus(
   });
   
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || `Failed to update order: ${response.statusText}`);
+    let errorPayload: { message?: string; error?: string; details?: unknown; code?: string } | null = null;
+    try {
+      errorPayload = await response.json();
+    } catch {
+      // ignore parse errors
+    }
+
+    const message = errorPayload?.message || errorPayload?.error || `Failed to update order: ${response.statusText}`;
+    console.error('[AdminOrders] ❌ Status update failed', {
+      orderId,
+      status: response.status,
+      message,
+      code: errorPayload?.code,
+      details: errorPayload?.details,
+    });
+    throw new Error(message);
   }
 
   const result: OrderResponse = await response.json();
