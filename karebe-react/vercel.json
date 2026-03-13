@@ -67,6 +67,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/rider",
+      "destination": "/index.html"
+    },
+    {
       "source": "/rider/:path*",
       "destination": "/index.html"
     },
