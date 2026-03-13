@@ -6,6 +6,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { orderService } from '../services/orderService';
 import { logger } from '../lib/logger';
+import { normalizePhone, validatePhone } from '../lib/phone';
 import {
   OrderStatus,
   ActorType,
@@ -91,7 +92,31 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    const order = await orderService.createOrder(validation.data);
+    // Validate and normalize phone number
+    const phoneValidation = validatePhone(validation.data.customer_phone);
+    if (!phoneValidation) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid phone number. Please provide a valid Kenyan mobile number.',
+      });
+    }
+
+    // Normalize phone to canonical E.164 format
+    const normalizedPhone = normalizePhone(validation.data.customer_phone);
+    if (!normalizedPhone.success) {
+      return res.status(400).json({
+        success: false,
+        error: normalizedPhone.error.message,
+      });
+    }
+
+    // Update the phone to canonical format before creating order
+    const orderData = {
+      ...validation.data,
+      customer_phone: normalizedPhone.data,
+    };
+
+    const order = await orderService.createOrder(orderData);
     
     res.status(201).json({
       success: true,

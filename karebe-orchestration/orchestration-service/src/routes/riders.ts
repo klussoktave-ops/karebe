@@ -6,6 +6,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
+import { normalizePhone, validatePhone } from '../lib/phone';
 import {
   RiderStatus,
 } from '../types/order';
@@ -31,11 +32,29 @@ router.post('/login', async (req: Request, res: Response) => {
       });
     }
 
-    // Get rider from database
+    // Validate and normalize phone number
+    if (!validatePhone(phone)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid phone number format. Please enter a valid Kenyan mobile number.',
+      });
+    }
+
+    const normalizedPhoneResult = normalizePhone(phone);
+    if (!normalizedPhoneResult.success) {
+      return res.status(400).json({
+        success: false,
+        error: normalizedPhoneResult.error.message,
+      });
+    }
+
+    const normalizedPhone = normalizedPhoneResult.data;
+
+    // Get rider from database using normalized phone
     const { data: rider, error } = await supabase
       .from('riders')
       .select('*')
-      .eq('phone', phone)
+      .eq('phone', normalizedPhone)
       .single();
 
     if (error || !rider) {
