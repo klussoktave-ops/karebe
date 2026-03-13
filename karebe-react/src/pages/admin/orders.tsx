@@ -46,6 +46,7 @@ function OrdersPageContent() {
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     customer_name: '',
+    customer_phone: '',
     delivery_address: '',
     delivery_notes: ''
   });
@@ -221,6 +222,7 @@ function OrdersPageContent() {
     setEditingOrderId(order.id);
     setEditForm({
       customer_name: order.customer_name || '',
+      customer_phone: order.customer_phone === 'PENDING_CALL' ? '' : (order.customer_phone || ''),
       delivery_address: order.delivery_address || '',
       delivery_notes: order.delivery_notes || ''
     });
@@ -228,7 +230,7 @@ function OrdersPageContent() {
 
   const handleCancelEdit = () => {
     setEditingOrderId(null);
-    setEditForm({ customer_name: '', delivery_address: '', delivery_notes: '' });
+    setEditForm({ customer_name: '', customer_phone: '', delivery_address: '', delivery_notes: '' });
   };
 
   const handleSaveEdit = async () => {
@@ -237,12 +239,39 @@ function OrdersPageContent() {
     const order = orders.find(o => o.id === editingOrderId);
     if (!order) return;
 
+    const ORCHESTRATION_API_URL = import.meta.env.VITE_ORCHESTRATION_API_URL 
+      ? `${import.meta.env.VITE_ORCHESTRATION_API_URL}/api` 
+      : 'http://localhost:3001/api';
+
     try {
-      console.log('Saving order details:', editForm);
+      // Only save if there are actual changes
+      const hasChanges = editForm.customer_name || editForm.customer_phone || editForm.delivery_address || editForm.delivery_notes;
+      
+      if (hasChanges) {
+        const response = await fetch(`${ORCHESTRATION_API_URL}/orders/${editingOrderId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer_name: editForm.customer_name || null,
+            customer_phone: editForm.customer_phone || null,
+            delivery_address: editForm.delivery_address || null,
+            delivery_notes: editForm.delivery_notes || null,
+          }),
+        });
+
+        if (response.ok) {
+          // Refresh orders to show updated data
+          await fetchOrders();
+        } else {
+          console.error('Failed to save order:', await response.text());
+        }
+      }
+      
       setEditingOrderId(null);
-      setEditForm({ customer_name: '', delivery_address: '', delivery_notes: '' });
+      setEditForm({ customer_name: '', customer_phone: '', delivery_address: '', delivery_notes: '' });
     } catch (error) {
       console.error('Failed to save order details:', error);
+      setEditingOrderId(null);
     }
   };
 

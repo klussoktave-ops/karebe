@@ -43,6 +43,7 @@ interface OrderCardProps {
   isEditing: boolean;
   editForm: {
     customer_name: string;
+    customer_phone?: string;
     delivery_address: string;
     delivery_notes: string;
   };
@@ -328,6 +329,15 @@ export function OrderCard({
                   className="h-9 text-sm font-medium"
                 />
                 <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-brand-500 flex-shrink-0" />
+                  <Input
+                    value={editForm.customer_phone || ''}
+                    onChange={(e) => onFormChange('customer_phone', e.target.value)}
+                    placeholder="Phone number (from call logs)"
+                    className="h-9 text-sm flex-1"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-brand-500 flex-shrink-0" />
                   <Input
                     value={editForm.delivery_address}
@@ -375,15 +385,31 @@ export function OrderCard({
                   </span>
                 </div>
                 
-                {/* Phone Row */}
+                {/* Phone Row - Show Call Order indicator or phone number */}
                 <div className="flex items-center gap-2 min-w-0">
-                  <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  <a 
-                    href={`tel:${order.customer_phone}`} 
-                    className="text-gray-700 hover:text-gray-900 hover:underline truncate"
-                  >
-                    {order.customer_phone}
-                  </a>
+                  {order.customer_phone === 'PENDING_CALL' ? (
+                    <>
+                      <PhoneCall className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                      <div className="flex flex-col">
+                        <span className="text-amber-600 font-medium text-sm">Call Order</span>
+                        <button 
+                          type="button"
+                          onClick={onStartEdit}
+                          className="text-xs text-blue-600 hover:underline text-left"
+                        >
+                          Check time + logs
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <a 
+                      href={`tel:${order.customer_phone}`} 
+                      className="text-gray-700 hover:text-gray-900 hover:underline truncate"
+                    >
+                      <Phone className="w-4 h-4 text-gray-400 inline mr-1" />
+                      {order.customer_phone}
+                    </a>
+                  )}
                 </div>
                 
                 {/* Address Row - Full width on mobile */}
@@ -531,9 +557,22 @@ export function OrderCard({
                     <Phone className="w-4 h-4 mt-0.5 text-gray-400 flex-shrink-0" />
                     <div>
                       <p className="text-gray-500 text-xs">Customer Phone</p>
-                      <a href={`tel:${order.customer_phone}`} className="text-gray-700 hover:underline">
-                        {order.customer_phone}
-                      </a>
+                      {order.customer_phone === 'PENDING_CALL' ? (
+                        <div className="flex flex-col">
+                          <span className="text-amber-600 font-medium">Call Order</span>
+                          <button 
+                            type="button"
+                            onClick={onStartEdit}
+                            className="text-xs text-blue-600 hover:underline text-left"
+                          >
+                            Check time + logs
+                          </button>
+                        </div>
+                      ) : (
+                        <a href={`tel:${order.customer_phone}`} className="text-gray-700 hover:underline">
+                          {order.customer_phone}
+                        </a>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
