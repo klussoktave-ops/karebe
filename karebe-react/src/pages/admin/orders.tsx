@@ -20,6 +20,7 @@ import {
   createAdminOrder
 } from '@/features/orders/api/admin-orders';
 import { OrderCard } from '@/features/orders/components/order-card';
+import { isPendingCall } from '@/features/orders/utils/order-display';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabase';
 import { getProducts } from '@/features/products/api/get-products';
@@ -349,8 +350,8 @@ function OrdersPageContent() {
     setEditingOrderId(order.id);
     setEditForm({
       customer_name: order.customer_name || '',
-      customer_phone: order.customer_phone === 'PENDING_CALL' ? '' : (order.customer_phone || ''),
-      delivery_address: order.delivery_address || '',
+      customer_phone: isPendingCall(order.customer_phone) ? '' : (order.customer_phone || ''),
+      delivery_address: isPendingCall(order.delivery_address) ? '' : (order.delivery_address || ''),
       delivery_notes: order.delivery_notes || ''
     });
   };
@@ -371,8 +372,8 @@ function OrdersPageContent() {
     try {
       const normalizedOriginal = {
         customer_name: order.customer_name || '',
-        customer_phone: order.customer_phone === 'PENDING_CALL' ? '' : (order.customer_phone || ''),
-        delivery_address: order.delivery_address || '',
+        customer_phone: isPendingCall(order.customer_phone) ? '' : (order.customer_phone || ''),
+        delivery_address: isPendingCall(order.delivery_address) ? '' : (order.delivery_address || ''),
         delivery_notes: order.delivery_notes || '',
       };
       const normalizedEdits = {

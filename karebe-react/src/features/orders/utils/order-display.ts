@@ -138,6 +138,14 @@ export function formatPhoneDisplay(phone: string): string {
 }
 
 /**
+ * Check if a value is a placeholder like PENDING_CALL
+ */
+export function isPendingCall(value?: string | null): boolean {
+  if (!value) return true;
+  return value.trim().toUpperCase() === 'PENDING_CALL';
+}
+
+/**
  * Get delivery method display
  */
 export function getDeliveryMethodDisplay(

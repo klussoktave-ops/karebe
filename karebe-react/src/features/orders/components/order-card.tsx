@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Order, OrderStatus } from '../api/admin-orders';
-import { formatOrderDisplay, getOrderUrgency } from '../utils/order-display';
+import { formatOrderDisplay, getOrderUrgency, isPendingCall } from '../utils/order-display';
 
 interface Rider {
   id: string;
@@ -158,8 +158,8 @@ export function OrderCard({
   const StatusIcon = status.icon;
   const rider = order.rider_id ? getRiderById(order.rider_id, riders) : null;
   const isNameMissing = !order.customer_name || order.customer_name.trim().length === 0;
-  const isPhoneMissing = !order.customer_phone || order.customer_phone === 'PENDING_CALL';
-  const isAddressMissing = !order.delivery_address || order.delivery_address === 'PENDING_CALL';
+  const isPhoneMissing = isPendingCall(order.customer_phone);
+  const isAddressMissing = isPendingCall(order.delivery_address);
   const needsDetails = isNameMissing || isPhoneMissing || isAddressMissing;
   const attentionLabel = needsDetails ? 'Complete order details' : status.label;
   
@@ -533,7 +533,7 @@ export function OrderCard({
                     <Phone className="w-4 h-4 mt-0.5 text-gray-400 flex-shrink-0" />
                     <div>
                       <p className="text-gray-500 text-xs">Customer Phone</p>
-                      {order.customer_phone === 'PENDING_CALL' ? (
+                      {isPendingCall(order.customer_phone) ? (
                         <div className="flex flex-col">
                           <span className="text-amber-600 font-medium">Awaiting Call</span>
                           <button 
@@ -555,7 +555,7 @@ export function OrderCard({
                     <MapPin className="w-4 h-4 mt-0.5 text-gray-400 flex-shrink-0" />
                     <div>
                       <p className="text-gray-500 text-xs">Delivery Address</p>
-                      {order.delivery_address === 'PENDING_CALL' || !order.delivery_address ? (
+                      {isPendingCall(order.delivery_address) ? (
                         <div className="flex flex-col gap-1">
                           <span className="text-amber-600 font-medium">Awaiting address</span>
                           <button 
