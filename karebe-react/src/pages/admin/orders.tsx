@@ -293,7 +293,7 @@ function OrdersPageContent() {
     try {
       await assignRider(selectedOrder.id, {
         rider_id: selectedRiderId,
-        admin_id: user?.id || '00000000-0000-0000-0000-000000000001',
+        admin_id: getActorId(user?.id),
         notes: 'Assigned via admin dashboard',
       });
       await fetchOrders();
