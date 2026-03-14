@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { orderService } from '../services/orderService';
 import { logger } from '../lib/logger';
 import { normalizePhone, validatePhone } from '../lib/phone';
+import { supabase } from '../lib/supabase';
 import {
   OrderStatus,
   ActorType,
@@ -22,9 +23,9 @@ const router = Router();
 const createOrderSchema = z.object({
   customer_phone: z.string().min(10).max(20),
   customer_name: z.string().optional(),
-  delivery_address: z.string().min(5),
+  delivery_address: z.string().min(5).optional().default('PENDING_ADDRESS'),
   delivery_notes: z.string().optional(),
-  branch_id: z.string().uuid(),
+  branch_id: z.string().min(1).optional(),
   // Delivery and pricing
   delivery_fee: z.number().optional().default(0),
   delivery_zone_id: z.string().uuid().optional(),
@@ -33,13 +34,13 @@ const createOrderSchema = z.object({
   total: z.number().optional().default(0),
   // Items
   items: z.array(z.object({
-    product_id: z.string().uuid(),
+    product_id: z.string().min(1),
     product_name: z.string(),
     quantity: z.number().int().positive(),
     unit_price: z.number().positive(),
     variant: z.string().optional(),
   })).min(1),
-  trigger_source: z.enum(['call_button', 'cart_checkout', 'whatsapp']),
+  trigger_source: z.enum(['call_button', 'cart_checkout', 'whatsapp']).optional().default('call_button'),
   idempotency_key: z.string().optional(),
 });
 
@@ -93,6 +94,40 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
+    const getDefaultBranchId = async (): Promise<string | null> => {
+      const { data: wangige, error: wangigeError } = await supabase
+        .from('branches')
+        .select('id')
+        .ilike('name', '%wangige%')
+        .limit(1);
+
+      if (!wangigeError && wangige && wangige.length > 0) {
+        return wangige[0].id;
+      }
+
+      const { data, error } = await supabase
+        .from('branches')
+        .select('id, is_main, created_at')
+        .order('is_main', { ascending: false })
+        .order('created_at', { ascending: true })
+        .limit(1);
+
+      if (error) {
+        logger.error('Failed to load default branch', { error });
+        return null;
+      }
+
+      return data && data.length > 0 ? data[0].id : null;
+    };
+
+    const resolvedBranchId = validation.data.branch_id || (await getDefaultBranchId());
+    if (!resolvedBranchId) {
+      return res.status(400).json({
+        success: false,
+        error: 'No branch available to attach this order.',
+      });
+    }
+
     // Validate and normalize phone number
     const phoneValidation = validatePhone(validation.data.customer_phone);
     if (!phoneValidation) {
@@ -115,6 +150,7 @@ router.post('/', async (req: Request, res: Response) => {
     const orderData = {
       ...validation.data,
       customer_phone: normalizedPhone.data,
+      branch_id: resolvedBranchId,
     };
 
     const order = await orderService.createOrder(orderData);

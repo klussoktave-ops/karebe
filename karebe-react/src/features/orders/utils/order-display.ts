@@ -142,7 +142,8 @@ export function formatPhoneDisplay(phone: string): string {
  */
 export function isPendingCall(value?: string | null): boolean {
   if (!value) return true;
-  return value.trim().toUpperCase() === 'PENDING_CALL';
+  const normalized = value.trim().toUpperCase();
+  return normalized === 'PENDING_CALL' || normalized === 'PENDING_ADDRESS';
 }
 
 /**

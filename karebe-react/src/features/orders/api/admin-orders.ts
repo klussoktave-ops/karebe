@@ -64,7 +64,7 @@ export interface CreateAdminOrderInput {
   customer_name?: string | null;
   delivery_address?: string | null;
   delivery_notes?: string | null;
-  branch_id: string;
+  branch_id?: string | null;
   items: OrderItem[];
   total?: number;
   delivery_fee?: number;
@@ -156,9 +156,9 @@ export async function createAdminOrder(input: CreateAdminOrderInput): Promise<Or
     body: JSON.stringify({
       customer_phone: input.customer_phone,
       customer_name: input.customer_name || null,
-      delivery_address: input.delivery_address || '',
+      delivery_address: input.delivery_address || 'PENDING_ADDRESS',
       delivery_notes: input.delivery_notes || null,
-      branch_id: input.branch_id,
+      ...(input.branch_id ? { branch_id: input.branch_id } : {}),
       delivery_fee: input.delivery_fee ?? 0,
       tax: input.tax ?? 0,
       total: input.total ?? computedTotal,

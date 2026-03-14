@@ -335,10 +335,6 @@ function OrdersPageContent() {
       setCreateError('Quantity must be at least 1.');
       return;
     }
-    if (!isUuid(selectedProduct.id)) {
-      setCreateError('Selected product is missing a valid UUID. Please use live products from the database.');
-      return;
-    }
 
     const newItem: OrderItem = {
       product_id: selectedProduct.id,
@@ -364,18 +360,6 @@ function OrdersPageContent() {
       setCreateError('Customer phone is required.');
       return;
     }
-    if (!createForm.delivery_address.trim()) {
-      setCreateError('Delivery address is required.');
-      return;
-    }
-    if (!createForm.branch_id) {
-      setCreateError('Please select a branch.');
-      return;
-    }
-    if (!isUuid(createForm.branch_id)) {
-      setCreateError('Branch ID must be a valid UUID from the branch list.');
-      return;
-    }
     if (orderItems.length === 0) {
       setCreateError('Add at least one item.');
       return;
@@ -386,9 +370,9 @@ function OrdersPageContent() {
       await createAdminOrder({
         customer_phone: createForm.customer_phone.trim(),
         customer_name: createForm.customer_name.trim() || null,
-        delivery_address: createForm.delivery_address.trim(),
+        delivery_address: createForm.delivery_address.trim() || null,
         delivery_notes: createForm.delivery_notes.trim() || null,
-        branch_id: createForm.branch_id,
+        branch_id: createForm.branch_id || null,
         items: orderItems,
         total: orderTotal,
         trigger_source: 'call_button',
@@ -593,7 +577,6 @@ function OrdersPageContent() {
                   onChange={(e) => setCreateForm((prev) => ({ ...prev, branch_id: e.target.value }))}
                   className="mt-1 w-full rounded-md border border-brand-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
                   disabled={branchesLoading || branches.length === 0}
-                  required
                 >
                   {branches.length === 0 ? (
                     <option value="">No branches available</option>
@@ -632,7 +615,6 @@ function OrdersPageContent() {
                   onChange={(e) => setCreateForm((prev) => ({ ...prev, delivery_address: e.target.value }))}
                   className="mt-1 w-full rounded-md border border-brand-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
                   placeholder="Address"
-                  required
                 />
               </div>
               <div>
