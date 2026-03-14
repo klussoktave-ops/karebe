@@ -10,6 +10,7 @@ import CartPage from './pages/customer/cart';
 import CheckoutPage from './pages/customer/checkout';
 import AdminDashboardPage from './pages/admin/dashboard';
 import AdminLoginPage from './pages/admin/login';
+import AdminSetupPage from './pages/admin/setup';
 import AdminOrdersPage from './pages/admin/orders';
 import AdminProductsPage from './pages/admin/products';
 import BranchConfigPage from './pages/admin/branch-config';
@@ -44,6 +45,7 @@ function App() {
           
           {/* Admin Routes - with Sidebar Layout } */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin/setup" element={<AdminSetupPage />} />
           <Route path="/admin" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
           <Route path="/admin/orders" element={<AdminLayout><AdminOrdersPage /></AdminLayout>} />
           <Route path="/admin/products" element={<AdminLayout><AdminProductsPage /></AdminLayout>} />
