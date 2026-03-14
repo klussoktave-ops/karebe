@@ -38,6 +38,13 @@ export default function RidersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingRider, setEditingRider] = useState<RiderWithStatus | null>(null);
+  const [editRiderData, setEditRiderData] = useState({
+    full_name: '',
+    phone: '',
+    whatsapp_number: '',
+    branch_id: '',
+    pin: '',
+  });
   const [newRider, setNewRider] = useState({
     name: '',
     phone: '',
@@ -141,6 +148,52 @@ export default function RidersPage() {
       loadRiders();
     } catch (error) {
       console.error('Failed to toggle rider status:', error);
+    }
+  };
+
+  const handleEditClick = (rider: RiderWithStatus) => {
+    setEditingRider(rider);
+    setEditRiderData({
+      full_name: rider.full_name,
+      phone: rider.phone,
+      whatsapp_number: rider.whatsapp_number || '',
+      branch_id: rider.branch_id || '',
+      pin: '', // Don't show existing PIN for security
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateRider = async () => {
+    if (!editingRider) return;
+
+    try {
+      const response = await fetch(`${ORCHESTRATION_API}/api/admin/riders`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingRider.id,
+          full_name: editRiderData.full_name,
+          phone: editRiderData.phone,
+          whatsapp_number: editRiderData.whatsapp_number || null,
+          branch_id: editRiderData.branch_id || null,
+          pin: editRiderData.pin || undefined, // Only update if provided
+        }),
+      });
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update rider');
+      }
+
+      setIsEditDialogOpen(false);
+      setEditingRider(null);
+      if (editRiderData.pin) {
+        alert(`Rider updated successfully! New PIN: ${editRiderData.pin}`);
+      }
+      loadRiders();
+    } catch (error) {
+      console.error('Failed to update rider:', error);
+      alert('Failed to update rider. Please try again.');
     }
   };
 
@@ -276,6 +329,13 @@ export default function RidersPage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => handleEditClick(rider)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleDeleteRider(rider.id)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -361,6 +421,83 @@ export default function RidersPage() {
               </Button>
               <Button onClick={handleAddRider} disabled={!newRider.name || !newRider.phone}>
                 Add Rider
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Rider Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Rider</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-rider-name">Name</Label>
+                <Input
+                  id="edit-rider-name"
+                  value={editRiderData.full_name}
+                  onChange={(e) => setEditRiderData({ ...editRiderData, full_name: e.target.value })}
+                  placeholder="John Doe"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-rider-phone">Phone Number</Label>
+                <Input
+                  id="edit-rider-phone"
+                  value={editRiderData.phone}
+                  onChange={(e) => setEditRiderData({ ...editRiderData, phone: e.target.value })}
+                  placeholder="+254712345678"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-rider-whatsapp">WhatsApp Number (Optional)</Label>
+                <Input
+                  id="edit-rider-whatsapp"
+                  value={editRiderData.whatsapp_number}
+                  onChange={(e) => setEditRiderData({ ...editRiderData, whatsapp_number: e.target.value })}
+                  placeholder="254712345678"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-rider-branch">Branch (Optional)</Label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <select
+                    id="edit-rider-branch"
+                    value={editRiderData.branch_id}
+                    onChange={(e) => setEditRiderData({ ...editRiderData, branch_id: e.target.value })}
+                    className="w-full pl-10 pr-3 py-2 border rounded-md"
+                  >
+                    <option value="">No branch assigned</option>
+                    {branches.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-rider-pin">Set/Change PIN</Label>
+                <Input
+                  id="edit-rider-pin"
+                  type="password"
+                  maxLength={4}
+                  value={editRiderData.pin}
+                  onChange={(e) => setEditRiderData({ ...editRiderData, pin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                  placeholder="Enter 4-digit PIN to set/update"
+                />
+                <p className="text-xs text-gray-500">Leave blank to keep existing PIN</p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateRider} disabled={!editRiderData.full_name || !editRiderData.phone}>
+                Save Changes
               </Button>
             </DialogFooter>
           </DialogContent>

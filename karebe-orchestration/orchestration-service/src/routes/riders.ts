@@ -66,22 +66,38 @@ router.post('/login', async (req: Request, res: Response) => {
 
     // Verify PIN
     if (rider.pin !== pin) {
+      logger.warn('Rider login failed - invalid PIN', { phone: normalizedPhone });
       return res.status(401).json({
         success: false,
         error: 'Invalid PIN',
       });
     }
 
+    // Check if rider is active
+    if (!rider.is_active) {
+      logger.warn('Rider login failed - account inactive', { phone: normalizedPhone });
+      return res.status(401).json({
+        success: false,
+        error: 'Account is disabled. Please contact support.',
+      });
+    }
+
+    logger.info('Rider login successful', { 
+      phone: rider.phone, 
+      name: rider.full_name 
+    });
+
     res.json({
       success: true,
-      data: {
+      rider: {
         id: rider.id,
-        name: rider.name,
+        name: rider.full_name,
         phone: rider.phone,
-        email: rider.email,
+        email: rider.email || '',
+        branch_id: rider.branch_id,
         is_active: rider.is_active,
-        token: 'rider-token-' + rider.id,
       },
+      token: 'rider-token-' + rider.id,
     });
   } catch (error) {
     logger.error('Rider login error', { error });

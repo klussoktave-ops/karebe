@@ -27,48 +27,68 @@ router.post('/login', async (req: Request, res: Response) => {
       });
     }
 
-    // For demo purposes, check against demo accounts
-    const demoAdmins: Record<string, { password: string; name: string; role: string }> = {
-      'admin@karebe.local': { password: 'adminlemon1234', name: 'Admin User', role: 'super_admin' },
-      'wangige@karebe.local': { password: 'wangigelemon1234', name: 'Wangige Admin', role: 'manager' },
-      'karura@karebe.local': { password: 'karuralemon1234', name: 'Karura Admin', role: 'manager' },
-    };
+    logger.info('Admin login attempt', { email: email.toLowerCase() });
 
-    const admin = demoAdmins[email.toLowerCase()];
-    
-    if (!admin || admin.password !== password) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials',
-      });
-    }
-
-    // Get admin user from database
+    // Query admin user from database
     const { data: adminUser, error: dbError } = await supabase
       .from('admin_users')
       .select('*')
       .eq('email', email.toLowerCase())
       .single();
 
-    if (dbError && dbError.code !== 'PGRST116') {
-      logger.error('Error fetching admin user', { error: dbError });
+    if (dbError || !adminUser) {
+      logger.warn('Admin login failed - user not found', { email: email.toLowerCase(), error: dbError?.message });
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials',
+      });
     }
+
+    // Check if user is active
+    if (!adminUser.is_active) {
+      logger.warn('Admin login failed - account inactive', { email: email.toLowerCase() });
+      return res.status(401).json({
+        success: false,
+        error: 'Account is disabled. Please contact support.',
+      });
+    }
+
+    // Verify password - check both plain password and hash
+    const isValidPassword = 
+      adminUser.password === password || 
+      adminUser.password_hash === password;
+
+    if (!isValidPassword) {
+      logger.warn('Admin login failed - invalid password', { email: email.toLowerCase() });
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials',
+      });
+    }
+
+    logger.info('Admin login successful', { 
+      email: adminUser.email, 
+      role: adminUser.role,
+      name: adminUser.name 
+    });
 
     res.json({
       success: true,
       data: {
-        id: adminUser?.id || 'demo-admin-id',
-        email: email.toLowerCase(),
-        name: admin.name,
-        role: admin.role,
-        token: 'demo-token-' + Date.now(),
+        id: adminUser.id,
+        email: adminUser.email,
+        name: adminUser.name,
+        role: adminUser.role,
+        phone: adminUser.phone,
+        branch_id: adminUser.branch_id,
+        token: 'admin-token-' + Date.now(),
       },
     });
   } catch (error) {
     logger.error('Admin login error', { error });
     res.status(500).json({
       success: false,
-      error: 'Login failed',
+      error: 'Login failed. Please try again.',
     });
   }
 });
