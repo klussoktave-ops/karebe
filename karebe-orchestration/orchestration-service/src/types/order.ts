@@ -148,6 +148,9 @@ export interface Order {
   metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  // Soft delete fields
+  deleted_at?: string;
+  deleted_by?: string;
 }
 
 export interface OrderItem {
@@ -251,7 +254,7 @@ export function getAvailableActions(status: WorkflowStatus): WorkflowAction[] {
 // =============================================================================
 
 export interface CreateOrderRequest {
-  customer_phone?: string;
+  customer_phone: string;
   customer_name?: string;
   delivery_address: string;
   delivery_notes?: string;
@@ -311,6 +314,28 @@ export interface UpdateOrderDetailsRequest {
   delivery_method?: 'delivery' | 'pickup';
   actor_type: ActorType;
   actor_id: string;
+}
+
+// =============================================================================
+// Soft Delete Types
+// =============================================================================
+
+export interface DeleteOrderRequest {
+  actor_type: ActorType;
+  actor_id: string;
+  reason?: string;
+  confirm: true;  // Required confirmation
+}
+
+export interface RestoreOrderRequest {
+  actor_type: ActorType;
+  actor_id: string;
+}
+
+export interface PermanentDeleteRequest {
+  actor_type: ActorType;
+  actor_id: string;
+  confirm: true;  // Required confirmation for irreversible action
 }
 
 // =============================================================================

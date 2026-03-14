@@ -7,11 +7,12 @@ import { z } from 'zod';
 import { orderService } from '../services/orderService';
 import { logger } from '../lib/logger';
 import { normalizePhone, validatePhone } from '../lib/phone';
-import { supabase } from '../lib/supabase';
 import {
   OrderStatus,
   ActorType,
   ConfirmationMethod,
+  DeleteOrderRequest,
+  RestoreOrderRequest,
 } from '../types/order';
 
 const router = Router();
@@ -21,11 +22,11 @@ const router = Router();
 // =============================================================================
 
 const createOrderSchema = z.object({
-  customer_phone: z.string().optional(),
+  customer_phone: z.string().min(10).max(20),
   customer_name: z.string().optional(),
-  delivery_address: z.string().min(5).optional().default('PENDING_ADDRESS'),
+  delivery_address: z.string().min(5),
   delivery_notes: z.string().optional(),
-  branch_id: z.string().min(1).optional(),
+  branch_id: z.string().uuid(),
   // Delivery and pricing
   delivery_fee: z.number().optional().default(0),
   delivery_zone_id: z.string().uuid().optional(),
@@ -34,13 +35,13 @@ const createOrderSchema = z.object({
   total: z.number().optional().default(0),
   // Items
   items: z.array(z.object({
-    product_id: z.string().min(1),
+    product_id: z.string().uuid(),
     product_name: z.string(),
     quantity: z.number().int().positive(),
     unit_price: z.number().positive(),
     variant: z.string().optional(),
   })).min(1),
-  trigger_source: z.enum(['call_button', 'cart_checkout', 'whatsapp']).optional().default('call_button'),
+  trigger_source: z.enum(['call_button', 'cart_checkout', 'whatsapp']),
   idempotency_key: z.string().optional(),
 });
 
@@ -76,6 +77,28 @@ const updateOrderDetailsSchema = z.object({
 });
 
 // =============================================================================
+// Soft Delete Validation Schemas
+// =============================================================================
+
+const deleteOrderSchema = z.object({
+  actor_type: z.nativeEnum(ActorType),
+  actor_id: z.string().min(1),
+  reason: z.string().optional(),
+  confirm: z.literal(true),  // Must be explicitly true
+});
+
+const restoreOrderSchema = z.object({
+  actor_type: z.nativeEnum(ActorType),
+  actor_id: z.string().min(1),
+});
+
+const permanentDeleteSchema = z.object({
+  actor_type: z.nativeEnum(ActorType),
+  actor_id: z.string().min(1),
+  confirm: z.literal(true),  // Must be explicitly true
+});
+
+// =============================================================================
 // Routes
 // =============================================================================
 
@@ -94,62 +117,28 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    const getDefaultBranchId = async (): Promise<string | null> => {
-      const { data: wangige, error: wangigeError } = await supabase
-        .from('branches')
-        .select('id')
-        .ilike('name', '%wangige%')
-        .limit(1);
-
-      if (!wangigeError && wangige && wangige.length > 0) {
-        return wangige[0].id;
-      }
-
-      const { data, error } = await supabase
-        .from('branches')
-        .select('id, is_main, created_at')
-        .order('is_main', { ascending: false })
-        .order('created_at', { ascending: true })
-        .limit(1);
-
-      if (error) {
-        logger.error('Failed to load default branch', { error });
-        return null;
-      }
-
-      return data && data.length > 0 ? data[0].id : null;
-    };
-
-    const resolvedBranchId = validation.data.branch_id || (await getDefaultBranchId());
-    if (!resolvedBranchId) {
+    // Validate and normalize phone number
+    const phoneValidation = validatePhone(validation.data.customer_phone);
+    if (!phoneValidation) {
       return res.status(400).json({
         success: false,
-        error: 'No branch available to attach this order.',
+        error: 'Invalid phone number. Please provide a valid Kenyan mobile number.',
       });
     }
 
-    const isPlaceholderPhone = (value: string): boolean => {
-      const normalized = value.trim().toUpperCase();
-      return normalized === 'PENDING_CALL' || normalized === 'PENDING_ADDRESS';
-    };
-
-    let normalizedPhone: string | null = null;
-    const rawPhone = validation.data.customer_phone?.trim() ?? '';
-    if (rawPhone && !isPlaceholderPhone(rawPhone)) {
-      const normalization = normalizePhone(rawPhone);
-      if (normalization.success) {
-        normalizedPhone = normalization.data;
-      } else {
-        // Very forgiving: keep raw input if it can't be normalized
-        normalizedPhone = rawPhone;
-      }
+    // Normalize phone to canonical E.164 format
+    const normalizedPhone = normalizePhone(validation.data.customer_phone);
+    if (!normalizedPhone.success) {
+      return res.status(400).json({
+        success: false,
+        error: normalizedPhone.error.message,
+      });
     }
 
     // Update the phone to canonical format before creating order
     const orderData = {
       ...validation.data,
-      customer_phone: normalizedPhone,
-      branch_id: resolvedBranchId,
+      customer_phone: normalizedPhone.data,
     };
 
     const order = await orderService.createOrder(orderData);
@@ -311,19 +300,33 @@ router.patch('/:id', async (req: Request, res: Response) => {
       if (trimmedPhone.length === 0) {
         request.customer_phone = '';
       } else {
-        const normalized = trimmedPhone.toUpperCase();
-        if (normalized === 'PENDING_CALL' || normalized === 'PENDING_ADDRESS') {
-          request.customer_phone = '';
-        } else {
-          const looksLikePhone = /^[0-9+]+$/.test(trimmedPhone);
-          if (looksLikePhone) {
-            const normalizedPhone = normalizePhone(trimmedPhone);
-            request.customer_phone = normalizedPhone.success ? normalizedPhone.data : trimmedPhone;
-          } else {
-            // Very forgiving: store as-is if it doesn't look like a phone number
-            request.customer_phone = trimmedPhone;
-          }
+        const phoneValidation = validatePhone(trimmedPhone);
+        if (!phoneValidation.valid) {
+          return res.status(400).json({
+            success: false,
+            error: 'Validation failed',
+            details: phoneValidation.errors.map((message) => ({
+              code: 'invalid_phone',
+              path: ['customer_phone'],
+              message,
+            })),
+          });
         }
+
+        const normalizedPhone = normalizePhone(trimmedPhone);
+        if (!normalizedPhone.valid) {
+          return res.status(400).json({
+            success: false,
+            error: 'Validation failed',
+            details: normalizedPhone.errors.map((message) => ({
+              code: 'invalid_phone',
+              path: ['customer_phone'],
+              message,
+            })),
+          });
+        }
+
+        request.customer_phone = normalizedPhone.data;
       }
     }
 
@@ -631,6 +634,193 @@ router.delete('/:id/lock', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: 'Failed to release lock',
+    });
+  }
+});
+
+// =============================================================================
+// Soft Delete Routes
+// =============================================================================
+
+/**
+ * DELETE /api/orders/:id
+ * Soft delete an order
+ * Requires explicit confirmation
+ */
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const orderId = req.params.id;
+    const validation = deleteOrderSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: validation.error.errors,
+        warning: 'This action will soft-delete the order. It can be restored later from the deleted items section.',
+      });
+    }
+
+    const order = await orderService.deleteOrder(orderId, validation.data);
+    
+    res.json({
+      success: true,
+      data: order,
+      message: 'Order deleted successfully. You can restore it from the deleted items section.',
+    });
+  } catch (error) {
+    logger.error('Error deleting order', { error, orderId: req.params.id });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    if (errorMessage.includes('not found')) {
+      return res.status(404).json({
+        success: false,
+        error: 'Order not found',
+      });
+    }
+    
+    if (errorMessage.includes('already deleted')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Order is already deleted',
+      });
+    }
+    
+    if (errorMessage.includes('confirmation')) {
+      return res.status(400).json({
+        success: false,
+        error: errorMessage,
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete order',
+      message: errorMessage,
+    });
+  }
+});
+
+/**
+ * POST /api/orders/:id/restore
+ * Restore a soft-deleted order
+ */
+router.post('/:id/restore', async (req: Request, res: Response) => {
+  try {
+    const orderId = req.params.id;
+    const validation = restoreOrderSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: validation.error.errors,
+      });
+    }
+
+    const order = await orderService.restoreOrder(orderId, validation.data);
+    
+    res.json({
+      success: true,
+      data: order,
+      message: 'Order restored successfully',
+    });
+  } catch (error) {
+    logger.error('Error restoring order', { error, orderId: req.params.id });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    if (errorMessage.includes('not found')) {
+      return res.status(404).json({
+        success: false,
+        error: 'Order not found',
+      });
+    }
+    
+    if (errorMessage.includes('not deleted')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Order is not deleted',
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to restore order',
+      message: errorMessage,
+    });
+  }
+});
+
+/**
+ * GET /api/orders/deleted/list
+ * Get all soft-deleted orders (bin)
+ */
+router.get('/deleted/list', async (req: Request, res: Response) => {
+  try {
+    const { branch_id } = req.query;
+    
+    const orders = await orderService.getDeletedOrders(branch_id as string | undefined);
+    
+    res.json({
+      success: true,
+      data: orders,
+      count: orders.length,
+      message: 'These orders have been soft-deleted. You can restore them or permanently delete them.',
+    });
+  } catch (error) {
+    logger.error('Error getting deleted orders', { error, query: req.query });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get deleted orders',
+      message: errorMessage,
+    });
+  }
+});
+
+/**
+ * DELETE /api/orders/:id/permanent
+ * Permanently delete an order (irreversible!)
+ */
+router.delete('/:id/permanent', async (req: Request, res: Response) => {
+  try {
+    const orderId = req.params.id;
+    const validation = permanentDeleteSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: validation.error.errors,
+        warning: 'This action is IRREVERSIBLE. All order data will be permanently deleted.',
+      });
+    }
+
+    await orderService.permanentlyDeleteOrder(
+      orderId,
+      validation.data.actor_type,
+      validation.data.actor_id
+    );
+    
+    res.json({
+      success: true,
+      message: 'Order permanently deleted. This action cannot be undone.',
+    });
+  } catch (error) {
+    logger.error('Error permanently deleting order', { error, orderId: req.params.id });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    if (errorMessage.includes('not found')) {
+      return res.status(404).json({
+        success: false,
+        error: 'Order not found',
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to permanently delete order',
+      message: errorMessage,
     });
   }
 });

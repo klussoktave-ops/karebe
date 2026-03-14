@@ -17,6 +17,8 @@ import {
   AssignRiderRequest,
   ConfirmDeliveryRequest,
   UpdateOrderDetailsRequest,
+  DeleteOrderRequest,
+  RestoreOrderRequest,
   StateTransition,
   ValidStateTransition,
   StateTransitionError,
@@ -117,7 +119,7 @@ export class OrderService {
     // Create order
     const orderData = {
       status: OrderStatus.ORDER_SUBMITTED,
-      customer_phone: request.customer_phone ?? null,
+      customer_phone: request.customer_phone,
       customer_name: request.customer_name || null,
       delivery_address: request.delivery_address,
       delivery_notes: request.delivery_notes || null,
@@ -181,16 +183,23 @@ export class OrderService {
 
   /**
    * Get order by ID
+   * @param includeDeleted If true, includes soft-deleted orders
    */
-  async getOrder(orderId: string): Promise<Order | null> {
-    const { data, error } = await supabase
+  async getOrder(orderId: string, includeDeleted = false): Promise<Order | null> {
+    let query = supabase
       .from('orders')
       .select(`
         *,
         items:order_items(*)
       `)
-      .eq('id', orderId)
-      .single();
+      .eq('id', orderId);
+
+    // Filter out deleted orders by default
+    if (!includeDeleted) {
+      query = query.is('deleted_at', null);
+    }
+
+    const { data, error } = await query.single();
 
     if (error) {
       if (error.code === 'PGRST116') {
@@ -592,13 +601,19 @@ export class OrderService {
 
   /**
    * Get orders by status
+   * @param includeDeleted If true, includes soft-deleted orders
    */
-  async getOrdersByStatus(status: OrderStatus, branchId?: string): Promise<Order[]> {
+  async getOrdersByStatus(status: OrderStatus, branchId?: string, includeDeleted = false): Promise<Order[]> {
     let query = supabase
       .from('orders')
       .select('*')
       .eq('status', status)
       .order('created_at', { ascending: false });
+
+    // Filter out deleted orders by default
+    if (!includeDeleted) {
+      query = query.is('deleted_at', null);
+    }
 
     if (branchId) {
       query = query.eq('branch_id', branchId);
@@ -665,6 +680,184 @@ export class OrderService {
     }
 
     return data as boolean;
+  }
+
+  // =============================================================================
+  // Soft Delete Methods
+  // =============================================================================
+
+  /**
+   * Soft delete an order
+   * Sets deleted_at timestamp and records who deleted it
+   */
+  async deleteOrder(orderId: string, request: DeleteOrderRequest): Promise<Order> {
+    // Check if order exists
+    const order = await this.getOrder(orderId, true);
+    if (!order) {
+      throw new Error(`Order not found: ${orderId}`);
+    }
+
+    // Check if already deleted
+    if (order.deleted_at) {
+      throw new Error('Order is already deleted');
+    }
+
+    // Validate confirmation
+    if (!request.confirm) {
+      throw new Error('Deletion confirmation required. Set confirm: true to delete.');
+    }
+
+    const updateData = {
+      deleted_at: new Date().toISOString(),
+      deleted_by: request.actor_id,
+      metadata: {
+        ...order.metadata,
+        deletion_reason: request.reason,
+        deleted_by_actor_type: request.actor_type,
+      },
+    };
+
+    const { data, error } = await supabase
+      .from('orders')
+      .update(updateData)
+      .eq('id', orderId)
+      .select()
+      .single();
+
+    if (error) {
+      logger.error('Failed to soft delete order', { error, orderId, request });
+      throw new Error(`Failed to delete order: ${error.message}`);
+    }
+
+    logger.info('Order soft deleted', {
+      orderId,
+      actorType: request.actor_type,
+      actorId: request.actor_id,
+      reason: request.reason,
+    });
+
+    return data as Order;
+  }
+
+  /**
+   * Restore a soft-deleted order
+   */
+  async restoreOrder(orderId: string, request: RestoreOrderRequest): Promise<Order> {
+    // Check if order exists (including deleted)
+    const order = await this.getOrder(orderId, true);
+    if (!order) {
+      throw new Error(`Order not found: ${orderId}`);
+    }
+
+    // Check if not deleted
+    if (!order.deleted_at) {
+      throw new Error('Order is not deleted');
+    }
+
+    const updateData = {
+      deleted_at: null,
+      deleted_by: null,
+      metadata: {
+        ...order.metadata,
+        restored_by_actor_type: request.actor_type,
+        restored_at: new Date().toISOString(),
+      },
+    };
+
+    const { data, error } = await supabase
+      .from('orders')
+      .update(updateData)
+      .eq('id', orderId)
+      .select()
+      .single();
+
+    if (error) {
+      logger.error('Failed to restore order', { error, orderId, request });
+      throw new Error(`Failed to restore order: ${error.message}`);
+    }
+
+    logger.info('Order restored', {
+      orderId,
+      actorType: request.actor_type,
+      actorId: request.actor_id,
+    });
+
+    return data as Order;
+  }
+
+  /**
+   * Get all soft-deleted orders
+   */
+  async getDeletedOrders(branchId?: string): Promise<Order[]> {
+    let query = supabase
+      .from('orders')
+      .select('*')
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false });
+
+    if (branchId) {
+      query = query.eq('branch_id', branchId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      logger.error('Failed to get deleted orders', { error, branchId });
+      throw new Error(`Failed to get deleted orders: ${error.message}`);
+    }
+
+    return data as Order[];
+  }
+
+  /**
+   * Permanently delete an order and all its related data
+   * WARNING: This is irreversible!
+   */
+  async permanentlyDeleteOrder(orderId: string, actorType: ActorType, actorId: string): Promise<void> {
+    // Check if order exists (including deleted)
+    const order = await this.getOrder(orderId, true);
+    if (!order) {
+      throw new Error(`Order not found: ${orderId}`);
+    }
+
+    // Delete order items first (due to foreign key)
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .delete()
+      .eq('order_id', orderId);
+
+    if (itemsError) {
+      logger.error('Failed to delete order items', { error: itemsError, orderId });
+      throw new Error(`Failed to delete order items: ${itemsError.message}`);
+    }
+
+    // Delete state transitions
+    const { error: transitionsError } = await supabase
+      .from('order_state_transitions')
+      .delete()
+      .eq('order_id', orderId);
+
+    if (transitionsError) {
+      logger.warn('Failed to delete order transitions', { error: transitionsError, orderId });
+    }
+
+    // Delete the order itself
+    const { error: orderError } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderId);
+
+    if (orderError) {
+      logger.error('Failed to permanently delete order', { error: orderError, orderId });
+      throw new Error(`Failed to permanently delete order: ${orderError.message}`);
+    }
+
+    logger.info('Order permanently deleted', {
+      orderId,
+      actorType,
+      actorId,
+      orderReference: order.order_reference,
+    });
   }
 
   /**
