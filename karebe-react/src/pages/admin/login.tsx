@@ -1,22 +1,23 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
-import { Shield, Bike, UserCog } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Shield, Bike } from 'lucide-react';
 import { Container } from '@/components/layout/container';
 import { LoginForm } from '@/features/auth/components/login-form';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { PublicOnlyGuard } from '@/features/auth/components/auth-guard';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 
-// Check if in dev mode
-const isDevMode = import.meta.env.DEV || import.meta.env.VITE_DEV_MODE === 'true';
+// Role type for login
+type LoginRole = 'admin' | 'rider';
 
 function LoginContent() {
   const navigate = useNavigate();
   const { login, isLoading, error, user } = useAuth();
+  const [selectedRole, setSelectedRole] = useState<LoginRole>('admin');
 
   // Handle login with proper role-based redirect
   const handleLogin = async (credentials: { username: string; password: string }) => {
+    console.log('[LoginPage] Form submitted with username:', credentials.username);
+    console.log('[LoginPage] Selected role:', selectedRole);
     await login(credentials);
     // Navigation will be handled by the useEffect below that watches user changes
   };
@@ -24,46 +25,86 @@ function LoginContent() {
   // Redirect after successful login based on user role
   useEffect(() => {
     if (user) {
-      console.log('[AdminLogin] User detected, redirecting based on role:', user.role);
+      console.log('[LoginPage] User detected, redirecting based on role:', user.role);
+      console.log('[LoginPage] User details:', { 
+        id: user.id, 
+        email: user.email, 
+        role: user.role, 
+        name: user.name 
+      });
       // Determine redirect based on role
       switch (user.role) {
         case 'rider':
+          console.log('[LoginPage] Redirecting to /rider');
           navigate('/rider', { replace: true });
           break;
         case 'super-admin':
         case 'admin':
+          console.log('[LoginPage] Redirecting to /admin');
           navigate('/admin', { replace: true });
           break;
         default:
+          console.log('[LoginPage] Unknown role, redirecting to home');
           navigate('/', { replace: true });
       }
+    } else if (error) {
+      console.error('[LoginPage] Login error detected:', error);
     }
-  }, [user, navigate]);
+  }, [user, navigate, error]);
 
-  // Quick login for dev mode
-  const handleQuickLogin = async (role: 'admin' | 'rider' | 'super-admin') => {
-    console.log('[AdminLogin] Quick login clicked for role:', role);
-    const credentials = {
-      admin: { username: 'admin@karebe.com', password: 'admin123' },
-      'super-admin': { username: 'owner@karebe.com', password: 'owner123' },
-      rider: { username: 'rider@karebe.com', password: 'rider123' },
-    };
-    
-    await login(credentials[role]);
-    // Role-based redirect handled by useEffect
-  };
+  // Dynamic placeholder based on role
+  const usernamePlaceholder = selectedRole === 'admin' 
+    ? 'e.g. admin@karebe.local' 
+    : 'e.g. +254712345678';
 
   return (
     <div className="min-h-screen bg-brand-50 flex items-center justify-center py-12">
       <Container className="max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <h1 className="text-3xl font-display font-bold text-brand-900">
-            Admin Login
+            Staff Login
           </h1>
           <p className="text-brand-600 mt-2">
-            Sign in to access the admin dashboard
+            Sign in to access your dashboard
           </p>
         </div>
+        
+        {/* Role Selector */}
+        <div className="flex justify-center mb-6">
+          <div className="inline-flex rounded-lg border border-brand-200 bg-white p-1">
+            <button
+              type="button"
+              onClick={() => setSelectedRole('admin')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                selectedRole === 'admin'
+                  ? 'bg-brand-600 text-white'
+                  : 'text-brand-600 hover:bg-brand-50'
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedRole('rider')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                selectedRole === 'rider'
+                  ? 'bg-brand-600 text-white'
+                  : 'text-brand-600 hover:bg-brand-50'
+              }`}
+            >
+              <Bike className="w-4 h-4" />
+              Rider
+            </button>
+          </div>
+        </div>
+
+        {/* Format hint */}
+        <p className="text-center text-sm text-brand-500 mb-4">
+          {selectedRole === 'admin' 
+            ? 'Enter your email address (e.g., admin@karebe.local)' 
+            : 'Enter your phone number (e.g., +254712345678)'}
+        </p>
         
         <LoginForm
           onSubmit={handleLogin}
@@ -71,46 +112,8 @@ function LoginContent() {
           error={error}
           title="Welcome Back"
           description="Enter your credentials to continue"
+          usernamePlaceholder={usernamePlaceholder}
         />
-
-        {/* Quick Login - Available in all modes */}
-        <Card className="mt-6 p-4 border-2 border-dashed border-brand-300 bg-brand-50/50">
-          <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider mb-3 text-center">
-            Quick Login (Demo)
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickLogin('super-admin')}
-              className="flex flex-col items-center gap-1 h-auto py-2"
-            >
-              <Shield className="h-4 w-4" />
-              <span className="text-xs">Super Admin</span>
-              <span className="text-[10px] text-gray-500">owner@karebe.com</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickLogin('admin')}
-              className="flex flex-col items-center gap-1 h-auto py-2"
-            >
-              <UserCog className="h-4 w-4" />
-              <span className="text-xs">Admin</span>
-              <span className="text-[10px] text-gray-500">admin@karebe.com</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickLogin('rider')}
-              className="flex flex-col items-center gap-1 h-auto py-2"
-            >
-              <Bike className="h-4 w-4" />
-              <span className="text-xs">Rider</span>
-              <span className="text-[10px] text-gray-500">rider@karebe.com</span>
-            </Button>
-          </div>
-        </Card>
 
         <p className="text-center text-sm text-brand-500 mt-6">
           Protected area. Authorized personnel only.

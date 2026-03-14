@@ -20,6 +20,7 @@ interface LoginFormProps {
   error?: string | null;
   title?: string;
   description?: string;
+  usernamePlaceholder?: string;
 }
 
 /**
@@ -43,6 +44,7 @@ export function LoginForm({
   error,
   title = 'Welcome Back',
   description = 'Sign in to your account to continue',
+  usernamePlaceholder = 'Enter your username',
 }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   
@@ -85,7 +87,7 @@ export function LoginForm({
           <div>
             <Input
               label="Username"
-              placeholder="Enter your username"
+              placeholder={usernamePlaceholder}
               icon={<User className="w-4 h-4" />}
               error={errors.username?.message}
               {...register('username')}

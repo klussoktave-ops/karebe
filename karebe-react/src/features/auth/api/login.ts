@@ -65,6 +65,7 @@ async function demoLogin(credentials: LoginCredentials): Promise<LoginResponse> 
 
   if (!user) {
     console.warn('[DemoLogin] User not found for:', credentials.username);
+    console.warn('[DemoLogin] Please check your credentials and try again');
     return {
       success: false,
       message: 'Invalid credentials. Available demo logins:\n• super-admin: admin@karebe.local / adminlemon1234\n• admin (Wangige): wangige@karebe.local / wangigelemon1234\n• admin (Karura): karura@karebe.local / karuralemon1234',
@@ -96,8 +97,11 @@ async function demoLogin(credentials: LoginCredentials): Promise<LoginResponse> 
  * This is used for admin, super-admin, and rider logins
  */
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
+  console.log('[Login API] Starting login process for username:', credentials.username);
+  
   // Try demo login first (works both in dev and production)
   // This allows testing without requiring a backend API
+  console.log('[Login API] Attempting demo login...');
   const demoResult = await demoLogin(credentials);
   if (demoResult.success) {
     return demoResult;
@@ -110,6 +114,9 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
 
   // Supabase is configured - try the API login
   try {
+    console.log('[Login API] Demo login failed, attempting API login...');
+    console.log('[Login API] Calling orchestration API for authentication...');
+    
     // Call the admin login API endpoint
     const response = await fetch(`${ORCHESTRATION_API}/api/admin/login`, {
       method: 'POST',
@@ -120,8 +127,11 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
     });
 
     const data = await response.json();
+    console.log('[Login API] Received response from orchestration API');
 
     if (!response.ok || !data.success) {
+      console.error('[Login API] Login failed - Response status:', response.status);
+      console.error('[Login API] Error message:', data.message || 'Unknown error');
       return {
         success: false,
         message: data.message || 'Login failed. Please check your credentials.',
@@ -129,6 +139,7 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
     }
 
     // Map the API response to our AuthUser type
+    console.log('[Login API] Login successful, processing user data...');
     const user: AuthUser = {
       id: data.user.id,
       email: data.user.email || '',
@@ -146,7 +157,10 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
       token: data.token,
     };
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('[Login API] EXCEPTION during login:');
+    console.error('[Login API] Error type:', error instanceof Error ? error.constructor.name : typeof error);
+    console.error('[Login API] Error message:', error instanceof Error ? error.message : String(error));
+    console.error('[Login API] Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
     return {
       success: false,
       message: 'An unexpected error occurred. Please try again.',

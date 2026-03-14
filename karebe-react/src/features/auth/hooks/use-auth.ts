@@ -42,16 +42,25 @@ export function useAuth(): UseAuthReturn {
   const loginMutation = useMutation({
     mutationFn: loginApi,
     onSuccess: (data) => {
-      console.log('[useAuth] Login success:', data);
+      console.log('[useAuth] Login API returned:', { success: data.success, hasUser: !!data.user });
       if (data.success && data.user) {
+        console.log('[useAuth] Storing user in auth store:', { 
+          id: data.user.id, 
+          role: data.user.role, 
+          email: data.user.email 
+        });
         loginStore(data.user);
         // Invalidate any auth-related queries
         queryClient.invalidateQueries({ queryKey: ['auth'] });
+        console.log('[useAuth] User successfully logged in');
       } else {
+        console.warn('[useAuth] Login failed - setting error:', data.message);
         setErrorStore(data.message || 'Login failed');
       }
     },
     onError: (error) => {
+      console.error('[useAuth] Login mutation error:', error);
+      console.error('[useAuth] Error type:', error instanceof Error ? error.constructor.name : typeof error);
       setErrorStore(error instanceof Error ? error.message : 'Login failed');
     },
   });
@@ -108,8 +117,14 @@ export function useAuth(): UseAuthReturn {
 
   const handleLogin = useCallback(
     async (credentials: LoginCredentials) => {
+      console.log('[useAuth] handleLogin called with username:', credentials.username);
       setErrorStore(null);
-      await loginMutation.mutateAsync(credentials);
+      try {
+        await loginMutation.mutateAsync(credentials);
+        console.log('[useAuth] handleLogin completed');
+      } catch (error) {
+        console.error('[useAuth] handleLogin caught error:', error);
+      }
     },
     [loginMutation, setErrorStore]
   );
