@@ -40,6 +40,7 @@ const defaultOrigins = [
   'https://karebe-lemon.vercel.app',
   // Railway production domains
   'https://karebe-orchestration-production.up.railway.app',
+  'https://karebe-api-production.up.railway.app',
 ];
 const envOrigin = process.env.FRONTEND_URL;
 const allowedOrigins: string[] = envOrigin ? [...defaultOrigins, envOrigin] : defaultOrigins;
