@@ -60,10 +60,10 @@ export default function AdminSetupPage() {
     setIsLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app';
-      console.log('[AdminSetup] Submitting setup request to:', `${API_URL}/api/admin/setup`);
+      const API_URL = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-api-production.up.railway.app';
+      console.log('[AdminSetup] Submitting setup request to:', `${API_URL}/api/auth/register`);
       
-      const response = await fetch(`${API_URL}/api/admin/setup`, {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,6 +72,7 @@ export default function AdminSetupPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          role: 'super_admin',
         }),
       });
 
@@ -81,13 +82,17 @@ export default function AdminSetupPage() {
 
       if (!response.ok) {
         // Handle different error scenarios
-        if (response.status === 404) {
-          setError('Setup has already been completed. Please login instead.');
-          setTimeout(() => navigate('/admin/login'), 2000);
+        if (response.status === 403) {
+          setError('A super admin already exists. Please login instead.');
+          setTimeout(() => navigate('/admin/login'), 3000);
+        } else if (response.status === 409) {
+          setError('An admin with this email already exists. Please login or use a different email.');
+        } else if (response.status === 404) {
+          setError('Registration endpoint not found. Please contact support.');
         } else if (data.error) {
           setError(data.error);
         } else {
-          setError('Setup failed. Please try again.');
+          setError('Registration failed. Please try again.');
         }
         return;
       }
