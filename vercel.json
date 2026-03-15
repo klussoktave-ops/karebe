@@ -1,5 +1,9 @@
 {
   "version": 2,
+  "buildCommand": "cd karebe-react && npx vite build",
+  "outputDirectory": "karebe-react/dist",
+  "installCommand": "cd karebe-react && npm install",
+  "framework": "vite",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
@@ -15,36 +19,64 @@
   ],
   "rewrites": [
     {
-      "source": "/api/seed",
-      "destination": "/api/seed.js"
+      "source": "/cart",
+      "destination": "/index.html"
     },
     {
-      "source": "/api/cart",
-      "destination": "/api/cart.js"
+      "source": "/checkout",
+      "destination": "/index.html"
     },
     {
-      "source": "/api/orders",
-      "destination": "/api/orders.js"
+      "source": "/admin/login",
+      "destination": "/index.html"
     },
     {
-      "source": "/api/delivery",
-      "destination": "/api/delivery.js"
+      "source": "/admin",
+      "destination": "/index.html"
     },
     {
-      "source": "/api/products",
-      "destination": "/api/products.js"
+      "source": "/admin/orders",
+      "destination": "/index.html"
     },
     {
-      "source": "/api/admin/login",
-      "destination": "/api/admin/login.js"
+      "source": "/admin/products",
+      "destination": "/index.html"
     },
     {
-      "source": "/api/payments/daraja/stkpush",
-      "destination": "/api/payments/daraja/stkpush.js"
+      "source": "/admin/branches",
+      "destination": "/index.html"
     },
     {
-      "source": "/api/payments/daraja/callback",
-      "destination": "/api/payments/daraja/callback.js"
+      "source": "/admin/settings",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/riders",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/admins",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/pricing",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/setup",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/rider/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ]
 }
