@@ -741,7 +741,7 @@
   }
 
   function getAdminSession() {
-    const raw = sessionStorage.getItem(ADMIN_SESSION_KEY);
+    const raw = sessionStorage.getItem(ADMIN_SESSION_KEY) || localStorage.getItem(ADMIN_SESSION_KEY);
     if (!raw) return null;
     try {
       return JSON.parse(raw);
@@ -782,7 +782,9 @@
         const localSession = localAdminLogin(u, p, latest);
         const finalSession = backendSession || localSession;
         if (finalSession) {
-          sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(finalSession));
+          const payload = JSON.stringify(finalSession);
+          sessionStorage.setItem(ADMIN_SESSION_KEY, payload);
+          localStorage.setItem(ADMIN_SESSION_KEY, payload);
           renderAdmin();
         } else {
           notify("Invalid credentials.", "danger");
@@ -802,6 +804,7 @@
 
     document.getElementById("adminLogout").onclick = () => {
       sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      localStorage.removeItem(ADMIN_SESSION_KEY);
       renderAdmin();
     };
 
@@ -1534,6 +1537,11 @@
   }
 
   async function initApp() {
+    const page = document.body.dataset.page;
+    if (page === "customer") renderCustomer();
+    if (page && page.startsWith("admin")) renderAdmin();
+    if (page === "rider") renderRider();
+
     if (window.supabaseClient) {
       try {
         logClient("info", "INIT", "Loading remote state from Supabase...");
@@ -1556,7 +1564,6 @@
       logClient("warn", "INIT", "Supabase client not available; running local-only.");
     }
 
-    const page = document.body.dataset.page;
     if (page === "customer") renderCustomer();
     if (page && page.startsWith("admin")) renderAdmin();
     if (page === "rider") renderRider();
