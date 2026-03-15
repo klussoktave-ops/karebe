@@ -123,7 +123,7 @@ function LoginContent() {
         <div className="mt-4 text-center">
           <span className="text-sm text-gray-600">Don't have an account? </span>
           <a 
-            href="/admin/setup" 
+            href="/admin/register" 
             className="text-sm text-brand-600 hover:text-brand-700 font-medium underline"
           >
             Register here
