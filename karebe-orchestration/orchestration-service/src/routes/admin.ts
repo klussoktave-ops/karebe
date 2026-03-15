@@ -138,9 +138,13 @@ router.post('/login', async (req: Request, res: Response) => {
  */
 router.post('/setup', async (req: Request, res: Response) => {
   try {
+    console.log('[AdminSetup] Received setup request');
     const { email, password, name, phone } = req.body;
+    
+    console.log('[AdminSetup] Request body:', { email, name, phone: phone || 'not provided' });
 
     if (!email || !password || !name) {
+      console.log('[AdminSetup] Missing required fields');
       return res.status(400).json({
         success: false,
         error: 'Email, password, and name are required',
@@ -149,6 +153,7 @@ router.post('/setup', async (req: Request, res: Response) => {
 
     // Validate password strength (minimum 8 characters)
     if (password.length < 8) {
+      console.log('[AdminSetup] Password too short');
       return res.status(400).json({
         success: false,
         error: 'Password must be at least 8 characters long',
@@ -156,9 +161,12 @@ router.post('/setup', async (req: Request, res: Response) => {
     }
 
     // Check if any admin users already exist
+    console.log('[AdminSetup] Checking for existing admins...');
     const { count, error: countError } = await supabase
       .from('admin_users')
       .select('*', { count: 'exact', head: true });
+
+    console.log('[AdminSetup] Admin count:', count, 'Error:', countError);
 
     if (countError) {
       logger.error('Error checking for existing admins', { error: countError });
@@ -170,6 +178,7 @@ router.post('/setup', async (req: Request, res: Response) => {
 
     // If admins already exist, reject the setup request (return 404 to hide endpoint existence)
     if (count && count > 0) {
+      console.log('[AdminSetup] Admins already exist, count:', count);
       logger.warn('Admin setup attempted but admins already exist', { count });
       return res.status(404).json({
         success: false,
@@ -177,12 +186,15 @@ router.post('/setup', async (req: Request, res: Response) => {
       });
     }
 
+    console.log('[AdminSetup] No admins found, proceeding with setup...');
     logger.info('Starting one-time admin setup', { email: email.toLowerCase() });
 
     // Hash password with bcrypt
+    console.log('[AdminSetup] Hashing password with bcrypt...');
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Create the first super admin
+    console.log('[AdminSetup] Creating admin user...');
     const { data: adminUser, error: insertError } = await supabase
       .from('admin_users')
       .insert({
@@ -197,6 +209,7 @@ router.post('/setup', async (req: Request, res: Response) => {
       .single();
 
     if (insertError) {
+      console.log('[AdminSetup] Error creating admin:', insertError);
       logger.error('Error creating initial admin', { error: insertError });
       
       if (insertError.code === '23505') {

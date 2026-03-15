@@ -5,8 +5,6 @@ import { Container } from '@/components/layout/container';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
-
 interface SetupFormData {
   name: string;
   email: string;
@@ -62,7 +60,10 @@ export default function AdminSetupPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/setup`, {
+      const API_URL = import.meta.env.VITE_ORCHESTRATION_API_URL || 'https://karebe-orchestration-production.up.railway.app';
+      console.log('[AdminSetup] Submitting setup request to:', `${API_URL}/api/admin/setup`);
+      
+      const response = await fetch(`${API_URL}/api/admin/setup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +75,9 @@ export default function AdminSetupPage() {
         }),
       });
 
+      console.log('[AdminSetup] Response status:', response.status);
       const data = await response.json();
+      console.log('[AdminSetup] Response data:', data);
 
       if (!response.ok) {
         // Handle different error scenarios
@@ -97,7 +100,7 @@ export default function AdminSetupPage() {
       }, 2000);
 
     } catch (err) {
-      console.error('Setup error:', err);
+      console.error('[AdminSetup] Error:', err);
       setError('Unable to connect to server. Please try again.');
     } finally {
       setIsLoading(false);
