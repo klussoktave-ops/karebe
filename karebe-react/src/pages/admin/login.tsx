@@ -118,6 +118,19 @@ function LoginContent() {
         <p className="text-center text-sm text-brand-500 mt-6">
           Protected area. Authorized personnel only.
         </p>
+
+        {/* Setup link - only shown when no admins exist */}
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-xs text-blue-700 text-center mb-2">
+            First time here?
+          </p>
+          <a
+            href="/admin/setup"
+            className="block text-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+          >
+            Create Admin Account →
+          </a>
+        </div>
       </Container>
     </div>
   );
