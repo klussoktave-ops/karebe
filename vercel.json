@@ -63,6 +63,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/admin/setup",
+      "destination": "/index.html"
+    },
+    {
       "source": "/admin/:path*",
       "destination": "/index.html"
     },
